@@ -10,7 +10,10 @@ This is a PlatformIO starter firmware for an ESP32-S3 reference target. It is in
 | `include/PinMap.h` | Provisional ESP32-S3 pins |
 | `include/LiftConfig.h` | Motion constants and default floor table |
 | `include/Secrets.example.h` | Fallback AP credential template |
+| `src/EventLog.*` | Recent event log scaffold |
+| `src/LiftSettings.*` | Persistent local lift settings |
 | `src/NetworkConfig.*` | Stored station network settings and AP fallback defaults |
+| `src/VfdParameters.*` | VFD parameter metadata and WebUI/API definitions |
 | `src/VfdProtocol.*` | EM01 VFD command framing/checksum |
 | `src/PositionStore.*` | Persistent state placeholder using ESP32 NVS |
 | `src/main.cpp` | Main state machine, web API, inputs, and VFD servicing |
@@ -35,6 +38,21 @@ Copy `include/Secrets.example.h` to `include/Secrets.h` only if you want to chan
 pio run
 ```
 
+## API Surface
+
+- `GET /api/status`
+- `GET /api/network`
+- `POST /api/network`
+- `POST /api/reboot`
+- `GET /api/settings`
+- `POST /api/settings`
+- `GET /api/logs/recent`
+- `GET /api/vfd/parameters`
+- `GET /api/vfd/parameter?number=N`
+- `POST /api/vfd/parameter`
+- `POST /api/move?floor=N`
+- `POST /api/stop`
+
 ## Current Limitations
 
 - `PositionStore` uses ESP32 NVS as a placeholder; replace it with an MRAM-backed implementation once the MRAM part is selected.
@@ -42,4 +60,6 @@ pio run
 - Pin assignments are placeholders.
 - Web write endpoints have no authentication yet.
 - Network settings use ESP32 NVS for now; final settings should move to the MRAM configuration store.
+- VFD parameter reads/writes send protocol commands and return pending read-back status; complete frame parsing and cache persistence are still TODO.
+- `EventLog` is an in-memory scaffold; final recent logs should move to MRAM.
 - The motion constants are placeholders and must not be used on real hardware.

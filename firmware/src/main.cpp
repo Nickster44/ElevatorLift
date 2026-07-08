@@ -3,11 +3,14 @@
 #include <WebServer.h>
 #include <WiFi.h>
 
+#include "EventLog.h"
 #include "LiftConfig.h"
+#include "LiftSettings.h"
 #include "NetworkConfig.h"
 #include "PinMap.h"
 #include "PositionStore.h"
 #include "VfdProtocol.h"
+#include "VfdParameters.h"
 
 #if __has_include("Secrets.h")
 #include "Secrets.h"
@@ -35,8 +38,11 @@ HardwareSerial VfdSerial(2);
 WebServer server(80);
 PositionStore store;
 NetworkConfig networkConfig;
+LiftSettingsStore liftSettingsStore;
+EventLog eventLog;
 StoredLiftState storedState;
 NetworkSettings networkSettings;
+LiftSettingsData liftSettings;
 
 volatile int64_t pulsePositionCounts = 0;
 
@@ -134,6 +140,7 @@ void enterFault(const String& reason) {
   lastFault = reason;
   motionState = MotionState::Fault;
   activeCommand.active = false;
+  eventLog.append(EventCode::Fault);
   sendVfd(VfdProtocol::stop());
   digitalWrite(Pins::StatusLed, HIGH);
 }
@@ -145,6 +152,7 @@ void beginStopping() {
   motionState = MotionState::Stopping;
   stopStartedMs = millis();
   lastStopCommandMs = 0;
+  eventLog.append(EventCode::MotionStopped);
   sendVfd(VfdProtocol::stop());
 }
 
@@ -176,6 +184,7 @@ bool requestMoveToFloor(uint8_t floor) {
 
   motionState = MotionState::Moving;
   lastVfdCommandMs = 0;
+  eventLog.append(EventCode::MotionAccepted, floor, static_cast<int32_t>(target->positionCounts));
   return true;
 }
 
@@ -196,6 +205,8 @@ String jsonStatus() {
   json += targetBuffer;
   json += ",\"targetFloor\":";
   json += activeCommand.floor;
+  json += ",\"normalRunTenthsHz\":";
+  json += liftSettings.normalRunTenthsHz;
   json += ",\"safetyOk\":";
   json += safetyLoopHealthy() ? "true" : "false";
   json += ",\"home\":";
@@ -215,6 +226,24 @@ String jsonStatus() {
   json += "\",\"apIp\":\"";
   json += fallbackApEnabled ? WiFi.softAPIP().toString() : "";
   json += "\"}";
+  return json;
+}
+
+String jsonSettings() {
+  String json = "{";
+  json += "\"normalRunTenthsHz\":";
+  json += liftSettings.normalRunTenthsHz;
+  json += ",\"serviceJogTenthsHz\":";
+  json += liftSettings.serviceJogTenthsHz;
+  json += ",\"homingTenthsHz\":";
+  json += liftSettings.homingTenthsHz;
+  json += ",\"stopOffsetCounts\":";
+  json += liftSettings.stopOffsetCounts;
+  json += ",\"homingTimeoutMs\":";
+  json += liftSettings.homingTimeoutMs;
+  json += ",\"logRetentionRecords\":";
+  json += liftSettings.logRetentionRecords;
+  json += "}";
   return json;
 }
 
@@ -298,6 +327,129 @@ void setupWebServer() {
     server.send(200, "application/json", jsonNetworkStatus());
   });
 
+  server.on("/api/settings", HTTP_GET, []() {
+    server.send(200, "application/json", jsonSettings());
+  });
+
+  server.on("/api/settings", HTTP_POST, []() {
+    LiftSettingsData updated = liftSettings;
+
+    if (server.hasArg("normalRunTenthsHz")) {
+      const int value = server.arg("normalRunTenthsHz").toInt();
+      if (value < 1 || value > 2000) {
+        server.send(400, "application/json", "{\"error\":\"normal_run_out_of_range\"}");
+        return;
+      }
+      updated.normalRunTenthsHz = static_cast<uint16_t>(value);
+    }
+    if (server.hasArg("serviceJogTenthsHz")) {
+      const int value = server.arg("serviceJogTenthsHz").toInt();
+      if (value < 1 || value > 2000) {
+        server.send(400, "application/json", "{\"error\":\"service_jog_out_of_range\"}");
+        return;
+      }
+      updated.serviceJogTenthsHz = static_cast<uint16_t>(value);
+    }
+    if (server.hasArg("homingTenthsHz")) {
+      const int value = server.arg("homingTenthsHz").toInt();
+      if (value < 1 || value > 2000) {
+        server.send(400, "application/json", "{\"error\":\"homing_speed_out_of_range\"}");
+        return;
+      }
+      updated.homingTenthsHz = static_cast<uint16_t>(value);
+    }
+    if (server.hasArg("stopOffsetCounts")) {
+      const int value = server.arg("stopOffsetCounts").toInt();
+      if (value < 0 || value > 60000) {
+        server.send(400, "application/json", "{\"error\":\"stop_offset_out_of_range\"}");
+        return;
+      }
+      updated.stopOffsetCounts = static_cast<uint16_t>(value);
+    }
+
+    if (!liftSettingsStore.save(updated)) {
+      server.send(500, "application/json", "{\"error\":\"settings_save_failed\"}");
+      return;
+    }
+
+    liftSettings = updated;
+    eventLog.append(EventCode::SettingsChanged);
+    server.send(200, "application/json", jsonSettings());
+  });
+
+  server.on("/api/logs/recent", HTTP_GET, []() {
+    server.send(200, "application/json", eventLog.jsonRecent());
+  });
+
+  server.on("/api/vfd/parameters", HTTP_GET, []() {
+    server.send(200, "application/json", VfdParameters::allDefinitionsJson());
+  });
+
+  server.on("/api/vfd/parameter", HTTP_GET, []() {
+    if (!server.hasArg("number")) {
+      server.send(400, "application/json", "{\"error\":\"missing_number\"}");
+      return;
+    }
+
+    const uint8_t number = static_cast<uint8_t>(server.arg("number").toInt());
+    const VfdParameterDefinition* definition = VfdParameters::find(number);
+    if (definition == nullptr) {
+      server.send(404, "application/json", "{\"error\":\"unknown_parameter\"}");
+      return;
+    }
+
+    sendVfd(VfdProtocol::getParameter(number));
+    eventLog.append(EventCode::VfdParameterRead, number);
+
+    String json = "{";
+    json += "\"definition\":";
+    json += VfdParameters::definitionJson(*definition);
+    json += ",\"commandSent\":\"";
+    json += lastVfdCommand;
+    json += "\",\"readbackParsing\":\"pending\"}";
+    server.send(202, "application/json", json);
+  });
+
+  server.on("/api/vfd/parameter", HTTP_POST, []() {
+    if (motionState != MotionState::Idle) {
+      server.send(409, "application/json", "{\"error\":\"lift_must_be_idle\"}");
+      return;
+    }
+    if (!server.hasArg("number") || !server.hasArg("value")) {
+      server.send(400, "application/json", "{\"error\":\"missing_number_or_value\"}");
+      return;
+    }
+
+    const uint8_t number = static_cast<uint8_t>(server.arg("number").toInt());
+    const int requestedValue = server.arg("value").toInt();
+    const VfdParameterDefinition* definition = VfdParameters::find(number);
+    if (definition == nullptr) {
+      server.send(404, "application/json", "{\"error\":\"unknown_parameter\"}");
+      return;
+    }
+    if (!definition->writable) {
+      server.send(403, "application/json", "{\"error\":\"parameter_read_only\"}");
+      return;
+    }
+    if (requestedValue < definition->minValue || requestedValue > definition->maxValue) {
+      server.send(400, "application/json", "{\"error\":\"value_out_of_range\"}");
+      return;
+    }
+
+    sendVfd(VfdProtocol::setParameter(number, static_cast<uint16_t>(requestedValue)));
+    eventLog.append(EventCode::VfdParameterWrite, number, requestedValue);
+
+    String json = "{";
+    json += "\"definition\":";
+    json += VfdParameters::definitionJson(*definition);
+    json += ",\"requestedValue\":";
+    json += requestedValue;
+    json += ",\"commandSent\":\"";
+    json += lastVfdCommand;
+    json += "\",\"readbackVerification\":\"pending\"}";
+    server.send(202, "application/json", json);
+  });
+
   server.on("/api/network", HTTP_POST, []() {
     if (!server.hasArg("ssid")) {
       server.send(400, "application/json", "{\"error\":\"missing_ssid\"}");
@@ -313,6 +465,7 @@ void setupWebServer() {
       return;
     }
 
+    eventLog.append(EventCode::NetworkChanged);
     server.send(202, "application/json", "{\"saved\":true,\"restartRequired\":true}");
   });
 
@@ -329,6 +482,7 @@ void setupWebServer() {
     }
     const uint8_t floor = static_cast<uint8_t>(server.arg("floor").toInt());
     if (!requestMoveToFloor(floor)) {
+      eventLog.append(EventCode::MotionRejected, floor);
       server.send(409, "application/json", "{\"error\":\"move_rejected\"}");
       return;
     }
@@ -438,7 +592,7 @@ void serviceMotion() {
     }
 
     if (now - lastVfdCommandMs >= LiftConfig::VfdCommandRefreshMs) {
-      sendVfd(VfdProtocol::run(activeCommand.direction, LiftConfig::CruiseTenthsHz));
+      sendVfd(VfdProtocol::run(activeCommand.direction, liftSettings.normalRunTenthsHz));
       lastVfdCommandMs = now;
     }
   }
@@ -515,6 +669,7 @@ void setup() {
 
   setupPins();
   VfdSerial.begin(LiftConfig::VfdBaud, SERIAL_8N1, Pins::VfdRx, Pins::VfdTx);
+  eventLog.begin();
 
   if (store.begin() && store.load(storedState)) {
     setPositionCounts(storedState.currentPosition);
@@ -525,9 +680,15 @@ void setup() {
   ++storedState.bootCount;
   store.save(storedState);
 
+  if (!liftSettingsStore.begin() || !liftSettingsStore.load(liftSettings)) {
+    liftSettings = liftSettingsStore.defaults();
+    liftSettingsStore.save(liftSettings);
+  }
+
   setupWiFi();
   setupWebServer();
   initializeVfd();
+  eventLog.append(EventCode::Boot, static_cast<int32_t>(storedState.bootCount));
 
   motionState = safetyLoopHealthy() ? MotionState::Idle : MotionState::Fault;
   if (motionState == MotionState::Fault) {

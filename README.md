@@ -21,6 +21,7 @@ _old_resources/
   EM01 Manual User_EN-V1.02.pdf     VFD manual; serial protocol starts on page 27
   SKF-Motor-Encoder-Unit---15276_1-EN.pdf
 docs/
+  hardware-requirements-matrix.md   Schematic-facing hardware requirements
   hardware-selection.md             First-pass hardware IC/module candidates
   old-system-review.md              Existing firmware/hardware behavior and risks
   vfd-serial-protocol.md            Extracted EM01 serial protocol notes
@@ -30,6 +31,11 @@ firmware/
   platformio.ini                    Starter PlatformIO target for ESP32-S3
   include/
   src/
+hardware/
+  ElevatorLift.kicad_pro            KiCad project shell
+  ElevatorLift.kicad_sch            Root schematic shell
+  ElevatorLift.kicad_pcb            Empty PCB shell
+  architecture-blocks.md            Block-level hardware architecture notes
 ```
 
 ## Old System Summary
@@ -89,6 +95,12 @@ Endpoints:
 - `GET /api/network` - current AP/station network status.
 - `POST /api/network` - save station SSID/password and require a reboot.
 - `POST /api/reboot` - reboot after configuration changes.
+- `GET /api/settings` - read local lift settings such as run speed and jog speed.
+- `POST /api/settings` - update guarded local lift settings.
+- `GET /api/logs/recent` - read the current in-memory recent event log.
+- `GET /api/vfd/parameters` - list documented VFD parameter metadata.
+- `GET /api/vfd/parameter?number=N` - request a VFD parameter read.
+- `POST /api/vfd/parameter` - write a stopped-only, range-checked VFD parameter.
 - `POST /api/move?floor=N` - request a move to a configured floor.
 - `POST /api/stop` - request a controlled stop.
 
