@@ -1,6 +1,6 @@
 # Hardware Selection Draft
 
-This document identifies the first-pass hardware blocks and candidate ICs/modules needed to build the new controller. These are not final schematic decisions yet; they are the parts to evaluate before KiCad capture.
+This document identifies the first-pass hardware blocks and candidate ICs/modules needed to build the new controller. These are not final schematic decisions yet; they are the parts to evaluate before KiCad capture. Exact sourcing candidates are tracked in `docs/jlcpcb-lcsc-sourcing.md`, and local datasheet copies are under `datasheets/`.
 
 ## Summary Recommendation
 
@@ -24,7 +24,8 @@ Build the first board around:
 | Compact MCU alternate | Espressif ESP32-S3-MINI-1U | Smaller external-antenna ESP32-S3 module | Less flash/PSRAM flexibility depending on variant |
 | Quadrature counter | LSI/CSI LS7366R | 32-bit quadrature counter with SPI host interface | Good match for offloading encoder counting from MCU |
 | Encoder conditioning | SN74LVC2G17 or similar Schmitt buffer | Cleans slow/noisy open-collector encoder edges before counter input | Add pullups, series resistors, RC option, and ESD/TVS protection |
-| Critical nonvolatile memory | Everspin MR25H40 | 4 Mbit SPI MRAM, 40 MHz, nonvolatile, unlimited endurance, power-loss retention | Preferred over flash/EEPROM for frequent position/log writes |
+| Critical nonvolatile memory | Siproin PM004MNIATR | 4 Mbit SPI/QPI MRAM, nonvolatile, high endurance, LCSC/JLC-friendly SOP-8 sourcing path | Preferred over flash/EEPROM for frequent position/log writes |
+| MRAM fallback | Everspin MR25H40CDF | 4 Mbit SPI MRAM, 40 MHz, nonvolatile, unlimited endurance, power-loss retention | Technically strong but currently weaker for JLCPCB cost/stock than the Siproin part |
 | Lower-cost memory alternate | Infineon/Fujitsu MB85RS4MT | 4 Mbit SPI FRAM with high endurance | FRAM, not MRAM; acceptable fallback if MRAM cost/sourcing is poor |
 | Web assets / extended logs | Winbond W25Q128JV or similar QSPI NOR | Cheap high-density storage for static WebUI files, OTA image staging, and noncritical logs | Do not use for high-frequency critical position snapshots |
 | RTC timestamps | Micro Crystal RV-3028-C7 | Very low power I2C RTC with UNIX time counter and backup support | Useful when AP-only/offline and no NTP is available |
@@ -32,7 +33,7 @@ Build the first board around:
 | Industrial digital inputs | TI ISO1211 / ISO1212 | Isolated digital input receiver family for industrial input modules | Candidate if field inputs are 24 V or higher; exact input voltages still need confirmation |
 | RF receiver | TE/Linx RXM-418-LR | Maintains compatibility path with existing 418 MHz remotes | Requires firmware validation/decoding; RF commands are not safety signals |
 | AC/DC power | Mean Well IRM-05-5 or IRM-05-12 | PCB-mount isolated AC/DC module, compact, universal AC input | Need load budget before choosing 5 V versus 12 V output |
-| 3.3 V rail | TI TPSM82822/TPSM82823 or Diodes AP63203 | Compact buck regulator options depending on upstream DC rail | TPSM8282x is easy from 5 V; AP63203 handles a wider input range |
+| 3.3 V rail | Diodes AP63203WU-7 or AP63200 adjustable variant | Compact buck regulator options depending on upstream DC rail | AP63203 is a fixed 3.3 V JLC candidate; AP63200 adjustable is a fallback if stock changes |
 | AC light output | MOC3063/MOC3163 class optotriac plus triac, or compact relay/SSR | Compact path for 120 VAC lighting output | Use relay/SSR if load type or leakage current makes triac unsuitable |
 
 ## Architecture Notes
@@ -62,6 +63,8 @@ Use MRAM as the source of truth for:
 - VFD parameter cache.
 - Local run speed and service settings.
 - Recent binary event/fault ring buffer.
+
+The preferred first-pass MRAM part is Siproin `PM004MNIATR` because it is a 4 Mbit SPI/QPI MRAM with an LCSC sourcing path and an assembly-friendly SOP-8 package. Everspin `MR25H40CDF` remains a reference/fallback part, but its LCSC stock depth and cost are worse.
 
 Use optional QSPI NOR flash or SD only for noncritical bulk storage. A removable SD card is not required for the first board unless the design needs long-term removable logs. External QSPI flash is a better first option for WebUI assets and OTA staging because it avoids sockets and removable-media reliability issues.
 
@@ -127,6 +130,7 @@ Start with a 5 W budget check. If ESP32 Wi-Fi, RF receiver, MRAM, counter, isola
 - Espressif ESP32-S3-WROOM-1 / 1U datasheet: https://documentation.espressif.com/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf
 - Espressif ESP32-S3-MINI-1 / 1U datasheet: https://documentation.espressif.com/esp32-s3-mini-1_mini-1u_datasheet_en.pdf
 - LSI/CSI LS7366R datasheet: https://lsicsi.com/wp-content/uploads/2021/06/LS7366R.pdf
+- Siproin PM004MNIATR LCSC page: https://www.lcsc.com/product-detail/C5444277.html
 - Everspin MR25H40 product page: https://www.everspin.com/products/series/mr25h40
 - Infineon/Fujitsu MB85RS4MT FRAM datasheet: https://www.mouser.com/datasheet/2/1113/MB85RS4MT_DS501_00053_1v0_E-2329137.pdf
 - Micro Crystal RV-3028-C7 datasheet: https://www.microcrystal.com/fileadmin/Media/Products/RTC/Datasheet/RV-3028-C7.pdf
@@ -138,4 +142,3 @@ Start with a 5 W budget check. If ESP32 Wi-Fi, RF receiver, MRAM, counter, isola
 - TI TPSM82822 product page: https://www.ti.com/product/TPSM82822
 - Diodes AP63203 datasheet: https://www.diodes.com/datasheet/download/AP63200-AP63201-AP63203-AP63205.pdf
 - onsemi MOC3163M datasheet: https://www.onsemi.com/download/data-sheet/pdf/moc3163m-d.pdf
-

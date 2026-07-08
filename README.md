@@ -23,10 +23,13 @@ _old_resources/
 docs/
   hardware-requirements-matrix.md   Schematic-facing hardware requirements
   hardware-selection.md             First-pass hardware IC/module candidates
+  jlcpcb-lcsc-sourcing.md           JLCPCB/LCSC-oriented major part matrix
   old-system-review.md              Existing firmware/hardware behavior and risks
   vfd-serial-protocol.md            Extracted EM01 serial protocol notes
   new-controller-requirements.md    Hardware and firmware requirements draft
   webui-vfd-and-storage-plan.md     WebUI, VFD parameter, and log storage plan
+datasheets/
+  README.md                         Local datasheet manifest for major ICs/modules
 firmware/
   platformio.ini                    Starter PlatformIO target for ESP32-S3
   include/
