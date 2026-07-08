@@ -1,0 +1,707 @@
+#if PLATFORM_ID == PLATFORM_XENON
+#define Wiring_Serial2 1
+#define Serial2 __fetch_global_Serial2()
+extern USARTSerial& __fetch_global_Serial2();
+void serialEvent2(void) __attribute__((weak));
+#include "Serial2/Serial2.h"
+#endif
+#define Top A3
+#define Right A4
+#define Bottom A5
+#define Left A2
+#define Center D2
+#define RFLine D3
+#define S1pos 0
+#define S2pos 1
+#define S3pos 2
+#define PROGpos 3
+#define RFpos 4
+#define HOMEpos 5
+#define RELAY1pos 6
+#define RELAY2pos 7
+#define RELAY3pos 8
+#define RELAY4pos 9
+#define STEPUPpin D6
+#define STEPDOWNpin D8
+
+SYSTEM_MODE(SEMI_AUTOMATIC);
+
+// INPUT VARIABLES
+bool buttonState0, lastButtonState0 = 0, buttonState1, lastButtonState1 = 0, buttonState2, lastButtonState2 = 0;
+bool buttonState3, lastButtonState3 = 0, buttonState4, lastButtonState4 = 0, lastSafetyState = 0, blinkLightOn = true;
+// APP VARIABLES
+unsigned char currRelayValue = 0x00;
+unsigned long safetyTime = 0;
+bool dataArray[10] = {0};
+short toFloorNum = -1, blinkValue = 0, estopCounter = 0;
+String inputString = "", inputString2 = "";
+bool stringComplete = false, stringComplete2 = false, programMode = false, checkForHomingDelay = false, reachedTime = false;
+bool gotoHome = false, lastprogState = 0, calculate = true, run = false, calibrate = false, safetyState = false;
+short tempSpeedFactor = 0, MAXSPEED = 75, programModeRunSpeed = 0, countPos = 1, neg = 0, lastTempSpeedFactor = 0;
+int homingDelayTime = 0, speed = 0, prevMillis1 = 0, stopCounter = 0;
+long currentPos  = -999, nextPos = -1, lastPos = 1, totalDistance = 0, currDistance = 0, threshStopPos = 0;
+const int INTERVAL = 50;
+bool runOnce = true, foundChar = false, arriveAtFloor = false;
+int THRESHOLD = 3500; //(float) ((MAXSPEED * MAXSPEED + MAXSPEED ) / 2) * (float) (INTERVAL / 20);  * 0.64 ?
+//short thresholdData[8] = {300, 600, 900, 1200, 4655, 4320, 1800, 1800};
+Timer timer(INTERVAL, gotoNextPos);
+Timer ProgTimer(500, ProgTimerFunc, true);
+Timer stopTimer(50, stopFunc);
+Timer dataTimer(1000, dataFunc);
+Timer delayTimer(1000, delayTimerFunc, true);
+Timer calibrateTimer(3000, calibrateFunc, true);
+Timer onWait(500, onWaitFunc, true);
+Timer offWait(500, offWaitFunc, true);
+//Timer estopTimer(52, estopTimerFunc);
+struct MyObject {
+    uint8_t version;
+    int pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8, pos9;
+    unsigned short thresholdData[8];
+};
+MyObject savedPos;
+MyObject defaultObj = { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 300, 600, 900, 1200, 2000, 3000, 4000, 5000 };
+String relayMsg = "";
+
+void setup() {
+    inputString.reserve(100);
+    inputString2.reserve(100);
+    delay(150);
+    relayMsg.reserve(50);
+    Serial.begin(115200);
+    Serial1.begin(9600);
+    Serial2.begin(9600);
+    pinMode(Top, INPUT);
+    pinMode(Bottom, INPUT);
+    pinMode(Left, INPUT);
+    pinMode(Right, INPUT);
+    pinMode(Center, INPUT);
+    pinMode(RFLine, OUTPUT);
+    pinMode(D8, OUTPUT);
+    pinMode(D6, OUTPUT);
+    pinMode(A1, INPUT_PULLUP);
+    attachInterrupt(STEPUPpin, upSteps, RISING);
+    attachInterrupt(STEPDOWNpin, downSteps, RISING);
+    
+    Serial1.print("(4030010):9");
+    delay(50);
+    //Serial1.print("(4060036);4");
+    //delay(50);
+    Serial1.print("(4040010)::");
+    delay(50);
+    Serial1.print("(4120001):9");
+    delay(50);
+    Serial1.print("(4101200):9");
+    delay(50);
+    
+    Serial2.print("(0000)\n");
+    Serial2.flush();
+    savedPos = defaultObj;
+    delay(5);
+    EEPROM.get(0, savedPos);
+    delay(5);
+    if(savedPos.version != 0) {
+        savedPos = defaultObj;
+    }
+}
+
+
+
+void loop() {
+    safetyFunc();
+    
+    if(calibrate == true && run == false) {
+        int tempPos1 = savedPos.pos2;
+        int tempPos2 = currentPos;
+        int tempDist = tempPos1 - tempPos2;
+        nextPos = (tempDist / 5) + currentPos;
+        timer.start();
+        run = true;
+    }
+    if(gotoHome == true) {
+        stopButton();
+        programModeRunSpeed = 45;
+        move();
+        if(dataArray[HOMEpos] == 0) {
+            Serial.println("Arrived at Home location.");
+            stopTimer.start();
+            stopCounter = 0;
+            currentPos = 0;
+            programModeRunSpeed = 0;
+            gotoHome = false;
+            
+        }
+    }else{
+        buttonInputs();
+        if(programMode == true) {
+            move();
+        }
+    }
+    
+    if(checkForHomingDelay == true) {
+        if(buttonState4 == HIGH) {
+            if(millis() - homingDelayTime > 3000) {
+                gotoHome = true;
+                relay(0, 0);
+                checkForHomingDelay = false;
+            }
+        }
+    }
+    
+    if (stringComplete) {
+        for(int i = 0; i < inputString.length(); i++) {
+            dataArray[i] = inputString[i] - 48;
+        }
+        Serial.print("Received data: ");
+        Serial.println(inputString);
+        dataFunc();
+        
+        short sPinState1 = (short)dataArray[0];
+        short sPinState2 = (short)dataArray[1];
+        short sPinState3 = (short)dataArray[2];
+        tempSpeedFactor = sPinState1 + (sPinState2 * 2) + (sPinState3 * 4);
+        if(lastTempSpeedFactor != tempSpeedFactor) {
+            MAXSPEED = (tempSpeedFactor * 15) + 15;
+            Serial.printf("MAXSPEED set to: %d", MAXSPEED);
+            lastTempSpeedFactor = tempSpeedFactor;
+        }
+        programMode = dataArray[3];
+        if(dataArray[4] == true) {
+            digitalWrite(RFLine, HIGH);
+        }else {
+            digitalWrite(RFLine, LOW);
+        }
+        if(lastprogState != dataArray[PROGpos]) {
+            ProgTimer.start();
+        }
+        lastprogState = dataArray[PROGpos];
+        // clear the string:
+        inputString = "";
+        stringComplete = false;
+    }
+    
+    if(blinkValue > 0) {
+        if(!(onWait.isActive()) && blinkLightOn == true) {
+            relay(1, 1);
+            onWait.start();
+        }
+        if(!(offWait.isActive()) && blinkLightOn == false) {
+            relay(1, 0);
+            offWait.start();
+        }
+    }
+    
+}
+/*
+void estopTimerFunc() {
+    estopCounter++;
+    Serial1.print("(4040010)::");
+    Serial1.flush();
+    if(estopCounter >= 10){
+        estopTimer.stop();
+    }
+}
+*/
+void safetyFunc() {
+    unsigned long tempTime = millis();
+    safetyState = digitalRead(A1);
+    if(safetyState != lastSafetyState) {
+        if(safetyState == true) {//3.3v means safety loop broken //&& arriveAtFloor == false
+            callStop();
+        }
+    }
+    lastSafetyState = safetyState;
+    if(safetyState == false) {// low means safety loop closed
+        if(tempTime - safetyTime > 750) { //run == false
+            Serial1.print("(513)>:");
+            safetyTime = tempTime;
+        }
+    }
+}
+
+void upSteps() {
+    currentPos++;
+    //if(currentPos == threshStopPos && gotoHome == false && programMode == false) {
+      //  gotoNextPos();
+    //}
+}
+
+void downSteps() {
+    currentPos--;
+    //if(currentPos == threshStopPos && gotoHome == false && programMode == false) {
+      //  gotoNextPos();
+    //}
+}
+
+void onWaitFunc() {
+    blinkLightOn = false;
+}
+
+void offWaitFunc() {
+    blinkLightOn = true;
+    blinkValue--;
+}
+void calibrateFunc() {
+    unsigned short newThresh = 0;
+    short tempNum = currentPos - nextPos;
+    newThresh = abs(tempNum);
+    savedPos.thresholdData[tempSpeedFactor] = newThresh;
+    EEPROM.put(0, savedPos);
+    Serial.printf("Threshold value calibrated to: %d", newThresh);
+}
+
+void delayTimerFunc() {
+    reachedTime = true;
+}
+
+void dataFunc() {
+    Serial.printf("Speed: %d, Position: %d, Target: %d\n", speed, currentPos, nextPos);
+}
+
+void ProgTimerFunc() {
+    if(dataArray[PROGpos] == 1) {
+        relay(1,1);
+        programMode = true;
+        for(int i = 0; i < 5; i++) {
+            Serial1.print("(4030070):?");
+        }
+        Serial1.flush();
+        Serial.println("Prog state ON");
+    }else if(dataArray[PROGpos] == 0){
+        calibrate = true;
+        programMode = false;
+        //stopTimer.start();
+        relay(1,0);
+        toFloorNum = -1;
+        countPos = 1;
+        savedPos.version = 0;
+        EEPROM.put(0, savedPos);
+        for(int i = 0; i < 5; i++) {
+            Serial1.print("(4030010):9");
+        }
+        Serial1.flush();
+        Serial.println("Prog state OFF");
+    }
+}
+
+void serialEvent1() {
+  while (Serial1.available()) {
+    char inChar = (char)Serial1.read();
+    inputString2 += inChar;
+    if (inChar == '3') {
+        foundChar = true;
+    }
+    if (inChar == ')' && foundChar == true) {
+      stringComplete2 = true;
+      foundChar = false;
+    }
+  }
+}
+
+void serialEvent2() {
+  while (Serial2.available()) {
+    char inChar = (char)Serial2.read();
+    inputString += inChar;
+    if (inChar == '\n') {
+      stringComplete = true;
+    }
+  }
+}
+
+void stopButton() {
+    buttonState4 = digitalRead(Center);
+      if (buttonState4 != lastButtonState4) {
+        if (buttonState4 == HIGH) {
+            checkForHomingDelay = true;
+            homingDelayTime = millis();
+            callStop();
+          Serial.println("Center button ON in stop function");
+        }else{
+            checkForHomingDelay = false;
+        }
+      lastButtonState4 = buttonState4;
+    }
+}
+void gotoNextPos() {
+    
+    if(calculate == true) {
+        lastPos = currentPos;
+        
+        totalDistance = nextPos - lastPos;
+        totalDistance = abs(totalDistance);
+        currDistance = 0;
+        delayTimer.start();
+        if(calibrate == false) {
+            THRESHOLD = savedPos.thresholdData[tempSpeedFactor];
+        }else {
+            THRESHOLD = 0;
+        }
+        if(nextPos - lastPos >= 0) {
+            neg = 1;
+            threshStopPos = nextPos + THRESHOLD;
+        }else{
+            neg = -1;
+            threshStopPos = nextPos - THRESHOLD;
+        }
+        calculate = false;
+        speed = MAXSPEED;
+        
+    }
+    currDistance = currentPos - lastPos;
+    currDistance = abs(currDistance);
+    if((currDistance >= totalDistance / 2 && reachedTime == false) || currDistance >= totalDistance - THRESHOLD || currentPos == threshStopPos) {
+        Serial.printf("Threshold reached or short exception at pos %d\n", currentPos);
+        if(calibrate == true) {
+            calibrateTimer.start();
+            calibrate = false;
+        }
+        //arriveAtFloor = true;
+        callStop();
+        relay(toFloorNum, 1);
+        toFloorNum = -1;
+    }else { //else if(confirmation == false)
+        char data[8];
+        String format = (neg < 0) ? "(2%s)" : "(1%s)";
+        int speed2 = speed % 100;
+        char setting[5] = { ((int) speed / 100) + 48, ((int) speed2 / 10) + 48, ((int) speed2 % 10) + 48, '0' };
+        sprintf(data, format, setting);
+        char checkSum = 0;
+        for(int i = 0; i < 8; i++){
+            checkSum += data[i];
+        }
+        checkSum = checkSum & 255;
+        char sum1 = (checkSum / 0x10) + 0x30;
+        char sum2 = (checkSum % 0x10) + 0x30;
+        char *formatTwo = "%s%c%c";
+        char finalData[10];
+        sprintf(finalData, formatTwo, data, sum1, sum2);
+
+        Serial1.print(finalData);
+    }
+    Serial.printf("Speed: %d, Position: %d, Target: %d\n", speed, currentPos, nextPos);
+    
+}
+
+void setPos() {
+    countPos += 1;
+    switch(countPos) {
+        case 1: {
+                    //currentPos = 0;
+                    savedPos.pos1 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 0;
+                    break;
+                }
+        case 2: {
+                    savedPos.pos2 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 1;
+                    break;
+                }
+        case 3: {
+                    savedPos.pos3 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 2;
+                    break;
+                }
+        case 4: {
+                    savedPos.pos4 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 3;
+                    break;
+                }
+        case 5: {
+                    savedPos.pos5 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 4;
+                    break;
+                }
+        case 6: {
+                    savedPos.pos6 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 5;
+                    break;
+                }
+        case 7: {
+                    savedPos.pos7 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 6;
+                    break;
+                }
+        case 8: {
+                    savedPos.pos8 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 7;
+                    break;
+                }
+        case 9: {
+                    savedPos.pos9 = currentPos;
+                    Serial.printf("Pos %d Set/n", countPos);
+                    blinkValue = 8;
+                    break;
+                }
+        default: break;
+    }
+}
+void move() {
+    if((millis() - prevMillis1) > 200) {
+        speed = programModeRunSpeed;
+        char data[8];
+        String format = (speed < 0) ? "(2%s)" : "(1%s)";
+        speed = abs(speed);
+        int speed2 = speed % 100;
+        char setting[5] = { ((int) speed / 100) + 48, ((int) speed2 / 10) + 48, ((int) speed2 % 10) + 48, '0' };
+        sprintf(data, format, setting);
+        char checkSum = 0;
+        for(int i = 0; i < 8; i++){
+            checkSum += data[i];
+        }
+        checkSum = checkSum & 255;
+        char sum1 = (checkSum / 0x10) + 0x30;
+        char sum2 = (checkSum % 0x10) + 0x30;
+        char *formatTwo = "%s%c%c";
+        char finalData[10];
+        sprintf(finalData, formatTwo, data, sum1, sum2);
+        Serial1.print(finalData);
+        Serial.printf("Setting Data: %s\n", finalData);
+
+        
+        Serial.printf("Saved Pos: %d, %d, %d, %d, %d, %d, %d       %d\n", savedPos.version, savedPos.pos1, 
+        savedPos.pos2, savedPos.pos3, savedPos.pos4, savedPos.pos5, savedPos.pos6, currentPos);
+        
+    prevMillis1 = millis();
+    }
+}
+
+void gotoSavedPos(short posID) {
+    //arriveAtFloor = false;
+    if(run == false) {
+        switch (posID) {
+            case 2: {
+                nextPos = savedPos.pos2;
+                timer.start();
+                run = true;
+                toFloorNum = 4;
+                break;
+                }
+            case 3: {
+                nextPos = savedPos.pos3;
+                timer.start();
+                run = true;
+                toFloorNum = 3;
+                break;
+                }
+            case 4: {
+                nextPos = savedPos.pos4;
+                timer.start();
+                run = true;
+                toFloorNum = 2;
+                break;
+            }
+        }
+    }
+}
+
+void buttonInputs() {
+    // Left Button
+  buttonState0 = digitalRead(Left);
+  if (buttonState0 != lastButtonState0) {
+    if (buttonState0 == HIGH && run == false) {
+        relay(0, 0);
+        delay(300);
+        safetyState = digitalRead(A1);
+      if(programMode == false && safetyState == false) {
+        gotoSavedPos(2);
+        Serial.println("Going to saved pos 2.");
+      }
+      Serial.println("Left button ON");
+    }
+  }
+  lastButtonState0 = buttonState0;
+  // Top Button
+  buttonState3 = digitalRead(Top);
+  if (buttonState3 != lastButtonState3) {
+    if (buttonState3 == HIGH && run == false) {
+        relay(0, 0);
+        delay(300);
+        safetyState = digitalRead(A1);
+      if(programMode == true) {
+        programModeRunSpeed = 60;
+      }else if(safetyState == false){
+        gotoSavedPos(3);
+        Serial.println("Going to saved pos 3.");
+        }
+      Serial.println("Top button ON");
+    }else{
+        if(programMode == true) {
+            programModeRunSpeed = 0;
+        }
+    }
+  }
+  lastButtonState3 = buttonState3;
+  // Right Button
+  buttonState2 = digitalRead(Right);
+  if (buttonState2 != lastButtonState2) {
+    if (buttonState2 == HIGH && run == false) {
+        relay(0, 0);
+        delay(300);
+        safetyState = digitalRead(A1);
+      if(programMode == false && safetyState == false) {
+        gotoSavedPos(4);
+        Serial.println("Going to saved pos 4.");
+      }else if(programMode == true) {
+        if(currRelayValue & 0x02 == 0x02) {
+            relay(2, 0);
+        }else{
+            relay(2, 1);
+        }
+      }
+      Serial.println("Right button ON");
+    }
+  }
+  lastButtonState2 = buttonState2;
+  // Center Button
+  buttonState4 = digitalRead(Center);
+  if (buttonState4 != lastButtonState4) {
+    if (buttonState4 == HIGH) {
+        checkForHomingDelay = true;
+        homingDelayTime = millis();
+        if(programMode == true) {
+            setPos();
+        }else{
+            callStop();
+        }
+      Serial.println("Center button ON");
+    }else{
+        checkForHomingDelay = false;
+    }
+  }
+  lastButtonState4 = buttonState4;
+  
+  // Bottom Button
+  buttonState1 = digitalRead(Bottom);
+  if (buttonState1 != lastButtonState1) {
+    if (buttonState1 == HIGH) {
+      if(programMode == true && run == false && safetyState == false) {
+        programModeRunSpeed = -60;
+      }else{
+        if(currRelayValue & 0x01 == 0x01) {
+            relay(1, 0);
+        }else{
+            relay(1, 1);
+        }
+      }
+      Serial.println("Bottom button ON");
+    }else{
+        if(programMode == true) {
+            programModeRunSpeed = 0;
+        }
+    }
+  }
+  lastButtonState1 = buttonState1;
+}
+
+void callStop() {
+    gotoHome = false;
+    calibrate = false;
+    programModeRunSpeed = 0;
+    speed = 0;
+    stopTimer.start();
+    stopCounter = 0;
+    timer.stop();
+    calculate = true;
+    run = false;
+}
+
+void relay(uint8_t relayNum, uint8_t state) {
+    switch(relayNum) {
+        case 0: {
+            if(state == 1) {
+                currRelayValue = currRelayValue | 0x0F; 
+            }else{
+                currRelayValue = currRelayValue & 0xF0;
+            }
+            break;
+        }
+        case 1: {
+            if(state == 1) {
+                currRelayValue = currRelayValue | 0x01; 
+            }else{
+                currRelayValue = currRelayValue & 0xFE;
+            }
+            break;
+        }
+        case 2: {
+            if(state == 1) {
+                currRelayValue = currRelayValue | 0x02; 
+            }else{
+                currRelayValue = currRelayValue & 0xFD;
+            }
+            break;
+        }
+        case 3: {
+            if(state == 1) {
+                currRelayValue = currRelayValue | 0x04; 
+            }else{
+                currRelayValue = currRelayValue & 0xFB; 
+            }
+            break;
+        }
+        case 4: {
+            if(state == 1) {
+                currRelayValue = currRelayValue | 0x08; 
+            }else{
+                currRelayValue = currRelayValue & 0xF7;
+            }
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+    relayMsg = "(";
+    char tempChar = (currRelayValue & 0x01) + 48;
+    relayMsg += tempChar;
+    tempChar = ((currRelayValue & 0x02)>>1) + 48;
+    relayMsg += tempChar;
+    tempChar = ((currRelayValue & 0x04)>>2) + 48;
+    relayMsg += tempChar;
+    tempChar = ((currRelayValue & 0x08)>>3) + 48;
+    relayMsg += tempChar;
+    
+    relayMsg += ")\n";
+    Serial2.print(relayMsg);
+    Serial.print("Sent: ");
+    Serial.println(relayMsg);
+    Serial.println(currRelayValue);
+}
+
+void stopFunc() {
+    stopCounter++;
+    speed = 0;
+    char x = '0';
+    int countProgress = 0;
+    int sizeStr = inputString2.length();
+    if(stringComplete2) {
+        for(int i = 0; i < sizeStr; i++) {
+            if(i+1 < sizeStr) {
+                if(inputString2[i] == '(' && inputString2[i+1] == '3') {
+                    stopTimer.stop();
+                    //estopTimer.start();
+                    //estopCounter = 0;
+                }
+            }
+            
+        }
+        inputString2 = "";
+        stringComplete2 = false;
+    }
+    if(stopCounter >= 20) {
+        stopTimer.stop();
+        //estopTimer.start();
+    }else{
+        Serial1.print("(3)84");
+        //Serial1.flush();
+        Serial.println("Sent Stop Command");
+    }
+
+}

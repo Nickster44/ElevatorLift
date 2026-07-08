@@ -1,0 +1,16 @@
+/.pio/
+/firmware/.pio/
+*.tmp
+*.log
+*.bak
+*.swp
+Thumbs.db
+.DS_Store
+
+# Local credentials and generated build artifacts.
+firmware/include/Secrets.h
+*.elf
+*.bin
+*.hex
+*.map
+
