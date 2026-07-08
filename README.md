@@ -21,6 +21,7 @@ _old_resources/
   EM01 Manual User_EN-V1.02.pdf     VFD manual; serial protocol starts on page 27
   SKF-Motor-Encoder-Unit---15276_1-EN.pdf
 docs/
+  hardware-selection.md             First-pass hardware IC/module candidates
   old-system-review.md              Existing firmware/hardware behavior and risks
   vfd-serial-protocol.md            Extracted EM01 serial protocol notes
   new-controller-requirements.md    Hardware and firmware requirements draft
