@@ -1,6 +1,6 @@
 # Hardware / KiCad Workspace
 
-This folder is the hardware design workspace. The current files are a KiCad scaffold and planning notes, not a completed schematic.
+This folder is the hardware design workspace. The current files are a KiCad 10 scaffold and planning notes, not a completed schematic.
 
 ## Files
 
@@ -8,7 +8,7 @@ This folder is the hardware design workspace. The current files are a KiCad scaf
 | --- | --- |
 | `ElevatorLift.kicad_pro` | KiCad project shell |
 | `ElevatorLift.kicad_sch` | Root schematic shell with block-level text notes |
-| `ElevatorLift.kicad_pcb` | Empty PCB shell |
+| `ElevatorLift.kicad_pcb` | PCB shell with provisional 3.5 in x 3.5 in outline and corner mounting holes |
 | `architecture-blocks.md` | Schematic page/block plan |
 
 ## Schematic Page Plan
@@ -25,4 +25,3 @@ This folder is the hardware design workspace. The current files are a KiCad scaf
 ## Before Schematic Capture
 
 Resolve the open questions in `docs/hardware-requirements-matrix.md`, especially VFD serial electrical levels, field input voltages, VFD-box mounting space, encoder supply/pullups, and light load details.
-

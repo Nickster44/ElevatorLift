@@ -23,18 +23,18 @@ Build the first board around:
 | MCU/Wi-Fi | Espressif ESP32-S3-WROOM-1U | Wi-Fi AP/station support, multiple UART/SPI/I2C peripherals, native USB, external antenna connector for metal enclosure use | Use a U.FL/IPEX pigtail to move antenna outside or to a plastic window |
 | Compact MCU alternate | Espressif ESP32-S3-MINI-1U | Smaller external-antenna ESP32-S3 module | Less flash/PSRAM flexibility depending on variant |
 | Quadrature counter | LSI/CSI LS7366R | 32-bit quadrature counter with SPI host interface | Good match for offloading encoder counting from MCU |
-| Encoder conditioning | SN74LVC2G17 or similar Schmitt buffer | Cleans slow/noisy open-collector encoder edges before counter input | Add pullups, series resistors, RC option, and ESD/TVS protection |
+| Encoder conditioning | 5 V pullups plus Schmitt/level-shift path | Cleans slow/noisy open-collector encoder edges before counter input | SKF datasheet recommends 270 ohm pullups at 5 V; decide whether the counter side is 5 V with SPI level shifting or translated to 3.3 V |
 | Critical nonvolatile memory | Siproin PM004MNIATR | 4 Mbit SPI/QPI MRAM, nonvolatile, high endurance, LCSC/JLC-friendly SOP-8 sourcing path | Preferred over flash/EEPROM for frequent position/log writes |
 | MRAM fallback | Everspin MR25H40CDF | 4 Mbit SPI MRAM, 40 MHz, nonvolatile, unlimited endurance, power-loss retention | Technically strong but currently weaker for JLCPCB cost/stock than the Siproin part |
 | Lower-cost memory alternate | Infineon/Fujitsu MB85RS4MT | 4 Mbit SPI FRAM with high endurance | FRAM, not MRAM; acceptable fallback if MRAM cost/sourcing is poor |
 | Web assets / extended logs | Winbond W25Q128JV or similar QSPI NOR | Cheap high-density storage for static WebUI files, OTA image staging, and noncritical logs | Do not use for high-frequency critical position snapshots |
 | RTC timestamps | Micro Crystal RV-3028-C7 | Very low power I2C RTC with UNIX time counter and backup support | Useful when AP-only/offline and no NTP is available |
-| VFD UART isolation | TI ISO6721 / ISO6721-Q1 | Dual-channel digital isolator suitable for UART TX/RX | Pair with isolated power if a true isolated interface is required |
+| VFD UART opto drive | Discrete transistor/MOSFET current driver plus protected receive path | The VFD serial input is opto-isolated and needs more current than direct MCU UART drive can provide | Use standard UART framing at 9600 baud; bench-confirm opto input current and resistor values |
 | Industrial digital inputs | TI ISO1211 / ISO1212 | Isolated digital input receiver family for industrial input modules | Candidate if field inputs are 24 V or higher; exact input voltages still need confirmation |
 | RF receiver | TE/Linx RXM-418-LR | Maintains compatibility path with existing 418 MHz remotes | Requires firmware validation/decoding; RF commands are not safety signals |
-| AC/DC power | Mean Well IRM-05-5 or IRM-05-12 | PCB-mount isolated AC/DC module, compact, universal AC input | Need load budget before choosing 5 V versus 12 V output |
+| AC/DC power | RECOM RAC10-12SK/277 | Previously used 12 V, 10 W supply; JLCPCB lists it as an assembly candidate | Good baseline for 12 V light plus logic, but limited margin for future solenoids |
 | 3.3 V rail | Diodes AP63203WU-7 or AP63200 adjustable variant | Compact buck regulator options depending on upstream DC rail | AP63203 is a fixed 3.3 V JLC candidate; AP63200 adjustable is a fallback if stock changes |
-| AC light output | MOC3063/MOC3163 class optotriac plus triac, or compact relay/SSR | Compact path for 120 VAC lighting output | Use relay/SSR if load type or leakage current makes triac unsuitable |
+| 12 V light output | Protected MOSFET switch | Compact path for the believed 12 V, about 750 mA lift light | Confirm load type, inrush, and whether low-side switching is acceptable |
 
 ## Architecture Notes
 
@@ -70,12 +70,13 @@ Use optional QSPI NOR flash or SD only for noncritical bulk storage. A removable
 
 ### VFD Interface
 
-The old controller drove the VFD from `Serial1` directly at 9600 baud. Before finalizing the schematic, confirm whether the VFD serial pins are TTL-level, RS-232-like, RS-485-like, or a vendor-specific isolated logic port.
+The old controller drove the VFD from `Serial1` directly at 9600 baud. The VFD serial input is believed to be opto-isolated and to require more current than direct MCU GPIO can provide.
 
 Recommended default:
 
-- Include pads/footprint option for a digital isolator on VFD TX/RX.
-- Include series resistors and ESD protection.
+- Drive the VFD opto input with a transistor/MOSFET UART current driver, not a bare ESP32 pin.
+- Include resistor options to tune opto input current after bench testing.
+- Include series resistors, ESD protection, and a defined return/reference path.
 - Keep VFD serial routing away from mains/motor output wiring.
 - Add a hardware enable/stop path independent of serial commands if the VFD supports it.
 
@@ -111,7 +112,7 @@ If the control board fits inside the VFD housing, use a PCB-mount isolated AC/DC
 - Protective earth/chassis strategy.
 - Separate noisy/high-voltage area from SELV logic.
 
-Start with a 5 W budget check. If ESP32 Wi-Fi, RF receiver, MRAM, counter, isolator, and light-output control are the only loads, 5 W is likely enough. If external relays, sensors, or auxiliary outputs are added, revisit the power budget.
+Start with the RECOM `RAC10-12SK/277` 12 V, 10 W module as the baseline because it was used successfully in the previous accessory board and is listed by JLCPCB. The believed 12 V, about 750 mA lift light consumes most of that supply's continuous current rating, so future solenoids or auxiliary outputs require either a larger supply, a separate auxiliary supply, or an external output module.
 
 ## Open Decisions Before Schematic Capture
 

@@ -13,6 +13,7 @@ Planned WebUI areas:
 - RF remotes: pair, name, enable/disable, assign behavior, and view last received remote command.
 - Logs: recent events, faults, configuration changes, VFD alarms, resets, and exported CSV/JSON.
 - Maintenance: backup/restore configuration, firmware version, reset fault latch, reboot, and factory defaults.
+- Automation: local REST API documentation, API tokens, command audit log, and optional MQTT/Home Assistant settings.
 
 ## VFD Parameter Handling
 
@@ -124,3 +125,14 @@ Recommended log categories:
 
 The WebUI should export logs as CSV/JSON, but the internal format should stay compact binary.
 
+## Home Automation Path
+
+The baseline automation surface should be a local HTTP API with token authentication, explicit command endpoints, and read-only status endpoints. This keeps Google Home, Home Assistant, Node-RED, or another automation system outside the motion-control core.
+
+Recommended rev-A split:
+
+- REST API: always present for local status, logs, and guarded motion requests.
+- MQTT: optional firmware feature for Home Assistant discovery, status publishing, and command topics.
+- Google Home: integrate through Home Assistant or another local bridge first. Direct Google integration can be added later, but it adds cloud/account complexity and should not be required for lift operation.
+
+Any automation-originated motion request should be treated like a WebUI or RF request: authenticate it, log it, require normal motion prechecks, and reject it during service/fault/unknown-position states.

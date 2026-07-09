@@ -51,6 +51,7 @@
 - Motion and setup must not require cloud access.
 - Authenticated web access should be added before any production write operation.
 - RF remote pairing and program/service settings should be available from the web interface so the enclosure does not need extra physical buttons or switches for normal configuration.
+- Provide an automation path for local smart-home systems. The baseline should be a documented local REST API. An MQTT/Home Assistant integration can be added later for discovery and status entities. Cloud voice assistants such as Google Home should go through a local automation hub or explicit integration layer rather than bypassing the controller's authentication, logging, and motion prechecks.
 
 ## WebUI And Configuration
 
@@ -68,12 +69,15 @@
 - If the board is mounted inside the VFD housing, it may need to tap one 120 VAC leg for control power.
 - The power input should include appropriate fusing, surge protection, creepage/clearance, and an isolated AC/DC supply or approved enclosed module.
 - The previous design used an accessory board in the disconnect box with a 120 VAC to DC supply; this remains a fallback architecture if VFD-box space is too limited.
+- The previous accessory board used a RECOM `RAC10-12SK/277` 12 V, 10 W supply. This is a useful baseline because the lift light is believed to be 12 V at about 750 mA, but it leaves limited current margin if a solenoid output returns.
+- The first PCB should target roughly 3.5 in x 3.5 in with mounting holes near the corners. Exact mounting hole coordinates and keepouts can be revised after measuring the VFD housing.
+- Mains/control power should enter through a serviceable connector. Start with a screw terminal footprint; evaluate blade terminals if they improve cabinet wiring and safety clearances.
 - Mechanical design should account for service access, antenna placement, separation from VFD power wiring, connector strain relief, and safe separation between mains and SELV circuitry.
 
 ## RF Remote Input
 
 - The legacy RF receiver is believed to be a Linx RXM-418-LR module with existing remotes already available.
-- The new board should consider keeping a compatible 418 MHz receiver input path if the remote workflow is still desired.
+- The new board must keep a compatible 418 MHz receiver input path because the existing remotes remain part of the required user workflow.
 - Pairing, remote assignment, and enable/disable behavior should be managed through the local web interface rather than a dedicated program-mode switch.
 - RF commands must be treated like user requests, not safety signals; motion prechecks and interlocks still apply.
 
@@ -81,12 +85,13 @@
 
 - The old disconnect-box accessory board used 120 VAC, 10 A mechanical relays for solenoids, gate interlocks, controls, and lights.
 - If gate interlocks are not used, the new board should avoid carrying bulky relay channels just for legacy compatibility.
-- Retain at least one appropriately rated light-control output, either as a compact relay, SSR/triac output, or low-voltage output to an external relay module depending on the actual lighting load.
+- Retain at least one appropriately rated 12 V light-control output. A protected MOSFET output is the likely default if the light load is DC and shares the controller 12 V supply.
 - Any future gate/interlock control should be reviewed as part of the safety architecture and may require safety-rated hardware rather than general-purpose MCU-controlled relays.
 
 ## VFD Interface
 
 - The VFD UART should include protection and a defined ground/reference strategy.
+- The VFD serial input is opto-isolated but still uses standard UART framing. The new board must include a driver stage that can provide the required opto input current; direct MCU GPIO drive is not sufficient based on the old design experience.
 - Firmware should verify checksums for all VFD responses.
 - VFD monitor status should be polled during motion.
 - Stop should be layered: serial stop command plus a fail-safe hardware path where possible.

@@ -14,6 +14,7 @@ This folder holds local datasheet copies for the first-pass controller ICs and m
 | `TI_ISO1211_ISO1212_digital_input_receiver_datasheet.pdf` | Industrial input receiver | ISO1211DR / ISO1212 | https://www.ti.com/lit/ds/symlink/iso1211.pdf |
 | `Linx_RXM-418-LR_receiver_datasheet.pdf` | Legacy RF receiver | RXM-418-LR | https://datasheet.lcsc.com/datasheet/pdf/35ec37f75e2d2c95669ebbe0ea837597.pdf?productCode=C6670221 |
 | `Mornsun_LS05-13B05R3_ACDC_module_datasheet.pdf` | 120 VAC to 5 V supply reference | LS05-13B05R3 series | https://fiduspower.com/media/downloadable/files/attachment//l/s/ls05-13bxxr3.pdf |
+| `RECOM_RAC10-12SK277_ACDC_module_datasheet.pdf` | 120 VAC to 12 V supply | RAC10-12SK/277 | https://g.recomcdn.com/media/Datasheet/pdf/.fNZH1XvY/.t0407127c408a9a98940f/Datasheet-122/RAC10-K_277.pdf |
 | `Diodes_AP63200_AP63203_buck_datasheet.pdf` | 3.3 V buck regulator | AP63203WU-7 | https://datasheet.lcsc.com/datasheet/pdf/94820cc9e44613233ddcc1a15801eca3.pdf?productCode=C2071868 |
 | `TI_SN74LVC2G17_schmitt_buffer_datasheet.pdf` | Encoder input conditioning | SN74LVC2G17DBVR | https://www.ti.com/lit/ds/symlink/sn74lvc2g17.pdf |
 | `LiteOn_MOC3063S_optotriac_datasheet.pdf` | AC light output driver | MOC3063S-TA1 | https://dfsimg1.hqewimg.com/group5/M00/17/1F/wKhk3WYsy4-ACPLCAAL-o50Ymog025.pdf |
@@ -22,5 +23,6 @@ This folder holds local datasheet copies for the first-pass controller ICs and m
 ## Notes
 
 - The preferred MRAM candidate is currently Siproin `PM004MNIATR`, because it has a strong LCSC path and is much cheaper than the Everspin fallback.
-- The AC/DC PDF is for the LS05-13B05R3 series reference design. LCSC currently lists a `DEXU Electronics LS05-13B05R3` candidate; verify the final selected supplier datasheet before releasing mains layout.
+- The RECOM `RAC10-12SK/277` is now the baseline AC/DC supply because the old accessory board used it and JLCPCB lists it as assembly part `C5199922`.
+- The LS05-13B05R3 PDF remains a 5 V fallback reference. LCSC currently lists a `DEXU Electronics LS05-13B05R3` candidate; verify the final selected supplier datasheet before releasing mains layout.
 - The optotriac and MAX3485 PDFs were downloaded from alternate direct PDF mirrors because the vendor/LCSC direct links did not download cleanly in this environment.
