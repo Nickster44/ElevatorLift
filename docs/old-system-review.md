@@ -55,6 +55,8 @@ When moving to a saved floor:
 4. When the current position reaches the stopping threshold or the remaining distance is less than the threshold, it calls `callStop()`.
 5. `stopFunc()` sends `(3)84` every 50 ms until it sees a stop acknowledgment or reaches 20 tries.
 
+The old program-mode exit also performed a practical stop-distance calibration. After floor positions were set, the controller ran toward whichever end of travel was farther away, allowed the lift to reach normal speed for a few seconds, commanded a stop, measured the difference between the stop-command position and final stopped position, and saved that measured deceleration travel as the calibration value. This worked well enough that the redesign should keep the same measured stop-distance concept, but store the result in MRAM with validation metadata.
+
 ## VFD Initialization Seen In Setup
 
 The sketch writes these commands at boot:

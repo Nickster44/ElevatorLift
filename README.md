@@ -24,6 +24,7 @@ docs/
   hardware-requirements-matrix.md   Schematic-facing hardware requirements
   hardware-selection.md             First-pass hardware IC/module candidates
   jlcpcb-lcsc-sourcing.md           JLCPCB/LCSC-oriented major part matrix
+  motion-control-and-calibration.md Motion strategy and measured stop calibration
   old-system-review.md              Existing firmware/hardware behavior and risks
   vfd-serial-protocol.md            Extracted EM01 serial protocol notes
   new-controller-requirements.md    Hardware and firmware requirements draft
@@ -56,6 +57,7 @@ Known design constraints captured so far:
 - The lift light is believed to be 12 V at about 750 mA, so the 10 W supply is tight if future solenoids are added.
 - Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
 - Web assets and noncritical long logs should use MCU flash/LittleFS first, with optional QSPI NOR storage if the WebUI grows.
+- Motion control should stay with measured deceleration-distance stopping, not PID. Calibration should measure actual stop distance after leaving program mode and save that value for future prediction stops.
 
 ## Old System Summary
 
@@ -77,6 +79,8 @@ The old sketch used these major I/O groups:
 | USB debug | `Serial`, 115200 baud | Diagnostics |
 
 The original firmware stored floor positions and stopping thresholds in EEPROM. The live position was only held in RAM except when calibration values were saved. Motion was controlled by sending repeated VFD run commands until the calculated stopping point was reached, then sending repeated stop commands until a stop acknowledgment was seen or a retry counter expired.
+
+The old calibration workflow set floor positions in program mode, then on exit ran toward whichever end of travel was farther away, allowed the lift to reach speed, commanded a stop, measured the coast/deceleration distance, and saved that value as the stop calibration. The redesign should retain this measured stop-distance concept while storing it more robustly in MRAM.
 
 ## Observed Risk Areas In The Old Firmware
 
@@ -172,9 +176,10 @@ When the old lift system can be inspected in person, verify these items before f
 2. Define the first-pass connector map from the old wiring assumptions and the physical verification checklist.
 3. Bench-test the VFD opto UART driver current and polarity before connecting to the real lift.
 4. Define the MRAM data layout for position snapshots, settings, VFD parameter cache, remote registry, and event logs.
-5. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.
-6. Build a bench VFD serial simulator before testing motion logic on a real lift.
-7. Add authentication/API tokens before any production WebUI or automation write operation.
+5. Implement the program-mode exit calibration workflow that measures and stores stop distance.
+6. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.
+7. Build a bench VFD serial simulator before testing motion logic on a real lift.
+8. Add authentication/API tokens before any production WebUI or automation write operation.
 
 ## Build The Starter Firmware
 

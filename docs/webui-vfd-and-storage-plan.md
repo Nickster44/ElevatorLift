@@ -7,7 +7,7 @@ The WebUI should become the primary setup and service tool. Physical buttons and
 Planned WebUI areas:
 
 - Live status: position, target, state, VFD output frequency, current, bus voltage, temperature, safety inputs, limits, RF status, and last fault.
-- Motion settings: normal run speed, service jog speed, stop offsets, floor positions, acceleration/deceleration policy, and homing behavior.
+- Motion settings: normal run speed, service jog speed, measured stop-distance calibration, floor positions, acceleration/deceleration policy, and homing behavior.
 - VFD parameters: read all supported EM01 parameters, edit writeable parameters with range checks, and show raw protocol values.
 - Load/weight limiting: expose VFD current limit/current-related settings as a controlled user-facing limit after bench validation.
 - RF remotes: pair, name, enable/disable, assign behavior, and view last received remote command.
@@ -39,6 +39,7 @@ Some settings should remain local controller variables rather than VFD parameter
 - Floor positions.
 - Stop offset/calibration table.
 - Homing speed and homing timeout.
+- Measured stop-distance calibration value and the VFD/speed settings it was calibrated against.
 - RF remote assignments.
 - AP/station network settings.
 - Log retention/export settings.
@@ -122,6 +123,7 @@ Recommended log categories:
 - WebUI login/config change.
 - VFD parameter read/write.
 - Network connection state changes.
+- Calibration started/completed/failed/stale.
 
 The WebUI should export logs as CSV/JSON, but the internal format should stay compact binary.
 
@@ -136,3 +138,9 @@ Recommended rev-A split:
 - Google Home: integrate through Home Assistant or another local bridge first. Direct Google integration can be added later, but it adds cloud/account complexity and should not be required for lift operation.
 
 Any automation-originated motion request should be treated like a WebUI or RF request: authenticate it, log it, require normal motion prechecks, and reject it during service/fault/unknown-position states.
+
+## Stop Calibration Workflow
+
+The WebUI/service workflow should retain the old measured stop-distance approach. After the user exits floor-position programming, the controller should choose the longer safe travel direction toward the top or bottom floor, command normal run long enough to reach speed, issue a stop, measure the distance between the stop command position and the final stopped position, and store that as the stop offset.
+
+The saved calibration should record the run speed and VFD deceleration parameter used for the measurement. Changing either setting should mark the calibration stale and require a new measurement before normal automatic operation.

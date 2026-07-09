@@ -35,6 +35,7 @@ This matrix converts the project goals into schematic-facing requirements. `TBD`
 | VFD-001 | Serial control | Send EM01 run/stop/monitor/get/set commands into VFD opto-isolated serial input | UART transistor/opto-drive interface with current set for the VFD input LED; protected receive path | 9600 baud standard UART framing; direct MCU drive previously did not source/sink enough opto input current | Determine required VFD input current from manual/bench test and choose driver resistor values |
 | VFD-002 | Hardware stop/enable | Remove motion authority independent of serial if available | VFD enable/stop terminal driver | Must fail safe on reset/watchdog | Confirm VFD terminal functions |
 | VFD-003 | Parameter access | WebUI read/write of all documented parameters | Firmware metadata table and range checks | Stopped-only writes, read-back verify | Validate parameter 13 ambiguity on real drive |
+| VFD-004 | Stop calibration dependency | Track VFD deceleration parameter used during measured stop calibration | Calibration metadata in MRAM | Deceleration changes invalidate stop offset | Confirm exact VFD deceleration parameter behavior on real drive |
 
 ## Nonvolatile Storage
 
@@ -44,6 +45,7 @@ This matrix converts the project goals into schematic-facing requirements. `TBD`
 | MEM-002 | Web assets | Store richer WebUI files if needed | MCU flash/LittleFS or W25Q128JV QSPI NOR | Avoid using MRAM for large static assets | Decide optional QSPI footprint |
 | MEM-003 | Long logs | Store extended downloadable history | Optional QSPI flash or microSD | Removable media reliability if SD | Decide if SD footprint is worth board space |
 | MEM-004 | Timekeeping | Timestamp logs without cloud dependency | RV-3028-C7 RTC | Battery/supercap, I2C bus | Decide RTC backup source |
+| MEM-005 | Stop calibration | Store measured deceleration travel distance and settings used for calibration | MRAM record with sequence and CRC | Must survive power loss and detect stale calibration | Decide single global offset versus direction/speed-specific offsets after testing |
 
 ## Connectivity And RF
 

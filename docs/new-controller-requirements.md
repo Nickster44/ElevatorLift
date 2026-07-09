@@ -11,6 +11,9 @@
 - Any unexpected movement while idle should fault.
 - Lack of expected encoder movement while commanding motion should fault.
 - Stop timeout should fault if the VFD does not acknowledge or monitor as stopped.
+- Primary floor stopping should use a measured deceleration-distance offset, not a PID position loop.
+- Calibration mode should preserve the old behavior: after floor positions are set and program mode exits, run toward the farther top/bottom end, reach normal speed, command stop, measure actual stop distance, and save that calibration value.
+- If VFD deceleration, max frequency, normal run speed, or encoder scaling changes, the stop-distance calibration should be marked stale or require recalibration.
 
 ## Position Sensing
 
@@ -62,6 +65,7 @@
 - Lift run speed should be stored as a local controller setting and translated into VFD run commands during motion.
 - Current/overload VFD settings may be used for a configurable load-limit feature after calibration, but should not be presented as a certified weight measurement.
 - The WebUI should support configuration backup/restore and a factory-default reset path.
+- The WebUI should support entering/exiting calibration mode, setting floor positions, starting the measured stop-distance calibration, viewing the saved calibration value, and warning when calibration is stale.
 
 ## Power And Mechanical Placement
 
