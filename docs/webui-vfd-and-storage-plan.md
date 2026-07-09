@@ -134,8 +134,9 @@ The baseline automation surface should be a local HTTP API with token authentica
 Recommended rev-A split:
 
 - REST API: always present for local status, logs, and guarded motion requests.
-- MQTT: optional firmware feature for Home Assistant discovery, status publishing, and command topics.
-- Google Home: integrate through Home Assistant or another local bridge first. Direct Google integration can be added later, but it adds cloud/account complexity and should not be required for lift operation.
+- Home Assistant bridge: recommended hub for scripts/buttons, Google Home exposure, mobile/watch access, and future automations.
+- MQTT: optional firmware feature for Home Assistant discovery, status publishing, and command topics after REST is stable.
+- Google Home: integrate through Home Assistant first. Direct Google integration can be added later, but it adds cloud/account complexity and should not be required for lift operation.
 
 Any automation-originated motion request should be treated like a WebUI or RF request: authenticate it, log it, require normal motion prechecks, and reject it during service/fault/unknown-position states.
 

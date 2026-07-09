@@ -10,6 +10,7 @@ struct FloorTarget {
 
 namespace LiftConfig {
 
+constexpr const char* Hostname = "lift";
 constexpr uint32_t VfdBaud = 9600;
 constexpr uint32_t VfdCommandRefreshMs = 100;
 constexpr uint32_t StopRetryMs = 100;
@@ -29,4 +30,3 @@ constexpr FloorTarget DefaultFloors[] = {
 constexpr size_t FloorCount = sizeof(DefaultFloors) / sizeof(DefaultFloors[0]);
 
 }  // namespace LiftConfig
-

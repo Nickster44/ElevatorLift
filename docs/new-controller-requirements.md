@@ -54,7 +54,7 @@
 - Motion and setup must not require cloud access.
 - Authenticated web access should be added before any production write operation.
 - RF remote pairing and program/service settings should be available from the web interface so the enclosure does not need extra physical buttons or switches for normal configuration.
-- Provide an automation path for local smart-home systems. The baseline should be a documented local REST API. An MQTT/Home Assistant integration can be added later for discovery and status entities. Cloud voice assistants such as Google Home should go through a local automation hub or explicit integration layer rather than bypassing the controller's authentication, logging, and motion prechecks.
+- Provide an automation path for local smart-home systems. The baseline should be a documented local REST API with token-protected write endpoints and mDNS hostname support. MQTT/Home Assistant discovery can be added later for status entities and command topics. Cloud voice assistants such as Google Home should go through Home Assistant or another local automation hub rather than bypassing the controller's authentication, logging, and motion prechecks.
 
 ## WebUI And Configuration
 

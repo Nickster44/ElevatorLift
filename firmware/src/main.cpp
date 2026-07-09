@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <cstring>
+#include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFi.h>
 
+#include "ApiAuth.h"
 #include "EventLog.h"
 #include "LiftConfig.h"
 #include "LiftSettings.h"
@@ -65,6 +67,7 @@ bool lastButtonBottom = false;
 bool lastButtonLeft = false;
 bool lastButtonCenter = false;
 bool fallbackApEnabled = false;
+bool mdnsStarted = false;
 bool restartRequested = false;
 
 void IRAM_ATTR onUpPulse() {
@@ -282,6 +285,27 @@ void startFallbackAp() {
   Serial.println(WiFi.softAPIP());
 }
 
+void serviceMdns() {
+  if (mdnsStarted) {
+    return;
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  if (!MDNS.begin(LiftConfig::Hostname)) {
+    Serial.println("mDNS start failed");
+    return;
+  }
+
+  MDNS.addService("http", "tcp", 80);
+  mdnsStarted = true;
+  Serial.print("mDNS hostname: ");
+  Serial.print(LiftConfig::Hostname);
+  Serial.println(".local");
+}
+
 String jsonNetworkStatus() {
   String json = "{";
   json += "\"stationConfigured\":";
@@ -298,11 +322,19 @@ String jsonNetworkStatus() {
   json += networkSettings.apSsid;
   json += "\",\"apIp\":\"";
   json += fallbackApEnabled ? WiFi.softAPIP().toString() : "";
-  json += "\"}";
+  json += "\",\"hostname\":\"";
+  json += LiftConfig::Hostname;
+  json += ".local";
+  json += "\",\"writeAuthRequired\":";
+  json += ApiAuth::tokenConfigured() ? "true" : "false";
+  json += "}";
   return json;
 }
 
 void setupWebServer() {
+  const char* authHeaders[] = {ApiAuth::TokenHeader};
+  server.collectHeaders(authHeaders, 1);
+
   server.on("/", HTTP_GET, []() {
     String html =
         "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
@@ -332,6 +364,11 @@ void setupWebServer() {
   });
 
   server.on("/api/settings", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     LiftSettingsData updated = liftSettings;
 
     if (server.hasArg("normalRunTenthsHz")) {
@@ -411,6 +448,11 @@ void setupWebServer() {
   });
 
   server.on("/api/vfd/parameter", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     if (motionState != MotionState::Idle) {
       server.send(409, "application/json", "{\"error\":\"lift_must_be_idle\"}");
       return;
@@ -451,6 +493,11 @@ void setupWebServer() {
   });
 
   server.on("/api/network", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     if (!server.hasArg("ssid")) {
       server.send(400, "application/json", "{\"error\":\"missing_ssid\"}");
       return;
@@ -470,12 +517,22 @@ void setupWebServer() {
   });
 
   server.on("/api/reboot", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     restartRequested = true;
     restartAtMs = millis() + 1000;
     server.send(202, "application/json", "{\"rebooting\":true}");
   });
 
   server.on("/api/move", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     if (!server.hasArg("floor")) {
       server.send(400, "application/json", "{\"error\":\"missing_floor\"}");
       return;
@@ -490,6 +547,11 @@ void setupWebServer() {
   });
 
   server.on("/api/stop", HTTP_POST, []() {
+    if (!ApiAuth::requestAuthorized(server)) {
+      ApiAuth::sendUnauthorized(server);
+      return;
+    }
+
     beginStopping();
     server.send(202, "application/json", jsonStatus());
   });
@@ -500,6 +562,7 @@ void setupWebServer() {
 void setupWiFi() {
   loadNetworkSettings();
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname(LiftConfig::Hostname);
 
   if (strlen(networkSettings.staSsid) > 0) {
     WiFi.begin(networkSettings.staSsid, networkSettings.staPassword);
@@ -687,6 +750,7 @@ void setup() {
 
   setupWiFi();
   setupWebServer();
+  serviceMdns();
   initializeVfd();
   eventLog.append(EventCode::Boot, static_cast<int32_t>(storedState.bootCount));
 
@@ -699,6 +763,7 @@ void setup() {
 void loop() {
   server.handleClient();
   serviceWiFi();
+  serviceMdns();
   serviceVfdRx();
   serviceButtons();
   serviceMotion();

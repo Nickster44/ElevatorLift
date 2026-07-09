@@ -23,6 +23,7 @@ _old_resources/
 docs/
   hardware-requirements-matrix.md   Schematic-facing hardware requirements
   hardware-selection.md             First-pass hardware IC/module candidates
+  home-automation-integration.md    Local REST/Home Assistant/Google Home bridge plan
   jlcpcb-lcsc-sourcing.md           JLCPCB/LCSC-oriented major part matrix
   motion-control-and-calibration.md Motion strategy and measured stop calibration
   old-system-review.md              Existing firmware/hardware behavior and risks
@@ -57,6 +58,7 @@ Known design constraints captured so far:
 - The lift light is believed to be 12 V at about 750 mA, so the 10 W supply is tight if future solenoids are added.
 - Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
 - Web assets and noncritical long logs should use MCU flash/LittleFS first, with optional QSPI NOR storage if the WebUI grows.
+- Outside control should use local REST first, optional MQTT later, and Home Assistant as the recommended bridge to Google Home, watches, and broader automation.
 - Motion control should stay with measured deceleration-distance stopping, not PID. Calibration should measure actual stop distance after leaving program mode and save that value for future prediction stops.
 
 ## Old System Summary
@@ -131,7 +133,7 @@ Fallback AP credentials are configured from `firmware/include/Secrets.h`, which 
 
 Planned WebUI expansion includes local lift settings, RF pairing, VFD parameter read/write, current-limit/load-limit tuning, configuration backup/restore, and log export.
 
-The preferred home-automation path is local REST API first, with optional MQTT/Home Assistant support later. Google Home should integrate through a local bridge or explicit integration layer rather than bypassing the controller's authentication, logging, and motion prechecks.
+The preferred home-automation path is local REST API first, optional MQTT later, and Home Assistant as the bridge to Google Home. Google Home should not talk directly to the lift controller or bypass the controller's authentication, logging, and motion prechecks.
 
 ## Hardware Architecture Draft
 

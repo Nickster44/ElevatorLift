@@ -32,9 +32,12 @@ Copy `include/Secrets.example.h` to `include/Secrets.h` only if you want to chan
 #pragma once
 #define WIFI_AP_SSID "LiftControllerSetup"
 #define WIFI_AP_PASSWORD "change-me-1234"
+#define LIFT_API_TOKEN ""
 ```
 
 `Secrets.h` is intentionally ignored by Git.
+
+If `LIFT_API_TOKEN` is blank, write endpoints are open for development. For production or home automation testing, set a long random token and send it as the `X-Lift-Api-Token` HTTP header on write commands. The controller also advertises `lift.local` by mDNS where supported by the network.
 
 ## Build
 
@@ -59,12 +62,14 @@ pio run
 
 Future API work should include token authentication, an automation-safe local REST surface, and optional MQTT/Home Assistant integration. Any WebUI, RF, or automation motion request must pass the same motion prechecks and be logged.
 
+Write endpoints currently support optional API-token enforcement through the `X-Lift-Api-Token` header. REST is the first home automation interface; MQTT/Home Assistant discovery is planned as a later optional layer.
+
 ## Current Limitations
 
 - `PositionStore` uses ESP32 NVS as a placeholder; replace it with an MRAM-backed implementation for the selected Siproin `PM004MNIATR` or compatible SPI MRAM.
 - Position input is still represented by provisional interrupt pins; replace it with an LS7366R-backed position service.
 - Pin assignments are placeholders.
-- Web write endpoints have no authentication yet.
+- Web write endpoints only have optional build-time token authentication so far; final production auth should move to configurable MRAM-backed credentials/API tokens.
 - Network settings use ESP32 NVS for now; final settings should move to the MRAM configuration store.
 - VFD parameter reads/writes send protocol commands and return pending read-back status; complete frame parsing and cache persistence are still TODO.
 - `EventLog` is an in-memory scaffold; final recent logs should move to MRAM.
