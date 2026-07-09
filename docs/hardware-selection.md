@@ -10,7 +10,7 @@ Build the first board around:
 - SPI quadrature counter IC.
 - SPI MRAM for critical state and recent logs.
 - Optional external flash footprint for WebUI assets/OTA/longer logs.
-- Isolated/protected VFD UART.
+- UART driver for the VFD opto-isolated serial input, plus receive protection.
 - Conditioned open-collector encoder input path.
 - Local fallback AP Wi-Fi setup flow.
 - 120 VAC to isolated DC power module if the board fits inside the VFD housing.
@@ -116,13 +116,13 @@ Start with the RECOM `RAC10-12SK/277` 12 V, 10 W module as the baseline because 
 
 ## Open Decisions Before Schematic Capture
 
-1. Confirm exact VFD serial electrical interface.
+1. Bench-confirm VFD serial opto input current, polarity, and receive output level.
 2. Measure available space and mounting options inside the VFD housing.
 3. Confirm available 120 VAC tap point and grounding/chassis strategy.
-4. Confirm exact encoder model, supply voltage, cable length, and pullup voltage.
+4. Confirm exact encoder model, cable length, and pullup implementation on the old board.
 5. Confirm whether existing button/safety/home/limit wiring is low voltage, 24 V, or 120 VAC.
-6. Confirm lift light voltage, current, and load type.
-7. Decide whether RXM-418-LR compatibility is mandatory on revision A.
+6. Confirm lift light voltage, current, inrush, and load type.
+7. Confirm RXM-418-LR receiver wiring, antenna, and remote encoding behavior.
 8. Decide whether to include optional QSPI flash, microSD footprint, or both.
 9. Decide how much board area can be reserved for isolation/protection versus compactness.
 

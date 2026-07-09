@@ -2,6 +2,8 @@
 
 This is a PlatformIO starter firmware for an ESP32-S3 reference target. It is intended to prove the controller architecture before the final KiCad board is selected.
 
+The current hardware direction is ESP32-S3-WROOM-1U with an LS7366R quadrature counter, SPI MRAM, RXM-418-LR RF receiver input, local AP/station Wi-Fi, and a VFD UART driver that can source/sink enough current for the VFD opto-isolated serial input.
+
 ## Files
 
 | File | Purpose |
@@ -53,13 +55,17 @@ pio run
 - `POST /api/move?floor=N`
 - `POST /api/stop`
 
+Future API work should include token authentication, an automation-safe local REST surface, and optional MQTT/Home Assistant integration. Any WebUI, RF, or automation motion request must pass the same motion prechecks and be logged.
+
 ## Current Limitations
 
-- `PositionStore` uses ESP32 NVS as a placeholder; replace it with an MRAM-backed implementation once the MRAM part is selected.
-- Position input is still represented by provisional interrupt pins until the quadrature counter IC is selected.
+- `PositionStore` uses ESP32 NVS as a placeholder; replace it with an MRAM-backed implementation for the selected Siproin `PM004MNIATR` or compatible SPI MRAM.
+- Position input is still represented by provisional interrupt pins; replace it with an LS7366R-backed position service.
 - Pin assignments are placeholders.
 - Web write endpoints have no authentication yet.
 - Network settings use ESP32 NVS for now; final settings should move to the MRAM configuration store.
 - VFD parameter reads/writes send protocol commands and return pending read-back status; complete frame parsing and cache persistence are still TODO.
 - `EventLog` is an in-memory scaffold; final recent logs should move to MRAM.
+- RF receive, pairing, and remote registry support are not implemented yet, but RXM-418-LR compatibility is required.
+- Home automation is not implemented yet; the preferred path is local REST first, optional MQTT/Home Assistant later.
 - The motion constants are placeholders and must not be used on real hardware.

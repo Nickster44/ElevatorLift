@@ -24,4 +24,14 @@ This folder is the hardware design workspace. The current files are a KiCad 10 s
 
 ## Before Schematic Capture
 
-Resolve the open questions in `docs/hardware-requirements-matrix.md`, especially VFD serial electrical levels, field input voltages, VFD-box mounting space, encoder supply/pullups, and light load details.
+Use `docs/hardware-requirements-matrix.md` and the main README physical verification checklist as the source of truth. The current schematic assumptions are:
+
+- Target PCB outline: provisional 3.5 in x 3.5 in.
+- Main supply: 120 VAC input to RECOM `RAC10-12SK/277` 12 V module.
+- Logic supply: 3.3 V buck from 12 V.
+- VFD serial: 9600 baud UART into opto-isolated VFD input with a transistor/MOSFET current driver.
+- Encoder: SKF-style 5 V open-collector quadrature, starting with 270 ohm pullups and protected/conditioned inputs.
+- RF: RXM-418-LR receiver path is mandatory.
+- Light output: protected 12 V MOSFET output, pending final load verification.
+
+Still confirm field input voltages, exact VFD-box mounting geometry, VFD opto input current, light inrush/load type, and old-board IC markings before final schematic release.

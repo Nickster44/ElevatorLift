@@ -25,4 +25,5 @@ This folder holds local datasheet copies for the first-pass controller ICs and m
 - The preferred MRAM candidate is currently Siproin `PM004MNIATR`, because it has a strong LCSC path and is much cheaper than the Everspin fallback.
 - The RECOM `RAC10-12SK/277` is now the baseline AC/DC supply because the old accessory board used it and JLCPCB lists it as assembly part `C5199922`.
 - The LS05-13B05R3 PDF remains a 5 V fallback reference. LCSC currently lists a `DEXU Electronics LS05-13B05R3` candidate; verify the final selected supplier datasheet before releasing mains layout.
+- The datasheet library does not yet include every small discrete part. Add local datasheets once the VFD opto driver transistor/MOSFET, 12 V light MOSFET, fuses, surge parts, TVS arrays, connectors, and level shifters are selected for schematic capture.
 - The optotriac and MAX3485 PDFs were downloaded from alternate direct PDF mirrors because the vendor/LCSC direct links did not download cleanly in this environment.

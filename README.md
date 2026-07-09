@@ -35,11 +35,27 @@ firmware/
   include/
   src/
 hardware/
-  ElevatorLift.kicad_pro            KiCad project shell
+  ElevatorLift.kicad_pro            KiCad 10 project shell
   ElevatorLift.kicad_sch            Root schematic shell
-  ElevatorLift.kicad_pcb            Empty PCB shell
+  ElevatorLift.kicad_pcb            PCB shell with provisional 3.5 in x 3.5 in outline and corner mounting holes
   architecture-blocks.md            Block-level hardware architecture notes
 ```
+
+## Current Design Knowledge
+
+The current hardware direction is an ESP32-S3-WROOM-1U controller board in the VFD enclosure, using a self-hosted Wi-Fi AP as the primary service path and optional station Wi-Fi for local-network access. Ethernet is not a near-term requirement.
+
+Known design constraints captured so far:
+
+- KiCad 10.0.4 is the active hardware design version.
+- Target PCB envelope is provisionally 3.5 in x 3.5 in with corner mounting holes.
+- VFD serial is standard 9600 baud UART framing, but the VFD input is opto-isolated and needs a driver stage with enough current for the opto input.
+- Encoder is believed to be the SKF Hall/open-collector quadrature unit. The datasheet recommends 270 ohm pullups at 5 V.
+- Legacy Linx/TE RXM-418-LR 418 MHz RF remote support is mandatory.
+- Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, because the previous accessory board used it and JLCPCB lists it as assembly part `C5199922`.
+- The lift light is believed to be 12 V at about 750 mA, so the 10 W supply is tight if future solenoids are added.
+- Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
+- Web assets and noncritical long logs should use MCU flash/LittleFS first, with optional QSPI NOR storage if the WebUI grows.
 
 ## Old System Summary
 
@@ -111,33 +127,54 @@ Fallback AP credentials are configured from `firmware/include/Secrets.h`, which 
 
 Planned WebUI expansion includes local lift settings, RF pairing, VFD parameter read/write, current-limit/load-limit tuning, configuration backup/restore, and log export.
 
+The preferred home-automation path is local REST API first, with optional MQTT/Home Assistant support later. Google Home should integrate through a local bridge or explicit integration layer rather than bypassing the controller's authentication, logging, and motion prechecks.
+
 ## Hardware Architecture Draft
 
 The next board should be designed around these blocks:
 
-- MCU/module with Wi-Fi AP and station support.
-- Compact isolated 120 VAC to DC power supply or equivalent VFD-box power strategy.
-- Isolated or protected UART interface to the VFD.
-- Quadrature counter IC on SPI or parallel bus.
-- Encoder input conditioning for open-collector quadrature outputs.
-- SPI MRAM for live position snapshots, settings, event logs, and fault records.
-- Optional external flash or SD storage for long-term logs, rich WebUI assets, and exported data.
+- ESP32-S3-WROOM-1U or equivalent external-antenna Wi-Fi module.
+- Fused 120 VAC input and isolated 12 V supply, currently centered on RECOM `RAC10-12SK/277`.
+- 3.3 V buck regulation from the 12 V rail.
+- UART opto-input driver and protected VFD receive path.
+- LS7366R SPI quadrature counter.
+- Encoder input conditioning for 5 V open-collector quadrature outputs.
+- SPI MRAM for live position snapshots, settings, recent event logs, and fault records.
+- Optional QSPI NOR flash for WebUI assets, OTA staging, noncritical logs, and exported data.
 - Hardware safety chain independent of application firmware.
 - VFD enable/stop/brake control path that fails safe on MCU reset or watchdog timeout.
 - Protected digital inputs for call buttons, RF receiver, limit switches, home switch, and safety loop.
-- Compact protected outputs for lights and any retained interlock/control loads.
+- Mandatory RXM-418-LR RF receiver path.
+- Protected 12 V MOSFET light output and optional low-voltage auxiliary output header.
 - Watchdog and brownout detection.
 - Surge/ESD/EMI protection suitable for outdoor wiring and a VFD enclosure.
 
+## Physical Verification Checklist
+
+When the old lift system can be inspected in person, verify these items before final schematic release:
+
+1. VFD enclosure space: usable width, height, depth, door clearance, standoff height, wire-bend clearance, airflow, and any metal keepouts.
+2. Mounting pattern: old controller board size, exact mounting hole coordinates, screw size, chassis/standoff material, and whether the provisional 3.5 in x 3.5 in PCB fits.
+3. Old controller hardware: photograph both sides of the Particle/Xenon board and accessory Nano board, record IC markings, regulator parts, RF receiver wiring, level-shifting parts, optocouplers, drivers, relay part numbers, fuses, MOVs, terminal blocks, and any bodge wiring.
+4. VFD serial interface: terminal labels, idle voltage, common/reference pin, opto input current requirement, polarity, receive output level, cable length, and whether the old board used any transistor/resistor stage between MCU UART and the VFD.
+5. Power input: where 120 VAC can be tapped, whether it is upstream/downstream of the disconnect, available neutral, protective earth/chassis connection, fuse location, wire gauge, and connector style.
+6. Existing 12 V loads: light voltage/current, inrush behavior, shared return path, connector type, and whether any solenoid/interlock output still needs power.
+7. Encoder wiring: exact encoder model label, supply voltage at the encoder, A/B idle voltage, pullup location/value, cable length/shielding, connector pinout, and maximum observed pulse rate.
+8. Button, home, limit, and safety wiring: voltage levels, normally-open/normally-closed behavior, whether contacts are dry or powered, cable routing, and what is hardwired versus MCU-only.
+9. RF system: confirm receiver module marking, antenna type/location, data output idle level, remote count, remote button mapping, and pairing/encoding behavior.
+10. Grounding and EMI: cabinet earth strategy, shield terminations, VFD motor lead routing, separation between mains/motor wiring and control wiring, and any existing noise filters.
+11. VFD parameters: dump or photograph current drive parameters, especially acceleration, deceleration, max frequency, current/overload settings, serial timeout, and any stop/enable terminal configuration.
+12. Safety devices: identify final limits, emergency stop, gate/latch devices, brakes, and any non-MCU circuits that remove motion authority.
+
 ## Near-Term Project Plan
 
-1. Confirm the mechanical/electrical safety chain and what must remain hardwired.
-2. Identify the existing encoder or sensor output type and choose the quadrature counter IC.
-3. Choose the MRAM part and define the data layout for current position, floor targets, network settings, and logs.
-4. Decide whether the final board should use an ESP32-S3 module, another Wi-Fi MCU/module, or a two-MCU split.
-5. Build a bench VFD serial simulator before testing on a real lift.
-6. Port the starter state machine to the chosen hardware pinout and counter/MRAM drivers.
-7. Begin the KiCad schematic with connector definitions, power tree, isolation/protection, and safety wiring.
+1. Create the KiCad schematic pages for power, MCU, VFD interface, encoder/counter, storage, RF/inputs, and light output.
+2. Define the first-pass connector map from the old wiring assumptions and the physical verification checklist.
+3. Bench-test the VFD opto UART driver current and polarity before connecting to the real lift.
+4. Define the MRAM data layout for position snapshots, settings, VFD parameter cache, remote registry, and event logs.
+5. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.
+6. Build a bench VFD serial simulator before testing motion logic on a real lift.
+7. Add authentication/API tokens before any production WebUI or automation write operation.
 
 ## Build The Starter Firmware
 
