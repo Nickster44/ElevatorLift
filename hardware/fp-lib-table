@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+
+  (lib (name "SnapEDA") (type "KiCad") (uri "${KIPRJMOD}/SnapEDA-Library/Footprints.pretty") (options "") (descr ""))
+  (lib (name "ElevatorLift_Custom") (type "KiCad") (uri "${KIPRJMOD}/ElevatorLift_Custom.pretty") (options "") (descr "")))

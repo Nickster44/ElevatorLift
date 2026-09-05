@@ -140,7 +140,7 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.0,
+        "min_clearance": 0.2,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
@@ -155,7 +155,7 @@
         "min_through_hole_diameter": 0.3,
         "min_track_width": 0.2,
         "min_via_annular_width": 0.1,
-        "min_via_diameter": 0.5,
+        "min_via_diameter": 0.6,
         "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
       },
@@ -203,7 +203,14 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0,
+        0.2,
+        0.25,
+        0.5,
+        0.8,
+        1.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -230,7 +237,24 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        },
+        {
+          "diameter": 0.6,
+          "drill": 0.3
+        },
+        {
+          "diameter": 0.8,
+          "drill": 0.4
+        },
+        {
+          "diameter": 1.0,
+          "drill": 0.5
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -240,7 +264,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": ""
+      "sch_revision": "A0"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -511,6 +535,39 @@
         "via_diameter": 0.8,
         "via_drill": 0.4,
         "wire_width": 6
+      },
+      {
+        "clearance": 3.2,
+        "name": "MAINS",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 1.0,
+        "tuning_profile": "",
+        "via_diameter": 1.2,
+        "via_drill": 0.6
+      },
+      {
+        "clearance": 0.2,
+        "name": "SELV_POWER",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.8,
+        "tuning_profile": "",
+        "via_diameter": 1.0,
+        "via_drill": 0.5
+      },
+      {
+        "clearance": 0.2,
+        "name": "USB_DIFF",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": -1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.7,
+        "via_drill": 0.3
       }
     ],
     "meta": {
@@ -518,7 +575,108 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "MAINS",
+        "pattern": "AC_L_RAW"
+      },
+      {
+        "netclass": "MAINS",
+        "pattern": "AC_L_FUSED"
+      },
+      {
+        "netclass": "MAINS",
+        "pattern": "AC_N"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "+12V"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "+5V"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "+3V3"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "MAIN_5V_RAW"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "USB_VBUS_5V"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "LIGHT_SUPPLY_RAW"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "LIGHT_12V_FUSED"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "AUX_12V_FUSED"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "EXT_LIGHT_12V"
+      },
+      {
+        "netclass": "USB_DIFF",
+        "pattern": "USB_D+"
+      },
+      {
+        "netclass": "USB_DIFF",
+        "pattern": "USB_D-"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/Power/MAIN_5V_RAW"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/MCU_Storage/USB_VBUS_5V"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/IO/LIGHT_SUPPLY_RAW"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/IO/LIGHT_12V_FUSED"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/IO/AUX_12V_FUSED"
+      },
+      {
+        "netclass": "SELV_POWER",
+        "pattern": "/IO/EXT_LIGHT_12V"
+      },
+      {
+        "netclass": "USB_DIFF",
+        "pattern": "/MCU_Storage/USB_D+"
+      },
+      {
+        "netclass": "USB_DIFF",
+        "pattern": "/MCU_Storage/USB_D-"
+      },
+      {
+        "netclass": "MAINS",
+        "pattern": "/Power/AC_L_RAW"
+      },
+      {
+        "netclass": "MAINS",
+        "pattern": "/Power/AC_L_FUSED"
+      },
+      {
+        "netclass": "MAINS",
+        "pattern": "/Power/AC_N"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
@@ -650,16 +808,36 @@
       {
         "filename": "ElevatorLift.kicad_sch",
         "name": "ElevatorLift",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
       }
     ],
-    "used_designators": "",
+    "used_designators": "J26",
     "variants": []
   },
   "sheets": [
     [
       "3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8",
-      ""
+      "ElevatorLift"
+    ],
+    [
+      "ef96c25b-81a5-42bf-bfe0-53398cece262",
+      "Power"
+    ],
+    [
+      "96b45577-cf23-425d-b21b-e8e0055d5317",
+      "MCU_Storage"
+    ],
+    [
+      "d8035c27-9481-48bc-b99c-c1bc78f420cb",
+      "VFD_Interface"
+    ],
+    [
+      "8eecdc97-44f7-4936-917f-e0d7871e0599",
+      "Encoder_Counter"
+    ],
+    [
+      "06e3c240-f857-4f50-8e62-b0389e493f88",
+      "IO"
     ]
   ],
   "text_variables": {},

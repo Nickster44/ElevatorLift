@@ -1,29 +1,708 @@
-(kicad_sch (version 20230121) (generator "Codex")
-  (uuid "3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8")
-  (paper "A4")
-  (title_block
-    (title "Elevator Lift Controller")
-    (rev "A0")
-    (company "Project scaffold")
-    (comment 1 "Root schematic shell - see hardware/architecture-blocks.md")
-  )
-  (text "AC/DC Power\n- 120 VAC tap from VFD housing\n- isolated low-voltage rails\n- fuse/surge/EMI protection" (at 25.4 25.4 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
-  (text "ESP32-S3 Controller\n- WebUI AP/station mode\n- VFD protocol\n- storage/logging\n- RF/config" (at 25.4 58.42 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
-  (text "VFD Interface\n- protected UART\n- optional isolation\n- hardware stop/enable TBD" (at 111.76 25.4 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
-  (text "Encoder + Counter\n- open-collector A/B conditioning\n- LS7366R SPI counter\n- home/limit validation" (at 111.76 58.42 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
-  (text "Memory + RTC\n- SPI MRAM critical state/logs\n- optional flash/SD\n- RTC for offline timestamps" (at 25.4 91.44 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
-  (text "RF + Inputs + Outputs\n- RXM-418-LR candidate\n- protected field inputs\n- compact light output" (at 111.76 91.44 0)
-    (effects (font (size 2 2)) (justify left bottom))
-  )
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8")
+	(paper "A2")
+	(title_block
+		(title "Elevator Lift Controller")
+		(rev "A0")
+		(company "Project scaffold")
+		(comment 1 "Root schematic shell - see hardware/architecture-blocks.md")
+	)
+	(lib_symbols
+		(symbol "Mechanical:MountingHole"
+			(pin_names
+				(offset 1.016)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "H"
+				(at 0 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MountingHole"
+				(at 0 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Mounting Hole without connection"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "mounting hole"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "MountingHole*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "MountingHole_0_1"
+				(circle
+					(center 0 0)
+					(radius 1.27)
+					(stroke
+						(width 1.27)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "ESP32-S3 Controller\n- WebUI AP/station mode\n- VFD protocol\n- storage/logging\n- RF/config"
+		(exclude_from_sim no)
+		(at 25.4 58.42 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "0d8874f7-5f94-433e-8869-00aaee314328")
+	)
+	(text "RF + Inputs + Outputs\n- RXM-418-LR candidate\n- protected field inputs\n- compact light output"
+		(exclude_from_sim no)
+		(at 111.76 91.44 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "329b2f39-16c7-444e-8bd7-7b78e7548300")
+	)
+	(text "AC/DC Power\n- 120 VAC tap from VFD housing\n- isolated low-voltage rails\n- fuse/surge/EMI protection"
+		(exclude_from_sim no)
+		(at 25.4 25.4 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "3e8fd9b9-4f84-4d00-9dc9-41e6ed77eae5")
+	)
+	(text "VFD Interface\n- protected UART\n- optional isolation\n- hardware stop/enable TBD"
+		(exclude_from_sim no)
+		(at 111.76 25.4 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "6b262f77-caf0-4d98-b1ff-8aff38c0657e")
+	)
+	(text "Memory + RTC\n- SPI MRAM critical state/logs\n- optional flash/SD\n- RTC for offline timestamps"
+		(exclude_from_sim no)
+		(at 25.4 91.44 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "91769dfa-0add-4aed-8e85-b670882231c3")
+	)
+	(text "Encoder + Counter\n- open-collector A/B conditioning\n- LS7366R SPI counter\n- home/limit validation"
+		(exclude_from_sim no)
+		(at 111.76 58.42 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "fd338b95-cb46-4668-87b3-d39dd774bfe2")
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 60.96 190.5 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "c34e91a3-3342-4a61-a11e-07fb8521b1d6")
+		(property "Reference" "H3"
+			(at 60.96 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Mounting Hole 2.6mm"
+			(at 60.96 187.325 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "ElevatorLift_Custom:MountingHole_2.6mm_NPTH"
+			(at 60.96 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 60.96 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 60.96 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(reference "H3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 76.2 190.5 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "c4fe4660-128a-491a-b088-31cfa5bfed51")
+		(property "Reference" "H4"
+			(at 76.2 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Mounting Hole 2.6mm"
+			(at 76.2 187.325 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "ElevatorLift_Custom:MountingHole_2.6mm_NPTH"
+			(at 76.2 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 76.2 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 76.2 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(reference "H4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 45.72 190.5 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e465f88c-54ee-4eaf-86e0-a2921898c49c")
+		(property "Reference" "H2"
+			(at 45.72 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Mounting Hole 2.6mm"
+			(at 45.72 187.325 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "ElevatorLift_Custom:MountingHole_2.6mm_NPTH"
+			(at 45.72 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 45.72 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 45.72 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(reference "H2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 30.48 190.5 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "f7ff5035-bb80-44f3-a158-0de8251f548a")
+		(property "Reference" "H1"
+			(at 30.48 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Mounting Hole 2.6mm"
+			(at 30.48 187.325 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "ElevatorLift_Custom:MountingHole_2.6mm_NPTH"
+			(at 30.48 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 30.48 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 30.48 190.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(reference "H1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 20 260)
+		(size 115 70)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "06e3c240-f857-4f50-8e62-b0389e493f88")
+		(property "Sheetname" "IO"
+			(at 20 259.365 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "IO.kicad_sch"
+			(at 20 330.635 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 425 155)
+		(size 115 70)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "8eecdc97-44f7-4936-917f-e0d7871e0599")
+		(property "Sheetname" "Encoder_Counter"
+			(at 425 154.365 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Encoder_Counter_RevA.kicad_sch"
+			(at 425 225.635 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 155 155)
+		(size 115 70)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "96b45577-cf23-425d-b21b-e8e0055d5317")
+		(property "Sheetname" "MCU_Storage"
+			(at 155 154.365 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "MCU_Storage_RevA.kicad_sch"
+			(at 155 225.635 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 290 155)
+		(size 115 70)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "d8035c27-9481-48bc-b99c-c1bc78f420cb")
+		(property "Sheetname" "VFD_Interface"
+			(at 290 154.365 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "VFD_Interface_RevA.kicad_sch"
+			(at 290 225.635 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 20 155)
+		(size 115 70)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "ef96c25b-81a5-42bf-bfe0-53398cece262")
+		(property "Sheetname" "Power"
+			(at 20 154.365 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Power_RevA.kicad_sch"
+			(at 20 225.635 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
 )
-

@@ -10,9 +10,9 @@ Planned WebUI areas:
 - Motion settings: normal run speed, service jog speed, measured stop-distance calibration, floor positions, acceleration/deceleration policy, and homing behavior.
 - VFD parameters: read all supported EM01 parameters, edit writeable parameters with range checks, and show raw protocol values.
 - Load/weight limiting: expose VFD current limit/current-related settings as a controlled user-facing limit after bench validation.
-- RF remotes: pair, name, enable/disable, assign behavior, and view last received remote command.
+- RF remotes: request decoder Learn Mode, observe decoder state, name remotes by observed TX_ID, view last command/history, and perform the decoder's erase-all operation. Each remote has five fixed functions rather than a single-floor assignment.
 - Logs: recent events, faults, configuration changes, VFD alarms, resets, and exported CSV/JSON.
-- Maintenance: backup/restore configuration, firmware version, reset fault latch, reboot, and factory defaults.
+- Maintenance: versioned backup/restore, firmware version, restricted service-recovery workflow, reboot, and factory defaults. Backup includes settings, VFD parameters, floor names/positions, calibration, and remote nickname profiles, but not the decoder's internal learned-address memory.
 - Automation: local REST API documentation, API tokens, command audit log, and optional MQTT/Home Assistant settings.
 
 ## VFD Parameter Handling
@@ -37,10 +37,11 @@ Some settings should remain local controller variables rather than VFD parameter
 - Normal lift run speed.
 - Service jog speed.
 - Floor positions.
+- Floor nicknames keyed by stable numeric floor identifiers.
 - Stop offset/calibration table.
 - Homing speed and homing timeout.
 - Measured stop-distance calibration value and the VFD/speed settings it was calibrated against.
-- RF remote assignments.
+- RF remote nickname/observation profiles keyed by TX_ID. These are separate from decoder-learned addresses.
 - AP/station network settings.
 - Log retention/export settings.
 
@@ -98,8 +99,8 @@ Do not make SD card mandatory for the first board unless the WebUI or log-retent
 Recommended approach:
 
 - Baseline board: SPI MRAM plus MCU internal flash/LittleFS for WebUI assets.
-- Add an optional footprint for microSD or external QSPI flash if board space allows.
-- Prefer external QSPI NOR flash over removable SD for built-in web assets and OTA bundles.
+- Rev A uses the N16R8 module's 16 MB flash for the WebUI, OTA staging and noncritical data; it does not fit microSD or external QSPI flash.
+- Reconsider external QSPI NOR or removable SD only in a later revision if the measured production partition and retention requirements exceed the module capacity.
 - Prefer SD only if the user needs removable long-term logs or easy offline export.
 
 ## Log Retention Model
@@ -119,7 +120,7 @@ Recommended log categories:
 - Safety loop open.
 - Limit switch active.
 - Position mismatch/no movement.
-- RF command received.
+- RF command received, including TX_ID and resolved nickname when known.
 - WebUI login/config change.
 - VFD parameter read/write.
 - Network connection state changes.

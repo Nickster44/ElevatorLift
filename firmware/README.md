@@ -2,7 +2,7 @@
 
 This is a PlatformIO starter firmware for an ESP32-S3 reference target. It is intended to prove the controller architecture before the final KiCad board is selected.
 
-The current hardware direction is ESP32-S3-WROOM-1U with an LS7366R quadrature counter, SPI MRAM, RXM-418-LR RF receiver input, local AP/station Wi-Fi, and a VFD UART driver that can source/sink enough current for the VFD opto-isolated serial input.
+The current hardware direction is the exact ESP32-S3-WROOM-1U-N16R8 with an LS7366R quadrature counter, PM004MNIATR SPI MRAM, RXM-418-LR/LICAL-DEC-MS001 RF path, local AP/station Wi-Fi, and the bench-gated TXS0104E 3.3 V/5 V VFD UART interface captured in the schematic.
 
 The intended motion strategy is measured deceleration-distance stopping. The controller should preserve the old calibration workflow: after floor positions are set and program mode exits, run in the longer available direction, allow the lift to reach normal speed, command stop, measure the actual deceleration travel, and save that stop offset. A PID loop is not planned for the primary positioning strategy.
 
@@ -59,6 +59,11 @@ pio run
 - `POST /api/vfd/parameter`
 - `POST /api/move?floor=N`
 - `POST /api/stop`
+- `POST /api/light/toggle` (planned; return authoritative light state)
+- `GET/POST /api/floors` (planned; stable floor number, nickname, and encoder position)
+- `GET/POST /api/remotes` (planned WebUI observation/nickname registry; not decoder memory enumeration)
+- `POST /api/remotes/learn` and `POST /api/remotes/erase-all` (planned decoder control with timing/state confirmation)
+- `GET/POST /api/config/backup` and `/api/config/restore` (planned versioned backup with remote-profile reconciliation)
 
 Future API work should include token authentication, an automation-safe local REST surface, and optional MQTT/Home Assistant integration. Any WebUI, RF, or automation motion request must pass the same motion prechecks and be logged.
 
@@ -74,6 +79,8 @@ Write endpoints currently support optional API-token enforcement through the `X-
 - VFD parameter reads/writes send protocol commands and return pending read-back status; complete frame parsing and cache persistence are still TODO.
 - `EventLog` is an in-memory scaffold; final recent logs should move to MRAM.
 - RF receive, pairing, and remote registry support are not implemented yet, but RXM-418-LR compatibility is required.
+- Final RF support must include the LICAL-DEC-MS001 five decoded button lines, TX_ID capture, MODE_IND monitoring, and LEARN control. Record remote nicknames/history in MRAM separately from the decoder's retained learned-address memory.
+- A restricted recovery API must not directly accept arbitrary motion from the browser. If implemented, firmware must also verify cabinet-local keyed authorization and continuous hold-to-run, enforce low-speed jog and a short timeout, keep hardwired E-stop/final-limit/VFD authority intact, and log the full session.
 - Program/calibration mode is not implemented yet. The current `stopOffsetCounts` value is a placeholder and should become an MRAM-backed measured calibration record.
 - Home automation is not implemented yet; the preferred path is local REST first, optional MQTT/Home Assistant later.
 - The motion constants are placeholders and must not be used on real hardware.

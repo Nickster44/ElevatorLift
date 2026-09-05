@@ -30,6 +30,9 @@ docs/
   vfd-serial-protocol.md            Extracted EM01 serial protocol notes
   new-controller-requirements.md    Hardware and firmware requirements draft
   webui-vfd-and-storage-plan.md     WebUI, VFD parameter, and log storage plan
+  webapp-embedded-delivery.md       ESP32 static bundle budget and serving rules
+  field-verification-log.md         Observed legacy hardware and remaining site checks
+  schematic-capture-readiness.md    Rev-A capture inputs, BOM register, and release gates
 datasheets/
   README.md                         Local datasheet manifest for major ICs/modules
 firmware/
@@ -37,27 +40,36 @@ firmware/
   include/
   src/
 hardware/
-  ElevatorLift.kicad_pro            KiCad 10 project shell
-  ElevatorLift.kicad_sch            Root schematic shell
-  ElevatorLift.kicad_pcb            PCB shell with provisional 3.5 in x 3.5 in outline and corner mounting holes
+  ElevatorLift.kicad_pro            KiCad 10 project; open this file
+  ElevatorLift.kicad_sch            Root hierarchical schematic
+  Power_RevA.kicad_sch              AC input and 12 V/5 V/3.3 V power
+  MCU_Storage_RevA.kicad_sch        ESP32-S3, USB, MRAM and RTC
+  VFD_Interface_RevA.kicad_sch      VFD UART and enable interface
+  Encoder_Counter_RevA.kicad_sch    Encoder isolation and counter
+  IO.kicad_sch                      RF, field inputs and outputs
+  ElevatorLift.kicad_pcb            PCB WIP; full footprint/net transfer on a 90 mm x 90 mm outline with 86 mm hole centers
+  ElevatorLift_Custom.kicad_sym     Project-owned symbols
+  ElevatorLift_Custom.pretty/       Project-owned footprints
+  SnapEDA-Library/                  Vendored imported symbols, footprints and STEP files
+  sym-lib-table / fp-lib-table      Portable project library registrations
   architecture-blocks.md            Block-level hardware architecture notes
 ```
 
 ## Current Design Knowledge
 
-The current hardware direction is an ESP32-S3-WROOM-1U controller board in the VFD enclosure, using a self-hosted Wi-Fi AP as the primary service path and optional station Wi-Fi for local-network access. Ethernet is not a near-term requirement.
+The current hardware direction is an `ESP32-S3-WROOM-1U-N16R8` controller board in the VFD enclosure, using a self-hosted Wi-Fi AP as the primary service path and optional station Wi-Fi for local-network access. Ethernet is not a near-term requirement.
 
 Known design constraints captured so far:
 
 - KiCad 10.0.4 is the active hardware design version.
-- Target PCB envelope is provisionally 3.5 in x 3.5 in with corner mounting holes.
-- VFD serial is standard 9600 baud UART framing, but the VFD input is opto-isolated and needs a driver stage with enough current for the opto input.
-- Encoder is believed to be the SKF Hall/open-collector quadrature unit. The datasheet recommends 270 ohm pullups at 5 V.
+- Measured legacy mechanical target is approximately 90 mm x 90 mm with corner mounting-hole centers 86 mm apart; 2.56 mm hole diameter remains to be confirmed.
+- The observed VFD serial path is a four-pin header and a TI `TXS0104E` 3.3 V-to-5 V translator, with no discrete driver seen. Pinout, reference, and idle levels still require bench verification.
+- The observed encoder path appears to be 12 V open-collector A/B with 270 ohm pullups and 270 ohm series resistors feeding a `TLP291-4` optocoupler. Trace details, current, and maximum pulse rate remain open.
 - Legacy Linx/TE RXM-418-LR 418 MHz RF remote support is mandatory.
 - Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, because the previous accessory board used it and JLCPCB lists it as assembly part `C5199922`.
 - The lift light is believed to be 12 V at about 750 mA, so the 10 W supply is tight if future solenoids are added.
 - Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
-- Web assets and noncritical long logs should use MCU flash/LittleFS first, with optional QSPI NOR storage if the WebUI grows.
+- Web assets, OTA staging and noncritical logs should use the module's 16 MB flash and 8 MB PSRAM first. Rev A does not include a separate QSPI NOR device.
 - Outside control should use local REST first, optional MQTT later, and Home Assistant as the recommended bridge to Google Home, watches, and broader automation.
 - Motion control should stay with measured deceleration-distance stopping, not PID. Calibration should measure actual stop distance after leaving program mode and save that value for future prediction stops.
 
@@ -139,14 +151,13 @@ The preferred home-automation path is local REST API first, optional MQTT later,
 
 The next board should be designed around these blocks:
 
-- ESP32-S3-WROOM-1U or equivalent external-antenna Wi-Fi module.
-- Fused 120 VAC input and isolated 12 V supply, currently centered on RECOM `RAC10-12SK/277`.
-- 3.3 V buck regulation from the 12 V rail.
-- UART opto-input driver and protected VFD receive path.
+- Exact `ESP32-S3-WROOM-1U-N16R8` external-antenna Wi-Fi module.
+- Fused 120 VAC + neutral input, isolated 12 V supply, 5 V rail, and 3.3 V rail.
+- VFD UART interface based initially on the proven 3.3 V-to-5 V `TXS0104E` topology, with a bench gate before lift connection.
 - LS7366R SPI quadrature counter.
-- Encoder input conditioning for 5 V open-collector quadrature outputs.
+- Encoder input conditioning for the observed 12 V open-collector quadrature outputs, including isolation/level translation before the counter.
 - SPI MRAM for live position snapshots, settings, recent event logs, and fault records.
-- Optional QSPI NOR flash for WebUI assets, OTA staging, noncritical logs, and exported data.
+- The selected N16R8 module's 16 MB flash and 8 MB PSRAM serve WebUI assets, OTA staging and noncritical data; no separate Rev-A QSPI device is planned.
 - Hardware safety chain independent of application firmware.
 - VFD enable/stop/brake control path that fails safe on MCU reset or watchdog timeout.
 - Protected digital inputs for call buttons, RF receiver, limit switches, home switch, and safety loop.
@@ -155,28 +166,46 @@ The next board should be designed around these blocks:
 - Watchdog and brownout detection.
 - Surge/ESD/EMI protection suitable for outdoor wiring and a VFD enclosure.
 
+The service/recovery interface uses dry-contact inputs: J43 provides SERVICE
+KEY, HOLD-TO-RUN and GND; J44 provides SERVICE UP, SERVICE DOWN and GND. The
+intended external hardware is a maintained keyed service switch, a momentary
+hold-to-run control, and momentary UP/DOWN controls. These optically isolated
+MCU inputs are authorization/command inputs only; they are not a safety-rated
+enabling circuit and may not bypass the independent emergency-stop, final-limit,
+watchdog or VFD motion-authority paths.
+
+## Opening The Hardware Project On Another Computer
+
+Clone or copy the complete repository and open `hardware/ElevatorLift.kicad_pro`
+with KiCad 10. The custom and SnapEDA libraries are stored under `hardware/` and
+registered through `${KIPRJMOD}` paths, so no `D:\Downloads` or user-profile
+library path is required. Do not copy only the `.kicad_pro` file: the five child
+schematics, board, project library tables, custom libraries and vendored
+SnapEDA library directory must remain together.
+
 ## Physical Verification Checklist
 
-When the old lift system can be inspected in person, verify these items before final schematic release:
+The initial on-site observations are recorded in `docs/field-verification-log.md`.
+Before final schematic release, complete the remaining checks below:
 
-1. VFD enclosure space: usable width, height, depth, door clearance, standoff height, wire-bend clearance, airflow, and any metal keepouts.
-2. Mounting pattern: old controller board size, exact mounting hole coordinates, screw size, chassis/standoff material, and whether the provisional 3.5 in x 3.5 in PCB fits.
+1. Confirm the estimated 40 mm enclosure height and 12 mm underside clearance, then measure connector/wire-bend keepouts and airflow.
+2. Confirm the approximately 90 mm x 90 mm board, 86 mm mounting-hole centers, 2.56 mm hole diameter, screw size, and standoff material.
 3. Old controller hardware: photograph both sides of the Particle/Xenon board and accessory Nano board, record IC markings, regulator parts, RF receiver wiring, level-shifting parts, optocouplers, drivers, relay part numbers, fuses, MOVs, terminal blocks, and any bodge wiring.
-4. VFD serial interface: terminal labels, idle voltage, common/reference pin, opto input current requirement, polarity, receive output level, cable length, and whether the old board used any transistor/resistor stage between MCU UART and the VFD.
+4. VFD serial interface: document the observed `TXS0104E` connection, header pinout, idle voltage, common/reference, polarity, receive level, cable length, and bench behavior.
 5. Power input: where 120 VAC can be tapped, whether it is upstream/downstream of the disconnect, available neutral, protective earth/chassis connection, fuse location, wire gauge, and connector style.
 6. Existing 12 V loads: light voltage/current, inrush behavior, shared return path, connector type, and whether any solenoid/interlock output still needs power.
-7. Encoder wiring: exact encoder model label, supply voltage at the encoder, A/B idle voltage, pullup location/value, cable length/shielding, connector pinout, and maximum observed pulse rate.
+7. Encoder wiring: verify the observed 12 V supply, 270 ohm pullups, 270 ohm series resistors, `TLP291-4` path, exact encoder model, A/B idle voltage, cable/shielding, connector pinout, and maximum pulse rate.
 8. Button, home, limit, and safety wiring: voltage levels, normally-open/normally-closed behavior, whether contacts are dry or powered, cable routing, and what is hardwired versus MCU-only.
-9. RF system: confirm receiver module marking, antenna type/location, data output idle level, remote count, remote button mapping, and pairing/encoding behavior.
+9. RF system: confirm receiver module marking, antenna type/location, data output idle level, remote count, remote mapping, pairing behavior, and the separate wired `LEARN` node.
 10. Grounding and EMI: cabinet earth strategy, shield terminations, VFD motor lead routing, separation between mains/motor wiring and control wiring, and any existing noise filters.
 11. VFD parameters: dump or photograph current drive parameters, especially acceleration, deceleration, max frequency, current/overload settings, serial timeout, and any stop/enable terminal configuration.
 12. Safety devices: identify final limits, emergency stop, gate/latch devices, brakes, and any non-MCU circuits that remove motion authority.
 
 ## Near-Term Project Plan
 
-1. Create the KiCad schematic pages for power, MCU, VFD interface, encoder/counter, storage, RF/inputs, and light output.
-2. Define the first-pass connector map from the old wiring assumptions and the physical verification checklist.
-3. Bench-test the VFD opto UART driver current and polarity before connecting to the real lift.
+1. Review the completed Rev-A KiCad schematic, replace the remaining provisional connector/counter/MRAM/RTC library assets, and close actionable ERC findings.
+2. Verify the first-pass connector map against the real wiring and physical verification checklist.
+3. Bench-test the observed `TXS0104E` VFD interface topology, header pinout, levels, and fault behavior before connecting to the real lift.
 4. Define the MRAM data layout for position snapshots, settings, VFD parameter cache, remote registry, and event logs.
 5. Implement the program-mode exit calibration workflow that measures and stores stop distance.
 6. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.

@@ -9,7 +9,11 @@ Thumbs.db
 
 # KiCad local/session artifacts.
 *.kicad_prl
+*.lck
 *-backups/
+/hardware/snapshots/
+/hardware/reports/*
+!/hardware/reports/*.md
 
 # Local credentials and generated build artifacts.
 firmware/include/Secrets.h

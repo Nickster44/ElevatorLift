@@ -15,11 +15,12 @@ Status meanings:
 | Quadrature counter | LS7366R-S | `C3827808` | Likely | `datasheets/LS7366R-S_quadrature_counter_datasheet.pdf` | Keeps encoder edge counting out of MCU interrupt timing. Confirm JLC assembly availability; if weak, preserve the footprint and consider hand placement for rev A. |
 | Critical NVM | Siproin PM004MNIATR | `C5444277` | Strong | `datasheets/Siproin_PM004MNIATR_4Mbit_SPI_MRAM_datasheet.pdf` | 4 Mbit SPI/QPI MRAM, 2.7 V to 3.6 V, SOP-8, good China/LCSC fit. This is the preferred MRAM candidate. |
 | Critical NVM fallback | Everspin MR25H40CDF | `C246235` | Weak | None local | Technically excellent, but LCSC stock depth and price are poor compared with Siproin. Use only if qualification demands it. |
-| Web assets / bulk logs | Winbond W25Q128JVSIQ | `C97521` | Strong | `datasheets/Winbond_W25Q128JV_128Mbit_SPI_Flash_datasheet.pdf` | Good for WebUI files, OTA staging, parameter backup exports, and noncritical logs. Do not use as the only live position store. |
+| Deferred bulk storage | Winbond W25Q128JVSIQ | `C97521` | Strong | `datasheets/Winbond_W25Q128JV_128Mbit_SPI_Flash_datasheet.pdf` | Not fitted in Rev A; retain only as a later-revision option if the N16R8 module's 16 MB flash proves insufficient. |
 | RTC | Micro Crystal RV-3028-C7-32.768kHz-1ppm-TA-QC | `C3019759` | Strong | `datasheets/MicroCrystal_RV-3028-C7_RTC_datasheet.pdf` | LCSC lists stock. Useful for timestamped logs when there is no network/NTP connection. |
-| VFD UART isolation | TI ISO6721BDR | `C5216430` | Strong | `datasheets/TI_ISO6721_dual_digital_isolator_datasheet.pdf` | Good default for UART TX/RX isolation if the VFD port is logic-level. Needs isolated side power strategy if true isolation is required. |
+| VFD UART isolation alternate | TI ISO6721BDR | `C5216430` | Strong | `datasheets/TI_ISO6721_dual_digital_isolator_datasheet.pdf` | Not fitted in the captured TXS0104E reference topology. Retain as an option only if bench testing establishes a complete isolated-side power and signal strategy. |
 | VFD UART isolation alternate | Chipanalog CA-IS3721 / CA-IS372x | `C528650` | Likely | `datasheets/Chipanalog_CA-IS372x_dual_digital_isolator_datasheet.pdf` | China-source alternate with 150 Mbps family rating and wide supply range. Check exact suffix, channel direction, and default output state. |
-| VFD opto-input driver | MMBT3904 class NPN or small logic MOSFET | `C20526` for MMBT3904 | Strong | Datasheet not local | Use as a current driver for the VFD opto-isolated UART input. Final resistor values require bench confirmation of the VFD input current. |
+| VFD UART translator | TI TXS0104ED | Verify at order time | Likely | `datasheets/TI_TXS0104E_level_translator_datasheet.pdf` | Captured to match the observed 3.3 V/5 V legacy interface. Header pinout, direction and VFD electrical requirements remain bench gates. |
+| VFD opto-input driver alternate | MMBT3904 class NPN or small logic MOSFET | `C20526` for MMBT3904 | Strong | Datasheet not local | Not fitted by default. Add only if bench testing proves that the VFD input needs more current than the TXS0104E topology can provide. |
 | Industrial digital input | TI ISO1211DR | `C2674102` | Likely | `datasheets/TI_ISO1211_ISO1212_digital_input_receiver_datasheet.pdf` | Candidate for 24 V to 60 V field inputs. Do not use by default if final wiring can be low-voltage dry contacts. |
 | Encoder conditioning | TI SN74LVC2G17DBVR | `C10429` | Strong | `datasheets/TI_SN74LVC2G17_schmitt_buffer_datasheet.pdf` | Schmitt buffer after pullups, current limiting, filtering option, and ESD protection. Also review China-source equivalents if cost matters. |
 | Legacy RF receiver | Linx / TE RXM-418-LR | `C6670221` | Likely | `datasheets/Linx_RXM-418-LR_receiver_datasheet.pdf` | Preserves existing remote compatibility. Confirm JLC assembly support and RF module placement rules; RF commands must remain non-safety commands. |
@@ -37,9 +38,9 @@ For a JLCPCB-friendly revision A, use these as the default major parts unless be
 - ESP32-S3-WROOM-1U-N16R8 for the MCU/Wi-Fi module.
 - Siproin PM004MNIATR for critical MRAM.
 - LS7366R-S for quadrature counting, with a fallback plan if JLC assembly support is weak.
-- W25Q128JVSIQ for WebUI/static storage and noncritical logs.
+- N16R8 internal flash for WebUI/static storage and OTA; do not fit W25Q128JVSIQ in Rev A.
 - RV-3028-C7 for offline timestamps.
-- MMBT3904-class or small MOSFET current driver for the VFD opto-isolated UART input; keep ISO6721/CA-IS372x as optional isolation/protection only if bench testing requires it.
+- TXS0104ED for the captured VFD UART reference topology; keep a discrete driver or ISO6721/CA-IS372x architecture as a bench-driven redesign option only.
 - AP63203WU-7 for 3.3 V from the isolated 12 V rail.
 - RXM-418-LR receiver path because legacy remotes are mandatory.
 - AO3400A-class protected MOSFET output for the 12 V lift light.

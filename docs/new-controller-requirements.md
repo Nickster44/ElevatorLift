@@ -23,6 +23,7 @@
 - Store current position in MRAM frequently enough to recover from reset.
 - Store homing/calibration records with CRC and sequence numbers.
 - Use home and final limit switches to validate counter position.
+- The current installation's homing reed switch is near the top, close to floor 3. Homing/recovery text and direction should therefore assume upward travel to the home reference unless the field wiring changes.
 - The likely encoder is an SKF Motor Encoder Unit. Its datasheet describes two Hall-effect square-wave outputs with 90-degree phase shift, open-collector outputs, and 32-80 pulses per revolution depending on unit size.
 - The encoder interface should include pullups or configurable biasing, current limiting, input protection, and Schmitt-trigger or differential/noise-tolerant conditioning before the counter IC.
 
@@ -42,7 +43,7 @@
 - Use redundant records or sequence numbers so interrupted writes do not corrupt the active configuration.
 - Keep logs binary internally, with web/API export as JSON or CSV.
 - Use MRAM as the authoritative store for critical configuration and recent logs.
-- Consider optional SD card or external QSPI flash for rich WebUI assets, OTA bundles, and long-term downloadable logs.
+- Use the N16R8 module's 16 MB flash for Rev-A WebUI assets and OTA staging. Consider SD or external QSPI flash only in a later revision if measured storage requirements exceed the module capacity; no separate bulk-flash IC is fitted in Rev A.
 
 ## Connectivity
 
@@ -59,6 +60,7 @@
 ## WebUI And Configuration
 
 - The WebUI should expose local lift settings such as run speed, jog speed, floor positions, stop offsets, RF remote assignments, network settings, and log export.
+- Each floor should have an editable nickname stored with its numeric floor and encoder position. Status, controls, logs, automation, and backup/restore should use the nickname without losing the stable numeric floor identifier.
 - The WebUI should also expose VFD parameter read/write access using a metadata table with names, units, min/max/default values, and access levels.
 - Normal users should only see validated settings. Installer/advanced mode can expose the raw VFD parameter list.
 - All VFD writes should require the lift to be stopped, be range checked, be read back after write, and be logged.
@@ -66,6 +68,7 @@
 - Current/overload VFD settings may be used for a configurable load-limit feature after calibration, but should not be presented as a certified weight measurement.
 - The WebUI should support configuration backup/restore and a factory-default reset path.
 - The WebUI should support entering/exiting calibration mode, setting floor positions, starting the measured stop-distance calibration, viewing the saved calibration value, and warning when calibration is stale.
+- Configuration export should include local settings, all cached/custom VFD parameters, floor nicknames and positions, calibration metadata, network preferences, and remote nickname profiles. Decoder-learned addresses are not exportable controller data. On restore, remote profiles remain pending with IDs hidden until observed; restore must never auto-pair, silently overwrite, or incorrectly bind a nickname to a different transmitter.
 
 ## Power And Mechanical Placement
 
@@ -74,16 +77,24 @@
 - The power input should include appropriate fusing, surge protection, creepage/clearance, and an isolated AC/DC supply or approved enclosed module.
 - The previous design used an accessory board in the disconnect box with a 120 VAC to DC supply; this remains a fallback architecture if VFD-box space is too limited.
 - The previous accessory board used a RECOM `RAC10-12SK/277` 12 V, 10 W supply. This is a useful baseline because the lift light is believed to be 12 V at about 750 mA, but it leaves limited current margin if a solenoid output returns.
-- The first PCB should target roughly 3.5 in x 3.5 in with mounting holes near the corners. Exact mounting hole coordinates and keepouts can be revised after measuring the VFD housing.
+- The first PCB should target approximately 90 mm x 90 mm with corner mounting-hole centers 86 mm apart. Treat the approximately 2.56 mm hole diameter, 40 mm enclosure height, and 12 mm underside clearance as provisional until direct caliper measurements confirm them.
 - Mains/control power should enter through a serviceable connector. Start with a screw terminal footprint; evaluate blade terminals if they improve cabinet wiring and safety clearances.
 - Mechanical design should account for service access, antenna placement, separation from VFD power wiring, connector strain relief, and safe separation between mains and SELV circuitry.
 
 ## RF Remote Input
 
-- The legacy RF receiver is believed to be a Linx RXM-418-LR module with existing remotes already available.
-- The new board must keep a compatible 418 MHz receiver input path because the existing remotes remain part of the required user workflow.
-- Pairing, remote assignment, and enable/disable behavior should be managed through the local web interface rather than a dedicated program-mode switch.
+- The legacy RF path uses a Linx RXM-418-LR receiver with a `LICAL-DEC-MS001` decoder and existing remotes. The new board must keep this compatible 418 MHz path.
+- Route the decoder's five button outputs, `TX_ID`, and `MODE_IND` to the MCU, and provide an MCU-controlled `LEARN` line connected to the separate physical-button node because `LEARN` is not exposed by the legacy header. The five buttons request Floor 1, Floor 2, Floor 3, Stop, and Light toggle; a remote is not assigned to a single floor.
+- Web pairing drives the decoder Learn Mode, which accepts a valid transmitter during a 17-second window and stores up to 40 addresses. Holding `LEARN` high for 10 seconds erases all decoder addresses. Individual learned addresses cannot be deleted.
+- Store WebUI nicknames and observation history in MRAM keyed by captured `TX_ID`. Log transmitter ID, resolved nickname when known, button/command, time, and accepted/rejected result. Treat unseen/unknown IDs safely and do not imply that the WebUI can enumerate the decoder's internal address memory.
 - RF commands must be treated like user requests, not safety signals; motion prechecks and interlocks still apply.
+
+## Restricted Service Recovery
+
+- A diagnosed failure may require low-speed repositioning before a physical safety device can be reset. This must be a distinct installer-only service-recovery state, not a general WebUI "safety override."
+- Web authorization alone must never enable recovery motion. Require a cabinet-local keyed/service input and continuous physical hold-to-run control, low service speed, explicit direction, automatic short timeout, and a complete audit record containing operator, reason, affected channel, direction, start/stop time, and position.
+- Recovery may only disregard explicitly selected monitored channels whose failure has been diagnosed. Emergency stop, hardwired final limits, VFD faults, watchdog/enable removal, and independent hardwired motion authority remain effective and cannot be bypassed by the MCU or WebUI.
+- RF, home automation, and ordinary floor-call commands must remain disabled for the entire recovery session.
 
 ## Outputs And Interlocks
 
@@ -95,7 +106,7 @@
 ## VFD Interface
 
 - The VFD UART should include protection and a defined ground/reference strategy.
-- The VFD serial input is opto-isolated but still uses standard UART framing. The new board must include a driver stage that can provide the required opto input current; direct MCU GPIO drive is not sufficient based on the old design experience.
+- The VFD serial interface uses standard UART framing. The observed legacy board uses a `TXS0104E` 3.3 V-to-5 V translation stage and no discrete driver was seen. Reproduce that topology only as a bench-validated reference: confirm the header pinout, common/reference, levels, and any actual VFD opto-input requirement before release.
 - Firmware should verify checksums for all VFD responses.
 - VFD monitor status should be polled during motion.
 - Stop should be layered: serial stop command plus a fail-safe hardware path where possible.
@@ -111,9 +122,9 @@
 ## KiCad Design Inputs To Confirm
 
 - Supply voltage available in the lift cabinet.
-- Available internal VFD-box volume and mounting points.
+- Available internal VFD-box volume and mounting points; the current measured target is 90 mm x 90 mm with 86 mm hole centers.
 - VFD control terminal voltage/reference requirements.
-- Exact encoder model, voltage, cable length, pullup voltage, and maximum pulse rate.
+- Exact encoder model, voltage, cable length, observed 12 V/270 ohm/TLP291-4 path, and maximum pulse rate.
 - Number and voltage of button, limit, home, safety, and service inputs.
 - Whether the Linx RXM-418-LR receiver and existing remotes should remain supported.
 - Actual light load voltage/current and whether any solenoid/interlock outputs remain required.

@@ -146,7 +146,7 @@ All outside-control paths must follow the same rules:
 
 ## Hardware Impact
 
-No extra hardware is required on the lift controller beyond reliable Wi-Fi and the external antenna path already planned for the ESP32-S3-WROOM-1U.
+No extra hardware is required on the lift controller beyond reliable Wi-Fi and the external antenna path already planned for the selected `ESP32-S3-WROOM-1U-N16R8`.
 
 The property should have one always-on local automation hub if Google Home/watch control is desired. Recommended devices:
 
