@@ -16,6 +16,8 @@ The first design revision includes:
 
 Only status polling, move, stop, and light-toggle requests currently have frontend HTTP calls. Other controls intentionally demonstrate the planned workflow while their firmware contracts are being completed. See [API contract](docs/api-contract.md) for the exact boundary.
 
+The known cross-team gaps are tracked in [firmware and WebUI integration gaps](docs/firmware-integration-gaps.md). Until those contracts are implemented, simulated controls must remain preview-only or unavailable and must not claim that connected hardware changed state.
+
 The WebUI never grants motion authority. Firmware and independent hardware remain responsible for authentication, state validation, safety-loop monitoring, final limits, VFD health, watchdog behavior, and fail-safe motion removal. See [product and safety decisions](docs/product-and-safety.md).
 
 ## Development
@@ -57,6 +59,7 @@ The firmware release should package only the gzip assets, stream them from Littl
 | `scripts/compress-embedded.mjs` | Creates maximum-compression gzip assets and reports size |
 | `vite.embedded.config.ts` | Static embedded-build configuration |
 | `docs/api-contract.md` | Connected and proposed controller endpoints |
+| `docs/firmware-integration-gaps.md` | Shared firmware/WebUI contract gaps and acceptance tests |
 | `docs/embedded-delivery.md` | ESP32 storage and serving requirements |
 | `docs/product-and-safety.md` | Durable WebUI behavior and safety decisions |
 

@@ -2,6 +2,8 @@
 
 The production WebUI and controller API share an origin. Read endpoints return JSON. Every state-changing request must accept `X-Lift-Api-Token` when controller authentication is configured, apply firmware prechecks, return an authoritative result, and append an audit event.
 
+See [firmware and WebUI integration gaps](firmware-integration-gaps.md) for the required capability negotiation, authoritative safety/landing state, VFD freshness, RF confirmation behavior, and integration acceptance tests.
+
 ## Used by the frontend today
 
 ### `GET /api/status`
