@@ -15,7 +15,7 @@ This matrix converts the project goals into schematic-facing requirements. `TBD`
 | ID | Function | Required behavior | Candidate implementation | Key constraints | Open decisions |
 | --- | --- | --- | --- | --- | --- |
 | PWR-001 | Mains input | Tap available 120 VAC leg inside VFD housing | Fused AC input section with screw terminal or blade terminal option | Creepage, clearance, surge, service safety | Confirm tap point, disconnect behavior, and enclosure grounding |
-| PWR-002 | Isolated DC | Provide 12 V low-voltage control power | RECOM RAC10-12SK/277 baseline | 12 V, 10 W, 840 mA; light load is about 750 mA | Confirm final 12 V load budget and whether any solenoid output remains |
+| PWR-002 | Isolated DC | Provide 12 V low-voltage control power | RECOM RAC10-12SK/277 baseline plus jumper-selectable external 12 V lighting input | 12 V, 10 W, 840 mA; previous lighting operated from this supply | Confirm Rev-A load margin and use the external lighting feed if required |
 | PWR-003 | 5 V interface rail | Provide a regulated 5 V rail for VFD translation and legacy RF/decoder circuitry | Selected `R-78E5.0-0.5` from the isolated 12 V rail, isolated from USB VBUS with `LM66100DCKR` ideal-diode paths | VFD/RF load budget, noise, startup order | Confirm 5 V current budget and source-transition behavior |
 | PWR-004 | 3.3 V logic rail | Regulate 3.3 V for MCU and logic from 12 V | AP63203/AP63200 class buck | Wi-Fi current peaks, VFD noise, thermal margin | Finalize current budget and layout filtering |
 | PWR-005 | Backup time | Preserve logs/state across power loss | MRAM handles write endurance; optional RTC backup | No motion on backup power | Decide RTC battery/supercap |
@@ -33,7 +33,7 @@ This matrix converts the project goals into schematic-facing requirements. `TBD`
 
 | ID | Function | Required behavior | Candidate implementation | Key constraints | Open decisions |
 | --- | --- | --- | --- | --- | --- |
-| VFD-001 | Serial control | Send EM01 run/stop/monitor/get/set commands through the established four-pin interface | Observed `TXS0104E` 3.3 V-to-5 V translation stage with OE default-low, test pads, and optional protection | 9600 baud standard UART framing; pinout, reference, and electrical limits are still unverified | Bench-map the header and validate levels/fault behavior before selecting any extra driver/isolation |
+| VFD-001 | Serial control | Send EM01 run/stop/monitor/get/set commands through the established four-pin interface | Field-matched `TXS0104E` 3.3 V-to-5 V translation stage with OE default-low, test pads, and optional protection | 9600 baud standard UART framing; assembled-board connector and fault behavior still require verification | Bench-test the header, levels, and fault behavior before lift connection |
 | VFD-002 | Hardware stop/enable | Remove motion authority independent of serial if available | VFD enable/stop terminal driver | Must fail safe on reset/watchdog | Confirm VFD terminal functions |
 | VFD-003 | Parameter access | WebUI read/write of all documented parameters | Firmware metadata table and range checks | Stopped-only writes, read-back verify | Validate parameter 13 ambiguity on real drive |
 | VFD-004 | Stop calibration dependency | Track VFD deceleration parameter used during measured stop calibration | Calibration metadata in MRAM | Deceleration changes invalidate stop offset | Confirm exact VFD deceleration parameter behavior on real drive |
@@ -66,7 +66,7 @@ This matrix converts the project goals into schematic-facing requirements. `TBD`
 | IN-001 | User buttons | Read call/stop/service buttons | Protected GPIO or isolated input receiver | Voltage level TBD | Confirm field wiring voltage |
 | IN-002 | Safety loop monitor | Monitor safety status in firmware | Protected input only; hardwired chain handles authority | Must not be sole safety path | Confirm safety circuit voltage |
 | IN-003 | Restricted service recovery | Permit diagnosed monitored-channel recovery only with cabinet-local authorization and continuous hold-to-run | Keyed/service input plus hold-to-run input, guarded firmware state | Must not bypass E-stop, hardwired final limits, VFD/watchdog authority removal, or permit normal-speed/remote motion; automatic timeout and logging required | Safety review and exact field procedure required before implementation |
-| OUT-001 | Lift light | Control current lift lighting | 12 V MOSFET low-side or high-side switch with fuse/current protection | Estimated 12 V, about 750 mA | Confirm LED/incandescent load type, inrush, and wiring return |
+| OUT-001 | Lift light | Control current lift lighting | Protected 12 V MOSFET switch with jumper-selectable onboard or external 12 V source | Estimated 12 V, about 750 mA; external feed supports higher load or reduced onboard margin | Confirm load type, inrush, wiring return, and selected supply source |
 | OUT-002 | Interlocks/solenoids | Omit unless requirement returns | External relay/SSR header if needed | Safety review required | Confirm no interlock outputs required |
 | OUT-003 | Status indicator | Local board status indication | LED or service header | Useful during bring-up | Decide visible indicator location |
 

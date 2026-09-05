@@ -9,8 +9,9 @@ bench planning, but it is not a production BOM or safety approval.
 - Board envelope: 90 mm x 90 mm; corner mounting-hole centers 86 mm apart.
 - Local rails required by the observed interfaces: isolated 12 V, regulated 5 V,
   and regulated 3.3 V.
-- VFD serial reference: `TSW-104-07-G-S` four-pin connector ordered 5 V, GND,
-  RX, TX and `TXS0104E` 3.3 V-to-5 V translation, pending bench verification.
+- VFD serial reference: field-matched `TXS0104E` 3.3 V-to-5 V translation and
+  `TSW-104-07-G-S` four-pin connector ordered 5 V, GND, RX, TX. The assembled
+  board and connector remain subject to bench verification.
 - Encoder reference: 12 V open-collector A/B into `TLP291-4` isolation. Rev A
   uses 2.2 kOhm LED resistors rather than the observed legacy 270 ohm values;
   switching margin remains a bench gate.
@@ -28,13 +29,13 @@ bench planning, but it is not a production BOM or safety approval.
 
 | Block | Reference part or interface | Sourcing plan | Capture status |
 | --- | --- | --- | --- |
-| Mains to 12 V | RECOM `RAC10-12SK/277` | Exact imported part with fused input, MOV, bulk capacitance and test point. Phoenix `1717732` 7.62 mm-pitch L/N/PE terminal is selected provisionally so the PCB can maintain the mains clearance rule. Check final 12 V load budget before approval. | Captured; safety and connector-footprint review gate |
+| Mains to 12 V | RECOM `RAC10-12SK/277` | Exact imported part with fused input, MOV, bulk capacitance and test point. Phoenix `1717732` 7.62 mm-pitch L/N/PE terminal is selected provisionally so the PCB can maintain the mains clearance rule. The light output can instead use its jumper-selectable external 12 V feed if Rev-A load margin requires it. | Captured; load, safety and connector-footprint review gate |
 | 12 V to 5 V | RECOM `R-78E5.0-0.5` | Exact imported part, 0.5 A rating. | Captured |
 | 12 V to 3.3 V | `AP63203WU-7` 2 A buck | Standard KiCad symbol/footprint with selected 2.2 uH inductor and required capacitors. | Captured |
 | 5 V source sharing | Two `LM66100DCKR` ideal diodes | One isolates the onboard R-78E source and one isolates USB VBUS. Either source can run the logic rail without backfeeding the other. | Captured |
 | MCU | `ESP32-S3-WROOM-1U-N16R8` | Exact external-antenna module; its 16 MB flash and 8 MB PSRAM eliminate a separate Rev-A QSPI asset-flash device. | Captured |
 | Persistent storage | `PM004MNIATR` 4 Mbit MRAM | Datasheet-derived project symbol; downloaded library asset still requested for independent verification. | Captured; library verification gate |
-| VFD level translation | TI `TXS0104ED` | OE defaults low; direct UART nets and test pads are included. | Captured; bench gate |
+| VFD level translation | TI `TXS0104ED` | Field-matched circuit; OE defaults low and direct UART nets and test pads are included. | Captured; assembled-board bench gate |
 | Encoder isolation | Toshiba `TLP291-4` | Two channels used for A/B; unused channels explicitly marked no-connect. | Captured; bench gate |
 | Encoder counter | `LS7366R-S` | Datasheet-derived project symbol, SPI connection and local 4 MHz clock. | Captured; library verification gate |
 | RF receiver/decoder | Linx `RXM-418-LR` and `LICAL-DEC-MS001` | Exact imported parts; harvested modules acceptable for prototype use. | Captured |

@@ -38,10 +38,10 @@ Use `docs/hardware-requirements-matrix.md` and the main README physical verifica
 - Target PCB outline: 90 mm x 90 mm; corner mounting-hole centers 86 mm apart. Keep 12 mm underside screw/standoff keepouts; verify the estimated 2.56 mm hole diameter before layout release.
 - Main supply: fused 120 VAC + neutral to exact RECOM `RAC10-12SK/277`; protected 12 V distribution uses `MF-MSMF075/24X`; 5 V uses an `R-78E5.0-0.5`; and 3.3 V uses an AP63203 stage with Bourns `SRP7028A-2R2M`.
 - 5 V source sharing: separate `LM66100DCKR` ideal diodes isolate the onboard 5 V converter and USB VBUS before they join the logic rail.
-- VFD serial: `TXS0104E` translation and `TSW-104-07-G-S` header ordered 5 V, GND, RX, TX. Pinout and bench behavior remain release gates.
+- VFD serial: the `TXS0104E` circuit matches the field design, with the `TSW-104-07-G-S` header ordered 5 V, GND, RX, TX. Assembled-board pinout and bench behavior remain release gates.
 - Encoder: 12 V field inputs use 2.2 kOhm LED resistors into `TLP291-4` isolation. This intentionally replaces the observed legacy 270 ohm values to avoid excessive optocoupler current; verify reliable switching on the actual encoder.
 - RF: RXM-418-LR and `LICAL-DEC-MS001` support is mandatory; include a separate wired `LEARN` interface plus a local service button/pads.
-- Light output: protected 12 V MOSFET output with an onboard/external supply selector. The 10 W RAC10 supply is too small for a 750 mA lamp plus the controller, so use the external lamp input or qualify a larger isolated supply.
+- Light output: protected 12 V MOSFET output with an onboard/external supply selector. The previous 750 mA lighting operated from the 10 W RAC10 supply; verify Rev-A load margin, and select the external 12 V lamp input if controller demand or upgraded lighting exceeds the onboard budget.
 - Service station: J43 accepts dry-contact SERVICE KEY and HOLD-TO-RUN inputs with a shared GND; J44 accepts dry-contact SERVICE UP and SERVICE DOWN inputs with a shared GND. Use a maintained key switch and momentary controls. These are optically isolated MCU inputs, not a safety-rated enabling circuit.
 
 ## PCB Preparation Status
@@ -97,3 +97,4 @@ The helper scripts auto-detect conventional OneDrive/Documents KiCad plugin
 locations. On a different layout, set `KONNECT_PLUGIN_ROOT` to the installed
 Konnect directory and `KICAD_10_BIN` to the KiCad 10 `bin` directory. Neither
 environment variable is required merely to open and edit the project in KiCad.
+The scripts are compatible with Windows PowerShell 5.1 and PowerShell 7.

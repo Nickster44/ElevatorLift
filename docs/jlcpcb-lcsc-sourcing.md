@@ -19,12 +19,12 @@ Status meanings:
 | RTC | Micro Crystal RV-3028-C7-32.768kHz-1ppm-TA-QC | `C3019759` | Strong | `datasheets/MicroCrystal_RV-3028-C7_RTC_datasheet.pdf` | LCSC lists stock. Useful for timestamped logs when there is no network/NTP connection. |
 | VFD UART isolation alternate | TI ISO6721BDR | `C5216430` | Strong | `datasheets/TI_ISO6721_dual_digital_isolator_datasheet.pdf` | Not fitted in the captured TXS0104E reference topology. Retain as an option only if bench testing establishes a complete isolated-side power and signal strategy. |
 | VFD UART isolation alternate | Chipanalog CA-IS3721 / CA-IS372x | `C528650` | Likely | `datasheets/Chipanalog_CA-IS372x_dual_digital_isolator_datasheet.pdf` | China-source alternate with 150 Mbps family rating and wide supply range. Check exact suffix, channel direction, and default output state. |
-| VFD UART translator | TI TXS0104ED | Verify at order time | Likely | `datasheets/TI_TXS0104E_level_translator_datasheet.pdf` | Captured to match the observed 3.3 V/5 V legacy interface. Header pinout, direction and VFD electrical requirements remain bench gates. |
-| VFD opto-input driver alternate | MMBT3904 class NPN or small logic MOSFET | `C20526` for MMBT3904 | Strong | Datasheet not local | Not fitted by default. Add only if bench testing proves that the VFD input needs more current than the TXS0104E topology can provide. |
+| VFD UART translator | TI TXS0104ED | Verify at order time | Likely | `datasheets/TI_TXS0104E_level_translator_datasheet.pdf` | Captured to match the field-used 3.3 V/5 V interface. Assembled-board header pinout, levels and fault behavior remain bench gates. |
+| VFD alternate driver | MMBT3904 class NPN or small logic MOSFET | `C20526` for MMBT3904 | Strong | Datasheet not local | Not fitted by default. Retain only as a redesign option for a different VFD electrical interface or an unexpected assembled-board test result. |
 | Industrial digital input | TI ISO1211DR | `C2674102` | Likely | `datasheets/TI_ISO1211_ISO1212_digital_input_receiver_datasheet.pdf` | Candidate for 24 V to 60 V field inputs. Do not use by default if final wiring can be low-voltage dry contacts. |
 | Encoder conditioning | TI SN74LVC2G17DBVR | `C10429` | Strong | `datasheets/TI_SN74LVC2G17_schmitt_buffer_datasheet.pdf` | Schmitt buffer after pullups, current limiting, filtering option, and ESD protection. Also review China-source equivalents if cost matters. |
 | Legacy RF receiver | Linx / TE RXM-418-LR | `C6670221` | Likely | `datasheets/Linx_RXM-418-LR_receiver_datasheet.pdf` | Preserves existing remote compatibility. Confirm JLC assembly support and RF module placement rules; RF commands must remain non-safety commands. |
-| 120 VAC to 12 V module | RECOM RAC10-12SK/277 | `C5199922` | Strong | `datasheets/RECOM_RAC10-12SK277_ACDC_module_datasheet.pdf` | JLCPCB lists this part for assembly as an Extended, wave-soldered AC/DC module. Baseline choice because the old accessory board used it and the light is believed to be 12 V. |
+| 120 VAC to 12 V module | RECOM RAC10-12SK/277 | `C5199922` | Strong | `datasheets/RECOM_RAC10-12SK277_ACDC_module_datasheet.pdf` | JLCPCB lists this part for assembly as an Extended, wave-soldered AC/DC module. It powered the previous installation; Rev A can move lighting to its jumper-selectable external 12 V feed if load margin requires it. |
 | 120 VAC to 5 V fallback | LS05-13B05R3 class module | `C41381028` | Likely | `datasheets/Mornsun_LS05-13B05R3_ACDC_module_datasheet.pdf` | Useful only if the 12 V light/output strategy changes. Verify supplier datasheet, creepage, clearance, approvals, and height before layout release. |
 | 3.3 V buck | Diodes AP63203WU-7 | `C780769` | Likely | `datasheets/Diodes_AP63200_AP63203_buck_datasheet.pdf` | Fixed 3.3 V, 2 A, TSOT-23-6. If stock is weak at order time, AP63200 adjustable (`C2071868`) or a China-source 3.3 V buck can be substituted. |
 | 12 V light switch | AO3400A N-channel MOSFET | `C20917` | Strong | Datasheet not local | JLC Basic SOT-23 MOSFET. Good candidate for a protected low-side 12 V light output if wiring allows low-side switching. |
@@ -40,7 +40,7 @@ For a JLCPCB-friendly revision A, use these as the default major parts unless be
 - LS7366R-S for quadrature counting, with a fallback plan if JLC assembly support is weak.
 - N16R8 internal flash for WebUI/static storage and OTA; do not fit W25Q128JVSIQ in Rev A.
 - RV-3028-C7 for offline timestamps.
-- TXS0104ED for the captured VFD UART reference topology; keep a discrete driver or ISO6721/CA-IS372x architecture as a bench-driven redesign option only.
+- TXS0104ED for the field-matched VFD UART topology; keep a discrete driver or ISO6721/CA-IS372x architecture as a future-interface or unexpected-test redesign option only.
 - AP63203WU-7 for 3.3 V from the isolated 12 V rail.
 - RXM-418-LR receiver path because legacy remotes are mandatory.
 - AO3400A-class protected MOSFET output for the 12 V lift light.
@@ -53,4 +53,4 @@ Before converting this into schematic symbols and PCB footprints:
 2. Confirm each package exactly matches the KiCad footprint, not just the family name.
 3. Re-check LCSC/JLC inventory for the MCU module, MRAM, LS7366R, RECOM AC/DC module, and RF receiver because those are the highest-risk supply items.
 4. Confirm mains module safety approvals and board-level creepage/clearance against the enclosure and installation constraints.
-5. Confirm the VFD serial electrical layer before committing to UART-only isolation, RS-485, or a footprint option for both.
+5. Confirm the assembled field-matched VFD serial circuit and connector behavior before release; revisit isolation or RS-485 only for a different VFD interface requirement.

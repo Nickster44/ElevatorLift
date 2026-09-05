@@ -92,7 +92,9 @@ try {
         $requestId++
     }
 
-    $arguments = $ArgumentsJson | ConvertFrom-Json -AsHashtable
+    # PSCustomObject serializes correctly as JSON-RPC arguments and keeps this
+    # helper compatible with both Windows PowerShell 5.1 and PowerShell 7.
+    $arguments = $ArgumentsJson | ConvertFrom-Json
     $result = Invoke-KonnectMessage -Id $requestId -Message @{
         jsonrpc = '2.0'
         id = $requestId

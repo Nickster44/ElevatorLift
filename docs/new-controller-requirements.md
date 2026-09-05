@@ -76,7 +76,7 @@
 - If the board is mounted inside the VFD housing, it may need to tap one 120 VAC leg for control power.
 - The power input should include appropriate fusing, surge protection, creepage/clearance, and an isolated AC/DC supply or approved enclosed module.
 - The previous design used an accessory board in the disconnect box with a 120 VAC to DC supply; this remains a fallback architecture if VFD-box space is too limited.
-- The previous accessory board used a RECOM `RAC10-12SK/277` 12 V, 10 W supply. This is a useful baseline because the lift light is believed to be 12 V at about 750 mA, but it leaves limited current margin if a solenoid output returns.
+- The previous installation successfully used a RECOM `RAC10-12SK/277` 12 V, 10 W supply for its lighting. Retain it as the baseline, verify total Rev-A load margin, and use the jumper-selectable external 12 V lighting input for upgraded lights or insufficient onboard margin.
 - The first PCB should target approximately 90 mm x 90 mm with corner mounting-hole centers 86 mm apart. Treat the approximately 2.56 mm hole diameter, 40 mm enclosure height, and 12 mm underside clearance as provisional until direct caliper measurements confirm them.
 - Mains/control power should enter through a serviceable connector. Start with a screw terminal footprint; evaluate blade terminals if they improve cabinet wiring and safety clearances.
 - Mechanical design should account for service access, antenna placement, separation from VFD power wiring, connector strain relief, and safe separation between mains and SELV circuitry.
@@ -106,7 +106,7 @@
 ## VFD Interface
 
 - The VFD UART should include protection and a defined ground/reference strategy.
-- The VFD serial interface uses standard UART framing. The observed legacy board uses a `TXS0104E` 3.3 V-to-5 V translation stage and no discrete driver was seen. Reproduce that topology only as a bench-validated reference: confirm the header pinout, common/reference, levels, and any actual VFD opto-input requirement before release.
+- The VFD serial interface uses standard UART framing. The Rev-A `TXS0104E` 3.3 V-to-5 V translation circuit has been cross-checked against the field design. Confirm the assembled-board header pinout, common/reference, levels, and fault behavior before release.
 - Firmware should verify checksums for all VFD responses.
 - VFD monitor status should be polled during motion.
 - Stop should be layered: serial stop command plus a fail-safe hardware path where possible.

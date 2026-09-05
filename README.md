@@ -39,6 +39,10 @@ firmware/
   platformio.ini                    Starter PlatformIO target for ESP32-S3
   include/
   src/
+webapp/
+  app/                              Full development and service-console UI
+  embedded/                         Static entry point for the ESP32 build
+  docs/                             WebUI API, safety, and delivery contracts
 hardware/
   ElevatorLift.kicad_pro            KiCad 10 project; open this file
   ElevatorLift.kicad_sch            Root hierarchical schematic
@@ -63,11 +67,11 @@ Known design constraints captured so far:
 
 - KiCad 10.0.4 is the active hardware design version.
 - Measured legacy mechanical target is approximately 90 mm x 90 mm with corner mounting-hole centers 86 mm apart; 2.56 mm hole diameter remains to be confirmed.
-- The observed VFD serial path is a four-pin header and a TI `TXS0104E` 3.3 V-to-5 V translator, with no discrete driver seen. Pinout, reference, and idle levels still require bench verification.
+- The Rev-A VFD serial circuit has been cross-checked against the field design and reproduces its TI `TXS0104E` 3.3 V-to-5 V topology. The assembled board, connector pinout, reference, and idle levels still require bench verification before lift connection.
 - The observed encoder path appears to be 12 V open-collector A/B with 270 ohm pullups and 270 ohm series resistors feeding a `TLP291-4` optocoupler. Trace details, current, and maximum pulse rate remain open.
 - Legacy Linx/TE RXM-418-LR 418 MHz RF remote support is mandatory.
-- Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, because the previous accessory board used it and JLCPCB lists it as assembly part `C5199922`.
-- The lift light is believed to be 12 V at about 750 mA, so the 10 W supply is tight if future solenoids are added.
+- Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, because the previous system successfully powered its lighting from this supply and JLCPCB lists it as assembly part `C5199922`.
+- Rev A retains a jumper-selectable external 12 V lighting input. Use it if measured controller margin is insufficient or future lighting requires more power than the onboard supply can provide.
 - Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
 - Web assets, OTA staging and noncritical logs should use the module's 16 MB flash and 8 MB PSRAM first. Rev A does not include a separate QSPI NOR device.
 - Outside control should use local REST first, optional MQTT later, and Home Assistant as the recommended bridge to Google Home, watches, and broader automation.
@@ -153,7 +157,7 @@ The next board should be designed around these blocks:
 
 - Exact `ESP32-S3-WROOM-1U-N16R8` external-antenna Wi-Fi module.
 - Fused 120 VAC + neutral input, isolated 12 V supply, 5 V rail, and 3.3 V rail.
-- VFD UART interface based initially on the proven 3.3 V-to-5 V `TXS0104E` topology, with a bench gate before lift connection.
+- VFD UART interface reproducing the field-used 3.3 V-to-5 V `TXS0104E` topology, with an assembled-board bench gate before lift connection.
 - LS7366R SPI quadrature counter.
 - Encoder input conditioning for the observed 12 V open-collector quadrature outputs, including isolation/level translation before the counter.
 - SPI MRAM for live position snapshots, settings, recent event logs, and fault records.
@@ -162,7 +166,7 @@ The next board should be designed around these blocks:
 - VFD enable/stop/brake control path that fails safe on MCU reset or watchdog timeout.
 - Protected digital inputs for call buttons, RF receiver, limit switches, home switch, and safety loop.
 - Mandatory RXM-418-LR RF receiver path.
-- Protected 12 V MOSFET light output and optional low-voltage auxiliary output header.
+- Protected 12 V MOSFET light output with jumper-selectable onboard or external 12 V supply, plus an optional low-voltage auxiliary output header.
 - Watchdog and brownout detection.
 - Surge/ESD/EMI protection suitable for outdoor wiring and a VFD enclosure.
 
@@ -191,7 +195,7 @@ Before final schematic release, complete the remaining checks below:
 1. Confirm the estimated 40 mm enclosure height and 12 mm underside clearance, then measure connector/wire-bend keepouts and airflow.
 2. Confirm the approximately 90 mm x 90 mm board, 86 mm mounting-hole centers, 2.56 mm hole diameter, screw size, and standoff material.
 3. Old controller hardware: photograph both sides of the Particle/Xenon board and accessory Nano board, record IC markings, regulator parts, RF receiver wiring, level-shifting parts, optocouplers, drivers, relay part numbers, fuses, MOVs, terminal blocks, and any bodge wiring.
-4. VFD serial interface: document the observed `TXS0104E` connection, header pinout, idle voltage, common/reference, polarity, receive level, cable length, and bench behavior.
+4. VFD serial interface: verify the field-matched `TXS0104E` circuit on the assembled board, including header pinout, idle voltage, common/reference, polarity, receive level, cable length, and bench behavior.
 5. Power input: where 120 VAC can be tapped, whether it is upstream/downstream of the disconnect, available neutral, protective earth/chassis connection, fuse location, wire gauge, and connector style.
 6. Existing 12 V loads: light voltage/current, inrush behavior, shared return path, connector type, and whether any solenoid/interlock output still needs power.
 7. Encoder wiring: verify the observed 12 V supply, 270 ohm pullups, 270 ohm series resistors, `TLP291-4` path, exact encoder model, A/B idle voltage, cable/shielding, connector pinout, and maximum pulse rate.
@@ -205,7 +209,7 @@ Before final schematic release, complete the remaining checks below:
 
 1. Review the completed Rev-A KiCad schematic, replace the remaining provisional connector/counter/MRAM/RTC library assets, and close actionable ERC findings.
 2. Verify the first-pass connector map against the real wiring and physical verification checklist.
-3. Bench-test the observed `TXS0104E` VFD interface topology, header pinout, levels, and fault behavior before connecting to the real lift.
+3. Bench-test the assembled field-matched `TXS0104E` VFD interface, header pinout, levels, and fault behavior before connecting to the real lift.
 4. Define the MRAM data layout for position snapshots, settings, VFD parameter cache, remote registry, and event logs.
 5. Implement the program-mode exit calibration workflow that measures and stores stop distance.
 6. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.

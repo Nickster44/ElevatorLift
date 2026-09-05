@@ -10,7 +10,7 @@ Build the first board around:
 - LS7366R-S SPI quadrature counter.
 - PM004MNIATR SPI MRAM for critical state and recent logs.
 - Module flash for WebUI assets and OTA; no separate Rev-A bulk-flash IC.
-- TXS0104E 3.3 V/5 V VFD UART reference topology, subject to bench qualification.
+- Field-matched TXS0104E 3.3 V/5 V VFD UART topology, subject to assembled-board bench qualification.
 - 12 V optically isolated encoder input path with 2.2 kOhm LED resistors.
 - Local fallback AP Wi-Fi setup flow.
 - 120 VAC to isolated DC power module if the board fits inside the VFD housing.
@@ -29,11 +29,11 @@ Build the first board around:
 | Lower-cost memory alternate | Infineon/Fujitsu MB85RS4MT | 4 Mbit SPI FRAM with high endurance | FRAM, not MRAM; acceptable fallback if MRAM cost/sourcing is poor |
 | Web assets / extended logs | N16R8 module internal flash | Avoids a separate memory IC while providing 16 MB flash and 8 MB PSRAM | W25Q128JV remains a later-revision reference only |
 | RTC timestamps | Micro Crystal RV-3028-C7 | Very low power I2C RTC with UNIX time counter and backup support | Useful when AP-only/offline and no NTP is available |
-| VFD UART interface | TI `TXS0104E` | Matches the observed 3.3 V-to-5 V legacy topology and four-pin 5 V/GND/RX/TX header | Bench-confirm header order, direction, idle levels and whether the VFD actually requires an opto-current driver |
+| VFD UART interface | TI `TXS0104E` | Matches the field-used 3.3 V-to-5 V topology and four-pin 5 V/GND/RX/TX header | Bench-confirm assembled-board header order, direction, idle levels and fault behavior |
 | Industrial digital inputs | TI ISO1211 / ISO1212 | Isolated digital input receiver family for industrial input modules | Candidate if field inputs are 24 V or higher; exact input voltages still need confirmation |
 | RF receiver | TE/Linx RXM-418-LR | Maintains compatibility path with existing 418 MHz remotes | Requires firmware validation/decoding; RF commands are not safety signals |
 | RF decoder | Linx LICAL-DEC-MS001 | Existing five-button remote decoding, retained learned-address memory, TX_ID identity output, LEARN control, and MODE_IND status | Route all five data outputs, TX_ID, LEARN, and MODE_IND; supports 40 learned addresses and erase-all rather than individual deletion |
-| AC/DC power | RECOM RAC10-12SK/277 | Previously used 12 V, 10 W supply; JLCPCB lists it as an assembly candidate | Good baseline for 12 V light plus logic, but limited margin for future solenoids |
+| AC/DC power | RECOM RAC10-12SK/277 | Previously powered the installed lighting; JLCPCB lists it as an assembly candidate | Proven installation baseline; verify Rev-A total load and use the jumper-selectable external 12 V light feed when needed |
 | 3.3 V rail | Diodes AP63203WU-7 or AP63200 adjustable variant | Compact buck regulator options depending on upstream DC rail | AP63203 is a fixed 3.3 V JLC candidate; AP63200 adjustable is a fallback if stock changes |
 | 12 V light output | Protected MOSFET switch | Compact path for the believed 12 V, about 750 mA lift light | Confirm load type, inrush, and whether low-side switching is acceptable |
 
@@ -71,12 +71,12 @@ Use the N16R8 module's flash for Rev-A WebUI assets, OTA staging and noncritical
 
 ### VFD Interface
 
-The old controller drove the VFD from `Serial1` at 9600 baud. The observed legacy PCB uses a TI `TXS0104E` between the 3.3 V controller side and a four-pin VFD header, with no discrete transistor or series resistor observed. This is a useful working reference, but the VFD pinout, common/reference, idle levels, and input type have not yet been bench-verified.
+The old controller drove the VFD from `Serial1` at 9600 baud. The legacy PCB uses a TI `TXS0104E` between the 3.3 V controller side and a four-pin VFD header, with no discrete transistor or series resistor. The Rev-A circuit has been cross-checked against that field design. The new assembled board still requires confirmation of connector pinout, common/reference, idle levels, and fault behavior before lift connection.
 
 Recommended default:
 
-- Start with the observed 3.3 V-to-5 V `TXS0104E` topology, including an OE pull-down, test pads, and a configurable protection/series-resistor footprint.
-- Do not add an opto-input current driver unless the bench test proves the VFD interface requires it; preserve space for that option if practical.
+- Use the field-matched 3.3 V-to-5 V `TXS0104E` topology, including an OE pull-down, test pads, and a configurable protection/series-resistor footprint.
+- Retain a discrete-driver or isolation redesign only as a contingency if assembled-board testing or a future VFD variant establishes a different electrical requirement.
 - Include series resistors, ESD protection, and a defined return/reference path.
 - Keep VFD serial routing away from mains/motor output wiring.
 - Add a hardware enable/stop path independent of serial commands if the VFD supports it.
@@ -113,11 +113,11 @@ If the control board fits inside the VFD housing, use a PCB-mount isolated AC/DC
 - Protective earth/chassis strategy.
 - Separate noisy/high-voltage area from SELV logic.
 
-Start with the RECOM `RAC10-12SK/277` 12 V, 10 W module as the baseline because it was used successfully in the previous accessory board and is listed by JLCPCB. The believed 12 V, about 750 mA lift light consumes most of that supply's continuous current rating, so future solenoids or auxiliary outputs require either a larger supply, a separate auxiliary supply, or an external output module.
+Use the RECOM `RAC10-12SK/277` 12 V, 10 W module as the baseline because it successfully powered the previous installation and is listed by JLCPCB. Rev A adds a jumper-selectable external 12 V feed specifically for the light output. Confirm the total onboard load during bring-up; select the external feed for upgraded lighting, inadequate controller margin, or any higher-power load.
 
 ## Remaining Qualification Decisions
 
-1. Bench-map the VFD four-pin header and confirm the `TXS0104E` levels, polarity, reference, and fault behavior.
+1. Bench-test the assembled field-matched VFD circuit and confirm the four-pin header order, levels, polarity, reference, and fault behavior.
 2. Confirm the measured 90 mm x 90 mm board envelope, 86 mm hole centers, hole diameter, and enclosure keepouts.
 3. Confirm available 120 VAC tap point and grounding/chassis strategy.
 4. Confirm exact encoder model, cable length, 12 V/270 ohm/TLP291-4 implementation, optocoupler outputs, and HC74 function on the old board.
