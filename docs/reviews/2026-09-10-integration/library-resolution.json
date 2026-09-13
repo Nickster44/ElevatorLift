@@ -1,0 +1,17 @@
+[
+  {
+    "isError": false,
+    "result": "{\"lib_id\":\"SnapEDA:LICAL-DEC-MS001\",\"library\":\"SnapEDA\",\"name\":\"LICAL-DEC-MS001\",\"pin_count\":20,\"pins\":[{\"name\":\"D6\",\"number\":\"1\",\"type\":\"output\",\"x\":-2.54,\"y\":0.0},{\"name\":\"D7\",\"number\":\"2\",\"type\":\"output\",\"x\":-2.54,\"y\":-2.54},{\"name\":\"SEL_BAUD0\",\"number\":\"3\",\"type\":\"input\",\"x\":-2.54,\"y\":-5.08},{\"name\":\"SEL_BAUD1\",\"number\":\"4\",\"type\":\"input\",\"x\":-2.54,\"y\":-7.62},{\"name\":\"GND1\",\"number\":\"5\",\"type\":\"power_in\",\"x\":-2.54,\"y\":-10.16},{\"name\":\"GND2\",\"number\":\"6\",\"type\":\"power_in\",\"x\":-2.54,\"y\":-12.7},{\"name\":\"LATCH\",\"number\":\"7\",\"type\":\"input\",\"x\":-2.54,\"y\":-15.24},{\"name\":\"RX_CNTL\",\"number\":\"8\",\"type\":\"input\",\"x\":-2.54,\"y\":-17.78},{\"name\":\"TX_ID\",\"number\":\"9\",\"type\":\"output\",\"x\":-2.54,\"y\":-20.32},{\"name\":\"MODE_IND\",\"number\":\"10\",\"type\":\"output\",\"x\":-2.54,\"y\":-22.86},{\"name\":\"LEARN\",\"number\":\"11\",\"type\":\"input\",\"x\":27.94,\"y\":-22.86},{\"name\":\"DATA_IN\",\"number\":\"12\",\"type\":\"input\",\"x\":27.94,\"y\":-20.32},{\"name\":\"D0\",\"number\":\"13\",\"type\":\"output\",\"x\":27.94,\"y\":-17.78},{\"name\":\"D1\",\"number\":\"14\",\"type\":\"output\",\"x\":27.94,\"y\":-15.24},{\"name\":\"VCC2\",\"number\":\"15\",\"type\":\"power_in\",\"x\":27.94,\"y\":-12.7},{\"name\":\"VCC1\",\"number\":\"16\",\"type\":\"power_in\",\"x\":27.94,\"y\":-10.16},{\"name\":\"D2\",\"number\":\"17\",\"type\":\"output\",\"x\":27.94,\"y\":-7.62},{\"name\":\"D3\",\"number\":\"18\",\"type\":\"output\",\"x\":27.94,\"y\":-5.08},{\"name\":\"D4\",\"number\":\"19\",\"type\":\"output\",\"x\":27.94,\"y\":-2.54},{\"name\":\"D5\",\"number\":\"20\",\"type\":\"output\",\"x\":27.94,\"y\":0.0}],\"properties\":{\"Footprint\":\"LICAL-DEC-MS001:20-SSOP\",\"Reference\":\"U\",\"Value\":\"LICAL-DEC-MS001\"}}",
+    "tool": "get_symbol_info"
+  },
+  {
+    "isError": false,
+    "result": "{\"description\":\"Corrected land pattern V2 for ESP32-S3-WROOM-1U-N16R8; manufacturer perimeter geometry and nine symbol-compatible exposed-pad segments; no invalid microvias.\",\"has_3d_model\":false,\"has_courtyard\":true,\"name\":\"ESP32-S3-WROOM-1U-N16R8_CorrectedV2\",\"pad_count\":49,\"path\":\"C:\\\\Users\\\\nicho\\\\OneDrive\\\\Documents\\\\KiCad\\\\ElevatorLift\\\\hardware\\\\ElevatorLift_Custom.pretty\\\\ESP32-S3-WROOM-1U-N16R8_CorrectedV2.kicad_mod\"}",
+    "tool": "get_footprint_info"
+  },
+  {
+    "isError": false,
+    "result": "{\"description\":\"\",\"has_3d_model\":false,\"has_courtyard\":true,\"name\":\"GCT_USB4145-03-0230-C_REVA2\",\"pad_count\":22,\"path\":\"C:\\\\Users\\\\nicho\\\\OneDrive\\\\Documents\\\\KiCad\\\\ElevatorLift\\\\hardware\\\\SnapEDA-Library/Footprints.pretty\\\\GCT_USB4145-03-0230-C_REVA2.kicad_mod\"}",
+    "tool": "get_footprint_info"
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "apiVersion":1,"contractVersion":1,"bootId":"1234567890abcdef","sequence":1,"uptimeMs":1000,"sampleAgeMs":0,
+  "state":"unknown-position","deploymentReady":false,"position":"0","positionValid":false,
+  "currentFloor":null,"targetFloor":null,"motionAllowed":false,"canMoveUp":false,"canMoveDown":false,"stoppedConfirmed":false,
+  "safetyOk":false,"home":false,"upperLimit":null,"lowerLimit":null,"serviceKey":null,"fault":"",
+  "blockedReasons":["HW-01-unavailable-input-gpios","HW-02-coupled-uart-run-enable","physical-qualification-required"],
+  "capabilities":{"status":true,"motion":false,"light":false,"network":false,"logs":false},
+  "floors":[{"floor":1,"name":"Landing 1","position":null},{"floor":2,"name":"Landing 2","position":null},{"floor":3,"name":"Landing 3","position":null}],
+  "light":{"on":false,"feedbackVerified":false},"telemetry":null,"calibration":{"valid":false,"distance":null},
+  "devices":{"counter":"unavailable","mram":"unavailable","rtc":"time-invalid"},
+  "network":{"mode":"fallback_ap","stationIp":"","apIp":"192.168.4.1","hostname":"lift.local"},"authConfigured":false
+}

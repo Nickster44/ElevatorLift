@@ -1,85 +1,79 @@
-# Webapp API Contract
+# Controller API v1
 
-The production WebUI and controller API share an origin. Read endpoints return JSON. Every state-changing request must accept `X-Lift-Api-Token` when controller authentication is configured, apply firmware prechecks, return an authoritative result, and append an audit event.
+Status contract version 1 corresponds to `firmware/interface-contract.json`.
+`webapp/lib/controller.ts` is the executable response validator, and
+`tests/fixtures/status.json` is an inhibited example. Firmware serializes JSON
+with ArduinoJson, including SSID escaping. No live-to-demo fallback exists.
 
-See [firmware and WebUI integration gaps](firmware-integration-gaps.md) for the required capability negotiation, authoritative safety/landing state, VFD freshness, RF confirmation behavior, and integration acceptance tests.
+## Status
 
-## Used by the frontend today
+`GET /api/status` returns a cached input snapshot, API/contract versions,
+16-hex-character boot identity, sequence, uptime and sample age. Three floors have stable numbers 1-3, names
+and nullable decimal-string coordinates. Position is a signed decimal string;
+`positionValid=false` means it must not be displayed as a known landing.
+`currentFloor`/`targetFloor` are nullable. No browser count thresholds are used.
 
-### `GET /api/status`
+Permission fields: `motionAllowed`, `canMoveUp`, `canMoveDown`, `blockedReasons`,
+`stoppedConfirmed`, `deploymentReady`, safety/home and nullable limit/service-key
+inputs. The Rev-A inhibited profile always denies motion and returns unknown
+limits/key, not false/healthy. Its blocked reasons explicitly include HW-01/HW-02.
 
-Polled every three seconds. Expected fields:
+`capabilities` are boolean flags, not a promise inferred from visible controls.
+`telemetry=null` means unavailable; if present it has a separate `ageMs`.
+`light.on` is the commanded output, not physical load feedback.
+`calibration.valid=false` and null distance mean no usable calibration.
+The browser polls without overlap, aborts after 1800 ms, rejects input sample age
+over 100 ms, and expires received status after 2500 ms. Failed polls do not
+advance the last-valid timestamp. Unmounted/obsolete polls cannot update state.
+Duplicate or backward sequences within one boot are rejected. Freshness uses a
+monotonic browser clock and is checked again when dispatching non-STOP commands.
 
-```json
-{
-  "state": "idle",
-  "position": 18420,
-  "target": 18420,
-  "targetFloor": 2,
-  "normalRunTenthsHz": 450,
-  "safetyOk": true,
-  "home": false,
-  "lowerLimit": false,
-  "upperLimit": false,
-  "lastVfdCommand": "S00A0000",
-  "lastFault": "",
-  "networkMode": "station",
-  "stationIp": "192.168.4.28",
-  "apIp": ""
-}
-```
+## Current Routes
 
-The firmware should return a cached snapshot quickly; this request must never wait for VFD or storage operations.
-
-### `POST /api/move?floor=N`
-
-Requests a move to stable numeric floor `N`. The firmware resolves the floor position and nickname, then accepts or rejects the command after all motion prechecks. Expected success status: `202`. Expected rejection: `409` with a specific machine-readable reason.
-
-### `POST /api/stop`
-
-Requests a controlled stop. Expected success status: `202` with the new controller status. This is an operational command, not a substitute for the independent emergency-stop circuit.
-
-### `POST /api/light/toggle`
-
-Requests a light-state toggle. Expected JSON response:
-
-```json
-{ "on": true }
-```
-
-The returned state is authoritative; the browser should not assume the output changed.
-
-## Firmware contracts still required
-
-| Endpoint | Purpose and important rules |
+| Route | Result |
 | --- | --- |
-| `GET/POST /api/settings` | Read and validate speeds, homing behavior, stop offset, and retention settings. Writes must report per-field validation errors. |
-| `GET/POST /api/floors` | Stable numeric floor, editable nickname, and signed 64-bit encoder position. Renaming must not change the floor identifier. |
-| `GET /api/vfd/parameters` | Return all documented metadata, cached/read-back value, freshness, and access level. |
-| `GET/POST /api/vfd/parameter` | Stopped-only, range-checked, authenticated writes with VFD read-back confirmation and logging. |
-| `GET /api/logs/recent` | Bounded/paged events including source, acceptance result, reason, position, and remote identity when relevant. |
-| `GET/POST /api/remotes` | WebUI nickname and observation registry keyed by captured `TX_ID`; not an enumeration of decoder memory. |
-| `POST /api/remotes/learn` | Start or cancel the decoder's 17-second Learn Mode and report `MODE_IND` state and remaining time. |
-| `POST /api/remotes/erase-all` | Deliberate 10-second erase-all sequence. Must require confirmation and return progress/result; individual address deletion is unsupported. |
-| `GET /api/network` and `POST /api/network` | Read connection state and store station credentials without returning stored passwords. |
-| `GET /api/config/backup` | Export versioned controller settings, VFD values, floors, calibration, network preferences, and remote profiles. Exclude credentials by default and exclude decoder memory. |
-| `POST /api/config/restore` | Validate size, schema version, ranges, conflicts, and CRC before committing. Unknown remote profiles remain pending until their IDs are observed. |
-| Restricted recovery endpoints | May configure or observe a recovery session, but can never authorize motion without cabinet-local keyed enable and continuous physical hold-to-run. |
+| GET `/api/status` | v1 status |
+| GET `/api/capabilities` | v1 boolean capabilities |
+| GET `/api/network` | Redacted network status and SSID |
+| POST `/api/network` | Validated SSID/password saved in NVS; restart required, no automatic restart |
+| POST `/api/light` | Idempotent `on=true` or `on=false`; returns status |
+| POST `/api/move` | Strict floor 1-3; current profile returns 409 `hardware_unresolved` |
+| POST `/api/stop` | Supervisor stop request; current profile returns 503 `stop_delivery_unavailable_hardware_inhibited`, never claims physical stop |
+| GET `/api/logs/recent` | Up to 16 durable events, or 503 when MRAM is unavailable |
+| GET `/api/vfd/parameters` | Metadata only; `available=false`, no fabricated readback |
+| Other `/api/` routes | 501 `unsupported_capability` |
 
-## Error shape
+All POSTs require a configured token >=16 characters in `X-Lift-Api-Token`.
+Empty/short configured tokens fail closed. Tokens in query strings are unsupported.
+Write bodies use `application/x-www-form-urlencoded`; query parameters may also
+be used. Duplicate arguments, nonnumeric floors, truncating/wrapping values and
+unknown light/network fields are rejected. There is no toggle endpoint.
 
-New endpoints should converge on a consistent response:
+Error shape: `{"apiVersion":1,"error":"machine_readable_reason"}`. Authentication
+failure is 401, malformed input 400, conflict 409, unavailable path 503,
+unsupported feature 501. A write response is not a motion-complete indication.
+Non-STOP writes are rate limited to one per 250 ms (429 when exceeded); STOP is
+excluded from this rate limit.
 
-```json
-{
-  "error": "move_rejected",
-  "reason": "safety_loop_open",
-  "message": "Motion is unavailable while the safety loop is open."
-}
-```
+## HTTP And Update Boundaries
 
-The short codes are stable for UI and automation logic. Human-readable text may evolve. Never return API tokens, Wi-Fi passwords, raw secrets, or unbounded logs.
+One active client, 2048-byte headers, 512-byte form body, 16 arguments,
+256-character request target, 128 input bytes and 512 output bytes serviced per
+loop. Headers must finish within 500 ms; responses are closed after 5 seconds.
+Duplicate headers, chunked requests and non-form bodies are rejected. No CORS
+access or browser request forwarding is provided. Responses carry no-store;
+hashed static assets use immutable caching, gzip and a self-origin CSP.
 
-## Preview behavior
+These are allocation/work bounds, **not a qualified motion deadline**: ESP32
+Wi-Fi socket writes, NVS operations, bus calls and scheduling still need measured
+worst-case latency and supervisor-task/watchdog integration before motion can be
+enabled. Do not expose this listener on a public network.
 
-Failure to retrieve valid JSON from `/api/status` enables representative preview data. Preview actions may animate locally and must remain visibly identified as disconnected; they are not evidence that a controller command succeeded.
+## Planned Routes
+
+Settings/floors, homing/program exit/calibration, fault reset, parameter read/write
+jobs, RF registry/learn/erase, backup/restore, and reboot remain unsupported on
+the target. Their portable logic is described in the software checklist. Add
+controller handlers, tests and UI controls together; do not advertise a capability
+merely because a portable class exists. REST automation uses the same supervisor
+and authentication as the WebUI. MQTT/Google Home remain hub-side future work.

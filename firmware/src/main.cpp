@@ -1,775 +1,580 @@
 #include <Arduino.h>
-#include <cstring>
+#include <ArduinoJson.h>
 #include <ESPmDNS.h>
-#include <WebServer.h>
+#include <LittleFS.h>
+#include <SPI.h>
 #include <WiFi.h>
+#include <Wire.h>
+#include <mbedtls/sha256.h>
 
-#include "ApiAuth.h"
-#include "EventLog.h"
-#include "LiftConfig.h"
-#include "LiftSettings.h"
 #include "NetworkConfig.h"
 #include "PinMap.h"
-#include "PositionStore.h"
-#include "VfdProtocol.h"
 #include "VfdParameters.h"
-
+#include "core/Configuration.h"
+#include "core/Devices.h"
+#include "core/HttpRequest.h"
+#include "core/SafetyLedger.h"
+#include "core/Supervisor.h"
 #if __has_include("Secrets.h")
 #include "Secrets.h"
 #else
 #include "Secrets.example.h"
 #endif
-
-enum class MotionState : uint8_t {
-  Boot,
-  Idle,
-  Moving,
-  Stopping,
-  Fault,
-};
-
-struct MotionCommand {
-  bool active = false;
-  uint8_t floor = 0;
-  int64_t targetCounts = 0;
-  uint32_t stopOffsetCounts = 0;
-  VfdDirection direction = VfdDirection::Forward;
-};
-
-HardwareSerial VfdSerial(2);
-WebServer server(80);
-PositionStore store;
-NetworkConfig networkConfig;
-LiftSettingsStore liftSettingsStore;
-EventLog eventLog;
-StoredLiftState storedState;
-NetworkSettings networkSettings;
-LiftSettingsData liftSettings;
-
-volatile int64_t pulsePositionCounts = 0;
-
-MotionState motionState = MotionState::Boot;
-MotionCommand activeCommand;
-String lastFault;
-String lastVfdCommand;
-String vfdRxBuffer;
-
-uint32_t lastVfdCommandMs = 0;
-uint32_t lastStopCommandMs = 0;
-uint32_t stopStartedMs = 0;
-uint32_t lastPersistMs = 0;
-uint32_t lastWifiCheckMs = 0;
-uint32_t restartAtMs = 0;
-
-bool lastButtonTop = false;
-bool lastButtonRight = false;
-bool lastButtonBottom = false;
-bool lastButtonLeft = false;
-bool lastButtonCenter = false;
-bool fallbackApEnabled = false;
-bool mdnsStarted = false;
-bool restartRequested = false;
-
-void IRAM_ATTR onUpPulse() {
-  ++pulsePositionCounts;
-}
-
-void IRAM_ATTR onDownPulse() {
-  --pulsePositionCounts;
-}
-
-int64_t readPositionCounts() {
-  noInterrupts();
-  const int64_t snapshot = pulsePositionCounts;
-  interrupts();
-  return snapshot;
-}
-
-void setPositionCounts(int64_t value) {
-  noInterrupts();
-  pulsePositionCounts = value;
-  interrupts();
-}
-
-const char* stateName(MotionState state) {
-  switch (state) {
-    case MotionState::Boot:
-      return "boot";
-    case MotionState::Idle:
-      return "idle";
-    case MotionState::Moving:
-      return "moving";
-    case MotionState::Stopping:
-      return "stopping";
-    case MotionState::Fault:
-      return "fault";
-  }
-  return "unknown";
-}
-
-bool safetyLoopHealthy() {
-  return digitalRead(Pins::SafetyLoop) == LOW;
-}
-
-bool homeSwitchActive() {
-  return digitalRead(Pins::HomeSwitch) == LOW;
-}
-
-bool lowerLimitActive() {
-  return digitalRead(Pins::LowerLimit) == LOW;
-}
-
-bool upperLimitActive() {
-  return digitalRead(Pins::UpperLimit) == LOW;
-}
-
-const FloorTarget* findFloor(uint8_t floor) {
-  for (size_t i = 0; i < LiftConfig::FloorCount; ++i) {
-    if (LiftConfig::DefaultFloors[i].floor == floor) {
-      return &LiftConfig::DefaultFloors[i];
-    }
-  }
-  return nullptr;
-}
-
-void sendVfd(const String& command) {
-  VfdSerial.print(command);
-  lastVfdCommand = command;
-  Serial.print("VFD <- ");
-  Serial.println(command);
-}
-
-void enterFault(const String& reason) {
-  lastFault = reason;
-  motionState = MotionState::Fault;
-  activeCommand.active = false;
-  eventLog.append(EventCode::Fault);
-  sendVfd(VfdProtocol::stop());
-  digitalWrite(Pins::StatusLed, HIGH);
-}
-
-void beginStopping() {
-  if (motionState == MotionState::Stopping) {
-    return;
-  }
-  motionState = MotionState::Stopping;
-  stopStartedMs = millis();
-  lastStopCommandMs = 0;
-  eventLog.append(EventCode::MotionStopped);
-  sendVfd(VfdProtocol::stop());
-}
-
-bool requestMoveToFloor(uint8_t floor) {
-  if (motionState != MotionState::Idle) {
-    return false;
-  }
-  if (!safetyLoopHealthy()) {
-    enterFault("safety_loop_open");
-    return false;
-  }
-
-  const FloorTarget* target = findFloor(floor);
-  if (target == nullptr) {
-    return false;
-  }
-
-  const int64_t current = readPositionCounts();
-  if (target->positionCounts == current) {
+#ifndef LIFT_API_TOKEN
+#define LIFT_API_TOKEN ""
+#endif
+namespace {
+class BoardSpi final : public lift::SpiBus {
+ public:
+  bool transfer(int cs, const uint8_t* tx, uint8_t* rx, size_t n) override {
+    if (n > 68 || (cs != Pins::CounterCs && cs != Pins::MramCs))
+      return false;
+    SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    digitalWrite(cs, LOW);
+    for (size_t i = 0; i < n; ++i)
+      rx[i] = SPI.transfer(tx[i]);
+    digitalWrite(cs, HIGH);
+    SPI.endTransaction();
     return true;
   }
-
-  activeCommand.active = true;
-  activeCommand.floor = floor;
-  activeCommand.targetCounts = target->positionCounts;
-  activeCommand.stopOffsetCounts = target->stopOffsetCounts;
-  activeCommand.direction =
-      target->positionCounts > current ? VfdDirection::Forward : VfdDirection::Reverse;
-
-  motionState = MotionState::Moving;
-  lastVfdCommandMs = 0;
-  eventLog.append(EventCode::MotionAccepted, floor, static_cast<int32_t>(target->positionCounts));
-  return true;
-}
-
-String jsonStatus() {
-  char currentBuffer[24] = {};
-  char targetBuffer[24] = {};
-  snprintf(currentBuffer, sizeof(currentBuffer), "%lld",
-           static_cast<long long>(readPositionCounts()));
-  snprintf(targetBuffer, sizeof(targetBuffer), "%lld",
-           static_cast<long long>(activeCommand.targetCounts));
-
-  String json = "{";
-  json += "\"state\":\"";
-  json += stateName(motionState);
-  json += "\",\"position\":";
-  json += currentBuffer;
-  json += ",\"target\":";
-  json += targetBuffer;
-  json += ",\"targetFloor\":";
-  json += activeCommand.floor;
-  json += ",\"normalRunTenthsHz\":";
-  json += liftSettings.normalRunTenthsHz;
-  json += ",\"safetyOk\":";
-  json += safetyLoopHealthy() ? "true" : "false";
-  json += ",\"home\":";
-  json += homeSwitchActive() ? "true" : "false";
-  json += ",\"lowerLimit\":";
-  json += lowerLimitActive() ? "true" : "false";
-  json += ",\"upperLimit\":";
-  json += upperLimitActive() ? "true" : "false";
-  json += ",\"lastVfdCommand\":\"";
-  json += lastVfdCommand;
-  json += "\",\"lastFault\":\"";
-  json += lastFault;
-  json += "\",\"networkMode\":\"";
-  json += WiFi.status() == WL_CONNECTED ? "station" : "fallback_ap";
-  json += "\",\"stationIp\":\"";
-  json += WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "";
-  json += "\",\"apIp\":\"";
-  json += fallbackApEnabled ? WiFi.softAPIP().toString() : "";
-  json += "\"}";
-  return json;
-}
-
-String jsonSettings() {
-  String json = "{";
-  json += "\"normalRunTenthsHz\":";
-  json += liftSettings.normalRunTenthsHz;
-  json += ",\"serviceJogTenthsHz\":";
-  json += liftSettings.serviceJogTenthsHz;
-  json += ",\"homingTenthsHz\":";
-  json += liftSettings.homingTenthsHz;
-  json += ",\"stopOffsetCounts\":";
-  json += liftSettings.stopOffsetCounts;
-  json += ",\"homingTimeoutMs\":";
-  json += liftSettings.homingTimeoutMs;
-  json += ",\"logRetentionRecords\":";
-  json += liftSettings.logRetentionRecords;
-  json += "}";
-  return json;
-}
-
-void copyBounded(char* destination, size_t destinationSize, const String& source) {
-  if (destinationSize == 0) {
-    return;
+} spi;
+class BoardI2c final : public lift::I2cBus {
+ public:
+  bool read(uint8_t device, uint8_t reg, uint8_t* out, size_t n) override {
+    Wire.beginTransmission(device);
+    Wire.write(reg);
+    if (Wire.endTransmission(false) != 0)
+      return false;
+    if (Wire.requestFrom(device, uint8_t(n)) != n)
+      return false;
+    for (size_t i = 0; i < n; ++i)
+      out[i] = Wire.read();
+    return true;
   }
-  snprintf(destination, destinationSize, "%s", source.c_str());
+} i2c;
+lift::Counter counter(spi, Pins::CounterCs);
+lift::Mram mram(spi, Pins::MramCs);
+lift::Rtc rtc(i2c);
+lift::Journal snapshots(mram, 0, 2), configurationRecords(mram, 2048, 2),
+    safetyRecords(mram, 4096, 2), events(mram, 8192, 768);
+lift::SafetyLedger safetyLedger(safetyRecords);
+lift::ConfigurationStore configurationStore(configurationRecords);
+lift::Configuration configuration;
+lift::Supervisor supervisor;
+NetworkConfig networkStore;
+NetworkSettings network;
+WiFiServer http(80);
+WiFiClient client;
+lift::HttpRequest request;
+File asset;
+String response;
+size_t responseOffset = 0;
+uint32_t connectedAt = 0, lastSample = 0, lastNetwork = 0, lastRtc = 0, lastPersist = 0,
+         unixTime = 0, statusSequence = 0;
+bool responding = false, ap = false, counterReady = false, storageReady = false, rtcValid = false,
+     fsReady = false;
+int64_t position = 0;
+const char* previousFault = "";
+char bootId[17] = {};
+uint32_t lastWriteRequestMs = 0;
+String counts(int64_t n) {
+  char b[24];
+  snprintf(b, sizeof b, "%lld", static_cast<long long>(n));
+  return b;
 }
-
-void loadNetworkSettings() {
-  if (networkConfig.begin() && networkConfig.load(networkSettings)) {
-    return;
-  }
-
-  copyBounded(networkSettings.apSsid, sizeof(networkSettings.apSsid), WIFI_AP_SSID);
-  copyBounded(networkSettings.apPassword, sizeof(networkSettings.apPassword), WIFI_AP_PASSWORD);
-}
-
-void startFallbackAp() {
-  if (fallbackApEnabled) {
-    return;
-  }
-
-  if (strlen(networkSettings.apSsid) == 0) {
-    copyBounded(networkSettings.apSsid, sizeof(networkSettings.apSsid), WIFI_AP_SSID);
-  }
-  if (strlen(networkSettings.apPassword) < 8) {
-    copyBounded(networkSettings.apPassword, sizeof(networkSettings.apPassword), WIFI_AP_PASSWORD);
-  }
-
-  WiFi.mode(strlen(networkSettings.staSsid) > 0 ? WIFI_AP_STA : WIFI_AP);
-  WiFi.softAP(networkSettings.apSsid, networkSettings.apPassword);
-  fallbackApEnabled = true;
-  Serial.print("Fallback AP IP: ");
-  Serial.println(WiFi.softAPIP());
-}
-
-void serviceMdns() {
-  if (mdnsStarted) {
-    return;
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    return;
-  }
-
-  if (!MDNS.begin(LiftConfig::Hostname)) {
-    Serial.println("mDNS start failed");
-    return;
-  }
-
-  MDNS.addService("http", "tcp", 80);
-  mdnsStarted = true;
-  Serial.print("mDNS hostname: ");
-  Serial.print(LiftConfig::Hostname);
-  Serial.println(".local");
-}
-
-String jsonNetworkStatus() {
-  String json = "{";
-  json += "\"stationConfigured\":";
-  json += strlen(networkSettings.staSsid) > 0 ? "true" : "false";
-  json += ",\"stationSsid\":\"";
-  json += networkSettings.staSsid;
-  json += "\",\"stationConnected\":";
-  json += WiFi.status() == WL_CONNECTED ? "true" : "false";
-  json += ",\"stationIp\":\"";
-  json += WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "";
-  json += "\",\"fallbackApEnabled\":";
-  json += fallbackApEnabled ? "true" : "false";
-  json += ",\"apSsid\":\"";
-  json += networkSettings.apSsid;
-  json += "\",\"apIp\":\"";
-  json += fallbackApEnabled ? WiFi.softAPIP().toString() : "";
-  json += "\",\"hostname\":\"";
-  json += LiftConfig::Hostname;
-  json += ".local";
-  json += "\",\"writeAuthRequired\":";
-  json += ApiAuth::tokenConfigured() ? "true" : "false";
-  json += "}";
-  return json;
-}
-
-void setupWebServer() {
-  const char* authHeaders[] = {ApiAuth::TokenHeader};
-  server.collectHeaders(authHeaders, 1);
-
-  server.on("/", HTTP_GET, []() {
-    String html =
-        "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
-        "<title>Lift Controller</title></head><body><h1>Lift Controller</h1>"
-        "<pre id='status'></pre>"
-        "<button onclick=\"fetch('/api/stop',{method:'POST'})\">Stop</button>"
-        "<form onsubmit=\"event.preventDefault();fetch('/api/network',{method:'POST',body:new URLSearchParams(new FormData(this))}).then(tick)\">"
-        "<input name='ssid' placeholder='Network SSID'><input name='password' placeholder='Password' type='password'>"
-        "<button>Save network</button></form>"
-        "<button onclick=\"fetch('/api/reboot',{method:'POST'})\">Reboot</button>"
-        "<script>async function tick(){let r=await fetch('/api/status');"
-        "document.getElementById('status').textContent=JSON.stringify(await r.json(),null,2)}"
-        "setInterval(tick,1000);tick();</script></body></html>";
-    server.send(200, "text/html", html);
-  });
-
-  server.on("/api/status", HTTP_GET, []() {
-    server.send(200, "application/json", jsonStatus());
-  });
-
-  server.on("/api/network", HTTP_GET, []() {
-    server.send(200, "application/json", jsonNetworkStatus());
-  });
-
-  server.on("/api/settings", HTTP_GET, []() {
-    server.send(200, "application/json", jsonSettings());
-  });
-
-  server.on("/api/settings", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    LiftSettingsData updated = liftSettings;
-
-    if (server.hasArg("normalRunTenthsHz")) {
-      const int value = server.arg("normalRunTenthsHz").toInt();
-      if (value < 1 || value > 2000) {
-        server.send(400, "application/json", "{\"error\":\"normal_run_out_of_range\"}");
-        return;
+bool tokenConfigured() { return strlen(LIFT_API_TOKEN) >= 16; }
+bool verifyWebBundle() {
+  File manifest = LittleFS.open("/bundle-manifest.json", "r");
+  if (!manifest || manifest.size() > 8192)
+    return false;
+  JsonDocument d;
+  if (deserializeJson(d, manifest) || d["apiVersion"] != 1 ||
+      d["contractVersion"] != Pins::ContractVersion)
+    return false;
+  JsonArray files = d["files"].as<JsonArray>();
+  if (files.size() < 2 || files.size() > 32)
+    return false;
+  size_t total = 0;
+  bool index = false;
+  for (JsonObject entry : files) {
+    const char* name = entry["path"] | "";
+    const char* expected = entry["sha256"] | "";
+    String path = name;
+    if (path.length() > 128 || path.indexOf("..") >= 0 || path.indexOf('\\') >= 0 ||
+        path.startsWith("/") || strlen(expected) != 64)
+      return false;
+    if (path != "index.html" && path != "index.html.gz" && !path.startsWith("assets/"))
+      return false;
+    File file = LittleFS.open("/" + path, "r");
+    size_t size = entry["bytes"] | 0;
+    if (!file || file.size() != size || size > 2097152 || total > 2097152 - size)
+      return false;
+    total += size;
+    mbedtls_sha256_context hash;
+    mbedtls_sha256_init(&hash);
+    mbedtls_sha256_starts_ret(&hash, 0);
+    uint8_t buffer[256], digest[32];
+    while (file.available()) {
+      size_t n = file.read(buffer, sizeof buffer);
+      if (!n) {
+        mbedtls_sha256_free(&hash);
+        return false;
       }
-      updated.normalRunTenthsHz = static_cast<uint16_t>(value);
+      mbedtls_sha256_update_ret(&hash, buffer, n);
     }
-    if (server.hasArg("serviceJogTenthsHz")) {
-      const int value = server.arg("serviceJogTenthsHz").toInt();
-      if (value < 1 || value > 2000) {
-        server.send(400, "application/json", "{\"error\":\"service_jog_out_of_range\"}");
-        return;
-      }
-      updated.serviceJogTenthsHz = static_cast<uint16_t>(value);
-    }
-    if (server.hasArg("homingTenthsHz")) {
-      const int value = server.arg("homingTenthsHz").toInt();
-      if (value < 1 || value > 2000) {
-        server.send(400, "application/json", "{\"error\":\"homing_speed_out_of_range\"}");
-        return;
-      }
-      updated.homingTenthsHz = static_cast<uint16_t>(value);
-    }
-    if (server.hasArg("stopOffsetCounts")) {
-      const int value = server.arg("stopOffsetCounts").toInt();
-      if (value < 0 || value > 60000) {
-        server.send(400, "application/json", "{\"error\":\"stop_offset_out_of_range\"}");
-        return;
-      }
-      updated.stopOffsetCounts = static_cast<uint16_t>(value);
-    }
-
-    if (!liftSettingsStore.save(updated)) {
-      server.send(500, "application/json", "{\"error\":\"settings_save_failed\"}");
-      return;
-    }
-
-    liftSettings = updated;
-    eventLog.append(EventCode::SettingsChanged);
-    server.send(200, "application/json", jsonSettings());
-  });
-
-  server.on("/api/logs/recent", HTTP_GET, []() {
-    server.send(200, "application/json", eventLog.jsonRecent());
-  });
-
-  server.on("/api/vfd/parameters", HTTP_GET, []() {
-    server.send(200, "application/json", VfdParameters::allDefinitionsJson());
-  });
-
-  server.on("/api/vfd/parameter", HTTP_GET, []() {
-    if (!server.hasArg("number")) {
-      server.send(400, "application/json", "{\"error\":\"missing_number\"}");
-      return;
-    }
-
-    const uint8_t number = static_cast<uint8_t>(server.arg("number").toInt());
-    const VfdParameterDefinition* definition = VfdParameters::find(number);
-    if (definition == nullptr) {
-      server.send(404, "application/json", "{\"error\":\"unknown_parameter\"}");
-      return;
-    }
-
-    sendVfd(VfdProtocol::getParameter(number));
-    eventLog.append(EventCode::VfdParameterRead, number);
-
-    String json = "{";
-    json += "\"definition\":";
-    json += VfdParameters::definitionJson(*definition);
-    json += ",\"commandSent\":\"";
-    json += lastVfdCommand;
-    json += "\",\"readbackParsing\":\"pending\"}";
-    server.send(202, "application/json", json);
-  });
-
-  server.on("/api/vfd/parameter", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    if (motionState != MotionState::Idle) {
-      server.send(409, "application/json", "{\"error\":\"lift_must_be_idle\"}");
-      return;
-    }
-    if (!server.hasArg("number") || !server.hasArg("value")) {
-      server.send(400, "application/json", "{\"error\":\"missing_number_or_value\"}");
-      return;
-    }
-
-    const uint8_t number = static_cast<uint8_t>(server.arg("number").toInt());
-    const int requestedValue = server.arg("value").toInt();
-    const VfdParameterDefinition* definition = VfdParameters::find(number);
-    if (definition == nullptr) {
-      server.send(404, "application/json", "{\"error\":\"unknown_parameter\"}");
-      return;
-    }
-    if (!definition->writable) {
-      server.send(403, "application/json", "{\"error\":\"parameter_read_only\"}");
-      return;
-    }
-    if (requestedValue < definition->minValue || requestedValue > definition->maxValue) {
-      server.send(400, "application/json", "{\"error\":\"value_out_of_range\"}");
-      return;
-    }
-
-    sendVfd(VfdProtocol::setParameter(number, static_cast<uint16_t>(requestedValue)));
-    eventLog.append(EventCode::VfdParameterWrite, number, requestedValue);
-
-    String json = "{";
-    json += "\"definition\":";
-    json += VfdParameters::definitionJson(*definition);
-    json += ",\"requestedValue\":";
-    json += requestedValue;
-    json += ",\"commandSent\":\"";
-    json += lastVfdCommand;
-    json += "\",\"readbackVerification\":\"pending\"}";
-    server.send(202, "application/json", json);
-  });
-
-  server.on("/api/network", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    if (!server.hasArg("ssid")) {
-      server.send(400, "application/json", "{\"error\":\"missing_ssid\"}");
-      return;
-    }
-
-    copyBounded(networkSettings.staSsid, sizeof(networkSettings.staSsid), server.arg("ssid"));
-    copyBounded(networkSettings.staPassword, sizeof(networkSettings.staPassword),
-                server.arg("password"));
-
-    if (!networkConfig.save(networkSettings)) {
-      server.send(500, "application/json", "{\"error\":\"save_failed\"}");
-      return;
-    }
-
-    eventLog.append(EventCode::NetworkChanged);
-    server.send(202, "application/json", "{\"saved\":true,\"restartRequired\":true}");
-  });
-
-  server.on("/api/reboot", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    restartRequested = true;
-    restartAtMs = millis() + 1000;
-    server.send(202, "application/json", "{\"rebooting\":true}");
-  });
-
-  server.on("/api/move", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    if (!server.hasArg("floor")) {
-      server.send(400, "application/json", "{\"error\":\"missing_floor\"}");
-      return;
-    }
-    const uint8_t floor = static_cast<uint8_t>(server.arg("floor").toInt());
-    if (!requestMoveToFloor(floor)) {
-      eventLog.append(EventCode::MotionRejected, floor);
-      server.send(409, "application/json", "{\"error\":\"move_rejected\"}");
-      return;
-    }
-    server.send(202, "application/json", jsonStatus());
-  });
-
-  server.on("/api/stop", HTTP_POST, []() {
-    if (!ApiAuth::requestAuthorized(server)) {
-      ApiAuth::sendUnauthorized(server);
-      return;
-    }
-
-    beginStopping();
-    server.send(202, "application/json", jsonStatus());
-  });
-
-  server.begin();
-}
-
-void setupWiFi() {
-  loadNetworkSettings();
-  WiFi.mode(WIFI_STA);
-  WiFi.setHostname(LiftConfig::Hostname);
-
-  if (strlen(networkSettings.staSsid) > 0) {
-    WiFi.begin(networkSettings.staSsid, networkSettings.staPassword);
+    mbedtls_sha256_finish_ret(&hash, digest);
+    mbedtls_sha256_free(&hash);
+    char actual[65];
+    for (unsigned i = 0; i < 32; ++i)
+      snprintf(actual + 2 * i, 3, "%02x", digest[i]);
+    if (strcmp(actual, expected))
+      return false;
+    if (path == "index.html")
+      index = true;
   }
-
-  startFallbackAp();
+  return index;
 }
-
-void serviceWiFi() {
-  const uint32_t now = millis();
-  if (now - lastWifiCheckMs < 5000) {
+void event(const char* code, const char* source, const char* result) {
+  if (!storageReady)
+    return;
+  JsonDocument d;
+  d["code"] = code;
+  d["source"] = source;
+  d["result"] = result;
+  d["uptimeMs"] = millis();
+  d["position"] = counts(position);
+  if (rtcValid)
+    d["unixTime"] = unixTime;
+  else
+    d["unixTime"] = nullptr;
+  char bytes[lift::Journal::PayloadMax];
+  size_t n = serializeJson(d, bytes, sizeof bytes);
+  if (n >= sizeof bytes || !events.append(reinterpret_cast<uint8_t*>(bytes), n))
+    storageReady = false;
+}
+JsonDocument status() {
+  JsonDocument d;
+  d["apiVersion"] = 1;
+  d["contractVersion"] = Pins::ContractVersion;
+  d["bootId"] = bootId;
+  d["sequence"] = ++statusSequence;
+  d["uptimeMs"] = millis();
+  d["sampleAgeMs"] = millis() - lastSample;
+  d["state"] = lift::stateName(supervisor.state);
+  d["deploymentReady"] = false;
+  d["position"] = counts(position);
+  d["positionValid"] = false;
+  d["currentFloor"] = nullptr;
+  d["targetFloor"] = nullptr;
+  d["motionAllowed"] = false;
+  d["canMoveUp"] = false;
+  d["canMoveDown"] = false;
+  d["stoppedConfirmed"] = false;
+  d["safetyOk"] = supervisor.inputs.safety;
+  d["home"] = supervisor.inputs.home;
+  d["upperLimit"] = nullptr;
+  d["lowerLimit"] = nullptr;
+  d["serviceKey"] = nullptr;
+  d["fault"] = supervisor.fault;
+  auto reasons = d["blockedReasons"].to<JsonArray>();
+  for (const char* r : {"HW-01-unavailable-input-gpios", "HW-02-coupled-uart-run-enable",
+                        "physical-qualification-required"})
+    reasons.add(r);
+  auto caps = d["capabilities"].to<JsonObject>();
+  for (const char* cap :
+       {"motion", "homing", "calibration", "floorWrite", "settingsWrite", "vfdRead", "vfdWrite",
+        "rfLearn", "rfErase", "backup", "restore", "reboot", "auxiliary"})
+    caps[cap] = false;
+  caps["status"] = true;
+  caps["network"] = tokenConfigured();
+  caps["light"] = tokenConfigured();
+  caps["logs"] = storageReady;
+  auto floors = d["floors"].to<JsonArray>();
+  for (int f = 1; f <= 3; ++f) {
+    auto floor = floors.add<JsonObject>();
+    floor["floor"] = f;
+    floor["name"] = *configuration.names[f - 1].data() ? String(configuration.names[f - 1].data())
+                                                       : String("Landing ") + f;
+    if (configuration.motion.floorsValid)
+      floor["position"] = counts(configuration.motion.floors[f - 1]);
+    else
+      floor["position"] = nullptr;
+  }
+  d["light"]["on"] = supervisor.light;
+  d["light"]["feedbackVerified"] = false;
+  d["telemetry"] = nullptr;
+  d["calibration"]["valid"] = false;
+  d["calibration"]["distance"] = nullptr;
+  d["devices"]["counter"] = counterReady ? "sampled-unverified" : "unavailable";
+  d["devices"]["mram"] = storageReady ? "readback-unverified" : "unavailable";
+  d["devices"]["rtc"] = rtcValid ? "sampled-unverified" : "time-invalid";
+  d["network"]["mode"] = WiFi.status() == WL_CONNECTED ? "station" : "fallback_ap";
+  d["network"]["stationIp"] = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "";
+  d["network"]["apIp"] = ap ? WiFi.softAPIP().toString() : "";
+  d["network"]["hostname"] = "lift.local";
+  d["authConfigured"] = tokenConfigured();
+  return d;
+}
+void reply(int code, const JsonDocument& d) {
+  asset.close();
+  String json;
+  serializeJson(d, json);
+  response =
+      "HTTP/1.1 " + String(code) +
+      " Response\r\nContent-Type: application/json\r\nCache-Control: no-store\r\nConnection: "
+      "close\r\nX-Content-Type-Options: nosniff\r\nContent-Length: " +
+      String(json.length()) + "\r\n\r\n" + json;
+  responseOffset = 0;
+  responding = true;
+}
+void error(int code, const char* reason) {
+  JsonDocument d;
+  d["error"] = reason;
+  d["apiVersion"] = 1;
+  reply(code, d);
+}
+bool authorized() {
+  auto it = request.headers.find("x-lift-api-token");
+  return tokenConfigured() && it != request.headers.end() && it->second == LIFT_API_TOKEN;
+}
+void dispatch() {
+  std::map<std::string, std::string> args;
+  if (!lift::HttpRequest::form(request.query, args) ||
+      !lift::HttpRequest::form(request.body, args)) {
+    error(400, "invalid_arguments");
     return;
   }
-  lastWifiCheckMs = now;
-
-  if (strlen(networkSettings.staSsid) == 0) {
-    startFallbackAp();
+  const auto& path = request.path;
+  bool post = request.method == "POST";
+  if (post && !authorized()) {
+    error(401, "authentication_required");
     return;
   }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    if (fallbackApEnabled) {
-      WiFi.softAPdisconnect(true);
-      fallbackApEnabled = false;
-      WiFi.mode(WIFI_STA);
-    }
-    return;
-  }
-
-  startFallbackAp();
-  WiFi.reconnect();
-}
-
-void initializeVfd() {
-  sendVfd(VfdProtocol::setParameter(3, 10));
-  delay(50);
-  sendVfd(VfdProtocol::setParameter(4, 10));
-  delay(50);
-  sendVfd(VfdProtocol::setParameter(12, 1));
-  delay(50);
-  sendVfd(VfdProtocol::setParameter(10, 1200));
-  delay(50);
-}
-
-void serviceVfdRx() {
-  while (VfdSerial.available()) {
-    const char c = static_cast<char>(VfdSerial.read());
-    vfdRxBuffer += c;
-    if (vfdRxBuffer.length() > 96) {
-      vfdRxBuffer.remove(0, vfdRxBuffer.length() - 96);
-    }
-  }
-
-  if (motionState == MotionState::Stopping && VfdProtocol::isStopAck(vfdRxBuffer)) {
-    activeCommand.active = false;
-    motionState = MotionState::Idle;
-    vfdRxBuffer = "";
-  }
-}
-
-void serviceMotion() {
-  if (!safetyLoopHealthy() && motionState != MotionState::Fault) {
-    enterFault("safety_loop_open");
-    return;
-  }
-
-  if (homeSwitchActive() && motionState == MotionState::Idle) {
-    setPositionCounts(0);
-  }
-
-  const uint32_t now = millis();
-
-  if (motionState == MotionState::Moving && activeCommand.active) {
-    const int64_t current = readPositionCounts();
-    const uint64_t remaining =
-        static_cast<uint64_t>(llabs(activeCommand.targetCounts - current));
-
-    if (remaining <= activeCommand.stopOffsetCounts) {
-      beginStopping();
+  if (post && path != "/api/stop") {
+    uint32_t now = millis();
+    if (now - lastWriteRequestMs < 250) {
+      error(429, "write_rate_limited");
       return;
     }
-
-    if (activeCommand.direction == VfdDirection::Forward && upperLimitActive()) {
-      enterFault("upper_limit_active");
-      return;
-    }
-    if (activeCommand.direction == VfdDirection::Reverse && lowerLimitActive()) {
-      enterFault("lower_limit_active");
-      return;
-    }
-
-    if (now - lastVfdCommandMs >= LiftConfig::VfdCommandRefreshMs) {
-      sendVfd(VfdProtocol::run(activeCommand.direction, liftSettings.normalRunTenthsHz));
-      lastVfdCommandMs = now;
-    }
+    lastWriteRequestMs = now;
   }
-
-  if (motionState == MotionState::Stopping) {
-    if (now - lastStopCommandMs >= LiftConfig::StopRetryMs) {
-      sendVfd(VfdProtocol::stop());
-      lastStopCommandMs = now;
-    }
-    if (now - stopStartedMs > LiftConfig::StopAckTimeoutMs) {
-      enterFault("stop_ack_timeout");
-    }
-  }
-}
-
-bool risingEdge(uint8_t pin, bool& lastState) {
-  const bool current = digitalRead(pin) == HIGH;
-  const bool rising = current && !lastState;
-  lastState = current;
-  return rising;
-}
-
-void serviceButtons() {
-  if (risingEdge(Pins::ButtonLeft, lastButtonLeft)) {
-    requestMoveToFloor(2);
-  }
-  if (risingEdge(Pins::ButtonTop, lastButtonTop)) {
-    requestMoveToFloor(3);
-  }
-  if (risingEdge(Pins::ButtonRight, lastButtonRight)) {
-    requestMoveToFloor(4);
-  }
-  if (risingEdge(Pins::ButtonCenter, lastButtonCenter)) {
-    beginStopping();
-  }
-  if (risingEdge(Pins::ButtonBottom, lastButtonBottom)) {
-    beginStopping();
-  }
-}
-
-void servicePersistence() {
-  const uint32_t now = millis();
-  if (now - lastPersistMs < LiftConfig::PositionPersistMs) {
+  if (path == "/api/status" && !post) {
+    reply(200, status());
     return;
   }
-  storedState.currentPosition = readPositionCounts();
-  store.save(storedState);
-  lastPersistMs = now;
+  if (path == "/api/capabilities" && !post) {
+    auto s = status();
+    JsonDocument d;
+    d["apiVersion"] = 1;
+    d["capabilities"] = s["capabilities"];
+    reply(200, d);
+    return;
+  }
+  if (path == "/api/stop" && post) {
+    if (!args.empty()) {
+      error(400, "unexpected_argument");
+      return;
+    }
+    supervisor.command({true, 0, lift::Source::Web}, millis());
+    event("stop", "web", "hardware_path_unavailable");
+    error(503, "stop_delivery_unavailable_hardware_inhibited");
+    return;
+  }
+  if (path == "/api/move" && post) {
+    uint32_t floor = 0;
+    if (args.size() != 1 || !args.count("floor") ||
+        !lift::parseUnsigned(args["floor"].c_str(), 3, floor) || floor < 1) {
+      error(400, "invalid_floor");
+      return;
+    }
+    const char* reason =
+        supervisor.command({false, 1u << (floor - 1), lift::Source::Web}, millis());
+    event("move", "web", reason ? reason : "accepted");
+    if (reason)
+      error(409, reason);
+    else
+      reply(202, status());
+    return;
+  }
+  if (path == "/api/light" && post) {
+    if (args.size() != 1 || !args.count("on") || (args["on"] != "true" && args["on"] != "false")) {
+      error(400, "invalid_light_state");
+      return;
+    }
+    supervisor.setLight(args["on"] == "true");
+    digitalWrite(Pins::LightControl, supervisor.light ? HIGH : LOW);
+    event("light", "web", supervisor.light ? "on-commanded" : "off-commanded");
+    reply(200, status());
+    return;
+  }
+  if (path == "/api/network" && !post) {
+    auto s = status();
+    JsonDocument d;
+    d["apiVersion"] = 1;
+    d["network"] = s["network"];
+    d["ssid"] = network.staSsid;
+    reply(200, d);
+    return;
+  }
+  if (path == "/api/network" && post) {
+    if (args.size() != 2 || !args.count("ssid") || !args.count("password") ||
+        args["ssid"].size() > 32 || args["password"].size() > 63 ||
+        (!args["password"].empty() && args["password"].size() < 8)) {
+      error(400, "invalid_network_settings");
+      return;
+    }
+    if (supervisor.runRequested() || supervisor.state == lift::State::Stopping) {
+      error(409, "stop_required");
+      return;
+    }
+    NetworkSettings updated = network;
+    snprintf(updated.staSsid, sizeof updated.staSsid, "%s", args["ssid"].c_str());
+    snprintf(updated.staPassword, sizeof updated.staPassword, "%s", args["password"].c_str());
+    if (!networkStore.save(updated)) {
+      error(500, "network_save_failed");
+      return;
+    }
+    network = updated;
+    event("network_saved", "web", "restart-required");
+    JsonDocument d;
+    d["apiVersion"] = 1;
+    d["saved"] = true;
+    d["restartRequired"] = true;
+    reply(200, d);
+    return;
+  }
+  if (path == "/api/logs/recent" && !post) {
+    if (!storageReady) {
+      error(503, "durable_log_unavailable");
+      return;
+    }
+    if (!args.empty()) {
+      error(400, "unexpected_argument");
+      return;
+    }
+    JsonDocument d;
+    d["apiVersion"] = 1;
+    d["durable"] = true;
+    auto rows = d["events"].to<JsonArray>();
+    uint32_t seq = events.sequence();
+    for (unsigned count = 0; count < 16 && seq; ++count, --seq) {
+      uint8_t p[lift::Journal::PayloadMax];
+      size_t n = sizeof p;
+      if (!events.readSequence(seq, p, n))
+        continue;
+      JsonDocument row;
+      if (deserializeJson(row, p, n))
+        continue;
+      row["sequence"] = seq;
+      rows.add(row.as<JsonObject>());
+    }
+    reply(200, d);
+    return;
+  }
+  if (path == "/api/vfd/parameters" && !post) {
+    JsonDocument d;
+    d["apiVersion"] = 1;
+    d["available"] = false;
+    d["reason"] = "HW-02-coupled-uart-run-enable";
+    JsonDocument definitions;
+    deserializeJson(definitions, VfdParameters::allDefinitionsJson());
+    d["definitions"] = definitions;
+    reply(200, d);
+    return;
+  }
+  if (path.compare(0, 5, "/api/") == 0) {
+    error(501, "unsupported_capability");
+    return;
+  }
+  if (post || !args.empty() || path.find("..") != std::string::npos ||
+      path.find('%') != std::string::npos) {
+    error(404, "not_found");
+    return;
+  }
+  String file = path == "/" ? "/index.html" : path.c_str();
+  if (!fsReady || (!file.startsWith("/assets/") && file != "/index.html")) {
+    error(503, "web_bundle_unavailable");
+    return;
+  }
+  bool gzip = request.headers["accept-encoding"].find("gzip") != std::string::npos &&
+              LittleFS.exists(file + ".gz");
+  asset = LittleFS.open(gzip ? file + ".gz" : file, "r");
+  if (!asset) {
+    error(404, "asset_not_found");
+    return;
+  }
+  const char* mime = file.endsWith(".js")    ? "text/javascript"
+                     : file.endsWith(".css") ? "text/css"
+                                             : "text/html";
+  response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: " + String(mime) +
+             "\r\nX-Content-Type-Options: nosniff\r\nContent-Security-Policy: default-src 'self'; "
+             "script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; "
+             "frame-ancestors 'none'\r\nVary: Accept-Encoding\r\nCache-Control: " +
+             String(file == "/index.html" ? "no-cache" : "public, max-age=31536000, immutable") +
+             "\r\nContent-Length: " + String(asset.size()) + "\r\n" +
+             (gzip ? "Content-Encoding: gzip\r\n" : "") + "\r\n";
+  responseOffset = 0;
+  responding = true;
 }
-
-void setupPins() {
-  pinMode(Pins::ButtonTop, INPUT);
-  pinMode(Pins::ButtonRight, INPUT);
-  pinMode(Pins::ButtonBottom, INPUT);
-  pinMode(Pins::ButtonLeft, INPUT);
-  pinMode(Pins::ButtonCenter, INPUT);
-
-  pinMode(Pins::SafetyLoop, INPUT_PULLUP);
-  pinMode(Pins::HomeSwitch, INPUT_PULLUP);
-  pinMode(Pins::UpperLimit, INPUT_PULLUP);
-  pinMode(Pins::LowerLimit, INPUT_PULLUP);
-
-  pinMode(Pins::PositionUpPulse, INPUT);
-  pinMode(Pins::PositionDownPulse, INPUT);
-  pinMode(Pins::StatusLed, OUTPUT);
-
-  attachInterrupt(digitalPinToInterrupt(Pins::PositionUpPulse), onUpPulse, RISING);
-  attachInterrupt(digitalPinToInterrupt(Pins::PositionDownPulse), onDownPulse, RISING);
+void serviceHttp(uint32_t now) {
+  if (!client) {
+    asset.close();
+    response = "";
+    client = http.available();
+    if (!client)
+      return;
+    client.setTimeout(10);
+    connectedAt = now;
+    request = lift::HttpRequest{};
+    responding = false;
+  }
+  if (now - connectedAt > (responding ? 5000u : 500u)) {
+    client.stop();
+    asset.close();
+    return;
+  }
+  if (responding) {
+    if (responseOffset < response.length()) {
+      size_t count = std::min(size_t(512), size_t(response.length() - responseOffset));
+      responseOffset +=
+          client.write(reinterpret_cast<const uint8_t*>(response.c_str() + responseOffset), count);
+    } else if (asset && asset.available()) {
+      uint8_t chunk[512];
+      size_t pos = asset.position(), count = asset.read(chunk, sizeof chunk),
+             sent = client.write(chunk, count);
+      if (sent < count)
+        asset.seek(pos + sent);
+    } else {
+      client.stop();
+      asset.close();
+      response = "";
+    }
+    return;
+  }
+  for (unsigned n = 0; n < 128 && client.available(); ++n) {
+    auto result = request.feed(char(client.read()));
+    if (result == lift::HttpRequest::Result::Complete) {
+      dispatch();
+      break;
+    }
+    if (result != lift::HttpRequest::Result::More) {
+      error(result == lift::HttpRequest::Result::TooLarge ? 413 : 400,
+            "invalid_or_oversized_request");
+      break;
+    }
+  }
 }
-
+void startAp() {
+  if (ap)
+    return;
+  WiFi.mode(WIFI_AP_STA);
+  ap = WiFi.softAP(network.apSsid, network.apPassword);
+}
+}  // namespace
 void setup() {
+  snprintf(bootId, sizeof bootId, "%08x%08x", esp_random(), esp_random());
+  // No VFD UART begin/transmit. GPIO42 stays LOW: translator OE and run permission are coupled.
+  for (int p : {Pins::CoupledVfdEnable, Pins::LightControl, Pins::AuxControl, Pins::RfLearn,
+                Pins::StatusLed}) {
+    digitalWrite(p, LOW);
+    pinMode(p, OUTPUT);
+  }
+  for (int p : {Pins::CounterCs, Pins::MramCs}) {
+    digitalWrite(p, HIGH);
+    pinMode(p, OUTPUT);
+  }
+  for (int p :
+       {Pins::SafetyLoop, Pins::HomeSwitch, Pins::HoldToRun, Pins::ServiceUp, Pins::ServiceDown,
+        Pins::RfD0, Pins::RfD1, Pins::RfD2, Pins::RfD3, Pins::RfD4, Pins::RfTxId, Pins::RfModeInd})
+    pinMode(p, INPUT);
   Serial.begin(115200);
-  delay(100);
-
-  setupPins();
-  VfdSerial.begin(LiftConfig::VfdBaud, SERIAL_8N1, Pins::VfdRx, Pins::VfdTx);
-  eventLog.begin();
-
-  if (store.begin() && store.load(storedState)) {
-    setPositionCounts(storedState.currentPosition);
-  } else {
-    storedState = StoredLiftState{};
-    store.save(storedState);
+  SPI.begin(Pins::SpiClock, Pins::SpiMiso, Pins::SpiMosi);
+  Wire.begin(Pins::I2cSda, Pins::I2cScl, 100000);
+  Wire.setTimeOut(5);
+  counterReady = counter.begin();
+  storageReady = mram.begin() && snapshots.recover() && configurationRecords.recover() &&
+                 safetyRecords.recover() && events.recover();
+  if (storageReady && safetyLedger.load() &&
+      (safetyLedger.faultLatched || safetyLedger.unfinishedMotion))
+    supervisor.fail("durable_fault_or_unfinished_motion");
+  if (storageReady && configurationStore.load(configuration))
+    supervisor.config = configuration.motion;
+  if (storageReady) {
+    uint8_t p[24];
+    size_t n = sizeof p;
+    if (snapshots.latest(p, n) && n == sizeof p && lift::get32(p) == 1 &&
+        p[17] == uint8_t(lift::State::Fault))
+      supervisor.fail("previous_boot_fault");
   }
-  ++storedState.bootCount;
-  store.save(storedState);
-
-  if (!liftSettingsStore.begin() || !liftSettingsStore.load(liftSettings)) {
-    liftSettings = liftSettingsStore.defaults();
-    liftSettingsStore.save(liftSettings);
+  // Snapshots are historical evidence, never proof of incremental position continuity.
+  fsReady = LittleFS.begin(false) && verifyWebBundle();
+  networkStore.begin();
+  if (!networkStore.load(network)) {
+    snprintf(network.apSsid, sizeof network.apSsid, "%s", WIFI_AP_SSID);
+    snprintf(network.apPassword, sizeof network.apPassword, "%s", WIFI_AP_PASSWORD);
   }
-
-  setupWiFi();
-  setupWebServer();
-  serviceMdns();
-  initializeVfd();
-  eventLog.append(EventCode::Boot, static_cast<int32_t>(storedState.bootCount));
-
-  motionState = safetyLoopHealthy() ? MotionState::Idle : MotionState::Fault;
-  if (motionState == MotionState::Fault) {
-    lastFault = "safety_loop_open_at_boot";
-  }
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.setHostname("lift");
+  if (*network.staSsid)
+    WiFi.begin(network.staSsid, network.staPassword);
+  startAp();
+  http.begin();
+  event("boot", "controller", "hardware-inhibited");
 }
-
 void loop() {
-  server.handleClient();
-  serviceWiFi();
-  serviceMdns();
-  serviceVfdRx();
-  serviceButtons();
-  serviceMotion();
-  servicePersistence();
-
-  if (restartRequested && millis() >= restartAtMs) {
-    ESP.restart();
+  uint32_t now = millis();
+  if (now - lastSample >= 10) {
+    counterReady = counterReady && counter.sample(position);
+    lift::Inputs i;
+    i.sampleMs = now;
+    i.position = position;
+    i.encoderHealthy = counterReady;
+    i.storageHealthy = storageReady;
+    i.safety = digitalRead(Pins::SafetyLoop) == LOW;
+    i.home = digitalRead(Pins::HomeSwitch) == LOW;
+    i.hold = digitalRead(Pins::HoldToRun) == LOW;
+    i.up = digitalRead(Pins::ServiceUp) == LOW;
+    i.down = digitalRead(Pins::ServiceDown) == LOW;
+    supervisor.tick(i, now);
+    lastSample = now;
+    digitalWrite(Pins::CoupledVfdEnable, LOW);
+    digitalWrite(Pins::AuxControl, LOW);
+    digitalWrite(Pins::RfLearn, LOW);
+    if (previousFault != supervisor.fault) {
+      if (storageReady && !safetyLedger.latchFault())
+        storageReady = false;
+      event("fault", "controller", supervisor.fault);
+      previousFault = supervisor.fault;
+    }
   }
+  if (now - lastRtc >= 1000) {
+    rtcValid = rtc.readUnix(unixTime);
+    lastRtc = now;
+  }
+  if (storageReady && now - lastPersist >= 1000) {
+    uint8_t p[24] = {};
+    lift::put32(p, 1);
+    lift::put32(p + 4, now);
+    lift::put32(p + 8, uint64_t(position));
+    lift::put32(p + 12, uint64_t(position) >> 32);
+    p[16] = 0;
+    p[17] = uint8_t(supervisor.state);
+    storageReady = snapshots.append(p, sizeof p);
+    lastPersist = now;
+  }
+  serviceHttp(now);
+  if (now - lastNetwork >= 5000) {
+    lastNetwork = now;
+    if (WiFi.status() != WL_CONNECTED)
+      startAp();
+    else if (ap) {
+      WiFi.softAPdisconnect(true);
+      ap = false;
+      WiFi.mode(WIFI_STA);
+      MDNS.begin("lift");
+      MDNS.addService("http", "tcp", 80);
+    }
+  }
+  delay(1);
 }

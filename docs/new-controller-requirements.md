@@ -1,5 +1,9 @@
 # New Controller Requirements Draft
 
+Implementation status is tracked in [software integration checklist](software-integration-checklist.md).
+The N16R8 profile is hardware-inhibited pending [hardware dependencies](hardware-dependency-handoff.md).
+Requirements below are design intent, not a claim that every target capability is implemented.
+
 ## Safety And Motion
 
 - Hardware safety chain must remove motion authority without depending on application firmware.
@@ -10,7 +14,7 @@
 - The state machine should have explicit states: boot, unknown-position, idle, homing, moving, stopping, stopped, service, and fault.
 - Any unexpected movement while idle should fault.
 - Lack of expected encoder movement while commanding motion should fault.
-- Stop timeout should fault if the VFD does not acknowledge or monitor as stopped.
+- Stop timeout must fault unless fresh VFD monitor data confirms stopped/zero frequency and the encoder is stable. An acknowledgement alone must not clear the stopping state or a fault latch.
 - Primary floor stopping should use a measured deceleration-distance offset, not a PID position loop.
 - Calibration mode should preserve the old behavior: after floor positions are set and program mode exits, run toward the farther top/bottom end, reach normal speed, command stop, measure actual stop distance, and save that calibration value.
 - If VFD deceleration, max frequency, normal run speed, or encoder scaling changes, the stop-distance calibration should be marked stale or require recalibration.
@@ -86,7 +90,7 @@
 - The legacy RF path uses a Linx RXM-418-LR receiver with a `LICAL-DEC-MS001` decoder and existing remotes. The new board must keep this compatible 418 MHz path.
 - Route the decoder's five button outputs, `TX_ID`, and `MODE_IND` to the MCU, and provide an MCU-controlled `LEARN` line connected to the separate physical-button node because `LEARN` is not exposed by the legacy header. The five buttons request Floor 1, Floor 2, Floor 3, Stop, and Light toggle; a remote is not assigned to a single floor.
 - Web pairing drives the decoder Learn Mode, which accepts a valid transmitter during a 17-second window and stores up to 40 addresses. Holding `LEARN` high for 10 seconds erases all decoder addresses. Individual learned addresses cannot be deleted.
-- Store WebUI nicknames and observation history in MRAM keyed by captured `TX_ID`. Log transmitter ID, resolved nickname when known, button/command, time, and accepted/rejected result. Treat unseen/unknown IDs safely and do not imply that the WebUI can enumerate the decoder's internal address memory.
+- Store WebUI nicknames and observations using captured `TX_ID` plus an association epoch. TX_ID is a reusable learned-slot number, not a permanent transmitter identity. Learn/erase/restore invalidates associations until explicitly re-associated. Log slot/epoch, nickname when verified, command, time and result; never imply the WebUI can enumerate decoder memory.
 - RF commands must be treated like user requests, not safety signals; motion prechecks and interlocks still apply.
 
 ## Restricted Service Recovery

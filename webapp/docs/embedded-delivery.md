@@ -8,21 +8,23 @@ Measured September 2026 output:
 
 | Bundle | Size |
 | --- | ---: |
-| HTML + CSS + JavaScript, raw | approximately 247 KB |
-| HTML + CSS + JavaScript, gzip | approximately 74 KB |
-| Share of 16 MB module flash | approximately 0.44% |
+| HTML + CSS + JavaScript, raw | 233,572 bytes |
+| HTML + CSS + JavaScript, gzip | 70,809 bytes |
+| Staging limit (raw plus compressed) | 2 MiB |
 
-The exact application, OTA, NVS, and LittleFS partition table remains a firmware decision. Reserve at least 256 KB for the WebUI so normal growth does not immediately require repartitioning. A 512 KB LittleFS partition offers healthier revision-A margin if the OTA layout permits it.
+The current `firmware/partitions.csv` reserves two 4 MiB application slots,
+LittleFS at 0x810000 of size 0x7e0000, NVS/OTA data and a 64 KiB coredump region.
+It fits exactly within 16 MiB. OTA-sized slots do not mean an OTA updater is implemented.
 
-The ESP32 does not execute React. It reads static bytes from flash and sends them over HTTP; decompression and JavaScript execution happen in the client browser. Web-server RAM use comes primarily from TCP/HTTP buffers, small JSON documents, and filesystem chunks—not the 247 KB raw bundle.
+The ESP32 streams static bytes. React and gzip decompression execute in the browser.
 
 ## Release asset rules
 
-- Package only `.gz` versions of HTML, CSS, and JavaScript when transparent gzip serving is enabled. Do not waste flash on duplicate raw copies.
+- This development package includes raw and gzip variants for clients without gzip. Both count toward the 2 MiB staging limit.
 - Serve the HTML entry point as `text/html` with `Content-Encoding: gzip` and `Cache-Control: no-cache`.
 - Serve hashed CSS and JavaScript as `text/css` and `text/javascript`, with `Content-Encoding: gzip` and `Cache-Control: public, max-age=31536000, immutable`.
 - Reject unknown paths instead of performing MCU-side templating.
-- Generate an asset manifest during firmware integration so firmware does not hard-code content hashes manually.
+- `scripts/stage-firmware.mjs` creates a SHA256 manifest and removes obsolete previously-manifested assets. Firmware checks every packaged hash and API/contract version at boot before serving the UI. It never reformats LittleFS automatically. Hashes detect corruption, not malicious firmware or asset replacement.
 
 ## Server constraints
 
@@ -41,3 +43,18 @@ The ESP32 does not execute React. It reads static bytes from flash and sends the
 3. Verify cold load, cached reload, fallback AP, station mode, and reconnect behavior on the target ESP32-S3.
 4. Exercise malformed requests, interrupted file transfers, slow clients, repeated status polling, and configuration-upload limits.
 5. Confirm that web traffic cannot measurably delay stop handling, safety-state transitions, VFD servicing, persistence, or watchdog feeding.
+
+## Update Strategy
+
+Current operation is **build-only**: `npm run build:embedded`,
+`node scripts/stage-firmware.mjs`, then `pio run -t buildfs`. Upload targets are
+blocked. A release must pair application and filesystem artifacts from the same
+build and record both hashes plus contract version. Never update while moving.
+
+No OTA/network update or rollback endpoint exists yet. Before adding one, require
+guarded confirmed stop, independent motion inhibition, authenticated/signed image
+validation, compatibility checks, power-interruption recovery and a confirmed
+boot before accepting the new application. The current single LittleFS partition
+does not provide atomic A/B asset rollback; solve that before advertising seamless
+OTA. A missing/corrupt/incompatible bundle returns an error while diagnostics stay
+available. Never let an asset update or UI reconnect enable motion.

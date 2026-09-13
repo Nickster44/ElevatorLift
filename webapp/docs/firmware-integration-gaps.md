@@ -1,135 +1,59 @@
-# Firmware and WebUI Integration Gaps
+# Firmware / WebUI Handoff
 
-This document is the shared handoff between firmware and WebUI development.
-The browser is a display and command client; firmware remains authoritative for
-position, motion permission, safety state, VFD communication, outputs, RF
-decoder state, authentication, and audit logging.
+Updated 2026-09-11. This replaces the old preview-oriented handoff.
+See [software checklist](../../docs/software-integration-checklist.md) and the
+separate [hardware dependencies](../../docs/hardware-dependency-handoff.md).
 
-Until a capability below has an implemented controller endpoint, the WebUI must
-label it as preview-only or disable it. It must not report a hardware action as
-accepted, completed, or communicating based only on local browser state.
+## Closed In Software
 
-## Contract Version And Capabilities
+- No automatic demo fallback, fake initial health, local-only STOP, fake telemetry,
+  fabricated calibration, timer-based pairing success or local configuration success.
+- Validated v1 status, explicit unavailable capabilities and stale/disconnected states.
+- Controller-owned floor numbers, nullable position and decimal-string counts.
+- Idempotent light set-state, real network save, bounded durable log read and errors.
+- Native static WebUI serving, asset staging and N16R8 flash partition build.
+- Host-tested replacement motion/protocol/storage logic; no old pulse-input runtime.
 
-Firmware should expose an API version and explicit capability list through
-`GET /api/status` or a dedicated `GET /api/capabilities` endpoint. The WebUI
-should enable controls only when the connected controller advertises the
-corresponding capability.
+## Still Required Before Operational Integration
 
-Initial capability names should cover motion, light state, floor configuration,
-VFD telemetry and parameters, RF learn, RF erase-all, logs, network settings,
-backup/restore, calibration, and restricted service recovery.
+1. Resolve HW-01/HW-02 before creating an operational target profile. Never merely
+   flip `hardwareReady` or capability flags. Review hardwired enable and watchdog
+   behavior independently of software; demonstrate timing under slow clients.
+2. Integrate `DriveScheduler` and `Em01` with actual UART TX/RX, serialized parameter
+   jobs and alarms. Portable parameter jobs now validate metadata, enforce service
+   guards, invalidate calibration before writes and persist verified readback/cache;
+   these are not operational target bindings.
+   STOP ACK is not stopped; physical stop needs fresh zero-status/zero-frequency
+   monitoring plus stable encoder observations. EM01 has no transaction ID.
+3. Bind the supervisor's top-HOME reference handshake to the counter origin;
+   commission scale/polarity, landing/home coordinates, tolerances, speeds and
+   progress/time limits. Wire program-exit to measured calibration and persist
+   completed results before enabling normal motion. The isolated controller session
+   implements this coordination and durable pre-RUN intent. No fabricated defaults.
+4. Expose guarded settings/floor/fault-reset/homing/calibration handlers. Finish
+   configuration migration and fault durability under every reset point, including
+   physical power interruption during the immediate fault-ledger write. The target
+   now records fault transitions immediately, independently of snapshots. Faults must not
+   disappear after STOP or reboot. Web changes must await real results.
+5. Finish RXM/LICAL serial TX_ID capture, debounce/correlation with output lines,
+   verified five-button mapping, MODE_IND interpretation and learn/erase state
+   confirmation. Portable learn/erase confirmation models are host-tested, but their
+   timing is unqualified and they are not an integrated receiver. Persist
+   epoch/association/nickname records; re-learn/erase/restore invalidates associations.
+   TX_ID is a reusable slot, never a permanent transmitter identity.
+6. Complete authenticated event attribution (source/operator/RF slot+epoch),
+   paginated export, configurable retention, RTC setting/backup verification and
+   write-protected/absent-device tests on target. Current events use bounded JSON
+   payloads inside integrity-checked MRAM records, not the final dense binary format.
+7. Implement backup/restore, reboot and OTA only with verified stopped/service
+   guards, version compatibility, durable transaction results and recovery tests.
+8. Add API/UI support for each capability as it becomes operational. The current
+   setup/drive-write/remotes/recovery screens intentionally remain unavailable.
 
-The WebUI also needs a distinct initial `connecting` state. It must not display
-`Controller online` until a valid, version-compatible status document has been
-received.
+## Acceptance Evidence
 
-## Safety And Direction Permission
-
-The current WebUI derives its top-level safety banner primarily from
-`safetyOk`. Firmware should instead return an authoritative motion-permission
-summary that includes at least:
-
-- `motionAllowed`
-- `blockedReasons[]`
-- `canMoveUp`
-- `canMoveDown`
-- safety-loop state
-- upper- and lower-limit state
-- VFD fault/availability state
-- position-valid state
-
-The WebUI must use that complete result for its banner and command availability.
-An active limit cannot coexist with an unconditional `All interlocks healthy`
-message. Directional limits should disable commands that require travel farther
-in the blocked direction. Firmware must still repeat every precheck when a
-request arrives; disabled browser controls are not a safety mechanism.
-
-## Position And Landing Identity
-
-The WebUI currently estimates the displayed landing from fixed encoder-count
-thresholds. This must be replaced by controller-owned data because floor
-positions are configurable and the car may be stopped between landings.
-
-Firmware should return:
-
-- `position`
-- `positionValid`
-- `currentFloor`, nullable when not at a configured landing
-- `atLanding`
-- configured floor identifiers, nicknames, and positions
-- the landing tolerance or the already-resolved landing result
-
-When `currentFloor` is null, the WebUI should show an explicit between-landings
-or unknown-position state and must not display `Lift is here` for any floor.
-
-## VFD Communication And Telemetry
-
-The current visual design contains representative frequency, current, DC-bus,
-and temperature values. They must never be presented as live values merely
-because `/api/status` succeeds.
-
-Firmware should provide a cached VFD telemetry object containing communication
-state, sample timestamp/age, output frequency, motor current, DC-bus voltage,
-temperature when supported, active fault, and last valid command/response. The
-WebUI should render `Unavailable`, `Stale`, or `Preview` until authoritative
-values are present and fresh. `Communicating` must be driven by the controller's
-protocol health, not browser connectivity.
-
-## RF Learn And Erase-All
-
-The current RF workflow is locally simulated. Before these controls become
-operational, firmware must implement the documented learn and erase-all
-endpoints and report authoritative decoder state.
-
-Learn responses should report whether the request was accepted, `MODE_IND`
-state, remaining learn-window time, completion/cancellation, and any observed
-transmitter identity. Erase-all should use an explicit staged confirmation or
-hold-session token, report progress, and confirm the final decoder result.
-
-The WebUI must not say the LEARN line was asserted or decoder memory was erased
-until firmware confirms it. Browser timers may display controller-provided
-remaining time, but they cannot determine success. All requests require normal
-authentication and audit events.
-
-## Outputs And Other Planned Controls
-
-Light state must be returned by firmware and treated as authoritative. A
-set-state endpoint such as `POST /api/light` with `{ "on": true }` is preferable
-to toggle-only behavior because retries and multiple clients can otherwise
-invert the output unexpectedly.
-
-Settings, network changes, calibration, VFD writes, backup/restore, remote
-registry changes, and restricted recovery controls must follow the same rule:
-no success message until the controller accepts and confirms the operation.
-Unsupported controls remain visibly unavailable even when basic status polling
-works.
-
-## Errors, Freshness, And Auditing
-
-Every state-changing response should include a stable result code, human-readable
-message, and current authoritative state. Rejections should preserve the
-specific firmware reason instead of becoming a generic unavailable message.
-Timeouts and malformed responses must leave the displayed state unconfirmed.
-
-Motion, stop, lighting, RF, settings, VFD, network, calibration, restore, and
-recovery requests must be logged by firmware with source, authentication
-identity when available, accepted/rejected result, reason, and resulting state.
-
-## Integration Acceptance Tests
-
-Before the WebUI is packaged into controller firmware, automated or bench tests
-must cover:
-
-1. Safety loop open, upper limit active, lower limit active, and VFD fault states.
-2. Direction-specific command availability and server-side rejection.
-3. Valid landing, between-landings, and invalid/restored-position states.
-4. Fresh, stale, unavailable, and faulted VFD telemetry.
-5. RF learn accepted, timed out, cancelled, and completed states.
-6. RF erase-all cancellation, authorization failure, timeout, and confirmed completion.
-7. Light commands from two clients without toggle-state races.
-8. Unsupported API capability, API-version mismatch, malformed JSON, timeout, and `401`/`409` responses.
-9. Confirmation that no preview-only action produces a controller-success message.
-
-These tests supplement the controller's motion and safety tests. Passing WebUI
-integration tests does not qualify the independent hardwired safety system.
+`firmware/tests/run.ps1` tests correct outcomes; it does not rerun the historical
+defect-accepting expectations. `webapp/tests/controller.test.mjs` and
+`browser.mjs` cover malformed/disconnected/reconnected APIs and actual STOP
+requests. The 2026-09-10 reproduction harness remains untouched as historical
+evidence tied to its baseline commit, not a current qualification suite.

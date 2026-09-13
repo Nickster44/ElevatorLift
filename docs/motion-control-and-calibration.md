@@ -8,13 +8,19 @@ Do not use a classic PID position loop as the primary lift control strategy. The
 
 ## Current Firmware Behavior
 
-The starter firmware currently uses a prediction-stop threshold:
+The portable supervisor uses a directional prediction-stop threshold:
 
 ```text
-remaining_counts <= stop_offset_counts -> send VFD stop command
+remaining_counts = (target_counts - position_counts) * direction
+remaining_counts <= measured_stop_distance -> request STOP
 ```
 
-This is implemented in `firmware/src/main.cpp` using `activeCommand.stopOffsetCounts`. The current starter data only has a single placeholder stop offset per floor target. Final firmware should move this to an MRAM-backed calibration table.
+This is implemented in `firmware/src/core/Supervisor.cpp`, with separate overshoot,
+progress, wrong-direction and final-tolerance checks. `core/Configuration` serializes
+the measured calibration metadata into versioned MRAM journal records. Target
+commissioning and program-exit APIs are still unsupported while hardware is
+inhibited; see the software integration checklist. No floor positions or valid
+calibration are invented at startup.
 
 ## Calibration Mode Requirement
 
@@ -25,7 +31,7 @@ The new controller should preserve the old calibration concept:
 3. When leaving programming mode, the controller chooses the longer available travel direction toward the top or bottom floor.
 4. The controller commands motion long enough to reach the configured normal run speed.
 5. The controller records the position at the instant it sends the stop command.
-6. The controller waits for the VFD stop acknowledgment or confirmed stopped condition.
+6. The controller waits for fresh VFD stopped-status/zero-frequency telemetry and stable encoder position. STOP acknowledgement alone is never sufficient.
 7. The controller records the final stopped position.
 8. The measured difference becomes the deceleration travel distance.
 9. The controller stores the calibration value in MRAM with sequence number and CRC.
@@ -58,3 +64,15 @@ Keep the runtime logic conservative:
 - If final stopped position is outside an allowed tolerance, latch a fault or require service recalibration.
 - If VFD deceleration, max frequency, run speed, or encoder scaling changes, invalidate or warn on the saved calibration.
 - Calibration mode must not override hardwired safety devices, final limits, or fault conditions.
+
+## Top Reference And Service Boundary
+
+There are exactly three floors, increasing in the upward direction. HOME is a
+separate configured reference near floor 3, not floor-one zero. A rising HOME
+event during upward homing records the reference crossing; coast after that edge
+is retained. The counter-origin adapter must complete the reference handshake
+before position becomes valid. An already-active HOME cannot establish a new
+reference without a deliberate service approach. Ordinary idle HOME never
+changes coordinates. Homing/calibration require local key plus continuous hold;
+service release requests STOP and cancels completion. All constants require field
+commissioning and physical verification before an operational profile exists.

@@ -21,3 +21,5 @@ firmware/include/Secrets.h
 *.bin
 *.hex
 *.map
+firmware/data/
+webapp/test-results/

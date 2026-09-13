@@ -11,7 +11,8 @@
     "build:embedded": "vite build --config vite.embedded.config.ts && node scripts/compress-embedded.mjs",
     "check": "tsc --noEmit",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
+    "test:browser": "npm run build:embedded && node scripts/test-browser.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "eslint-config-next": "16.2.6",
     "hermes-parser": "^0.37.0",
     "language-subtag-registry": "^0.4.2",
+    "playwright": "1.58.2",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",

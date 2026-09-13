@@ -1,5 +1,7 @@
 #include "NetworkConfig.h"
 
+#include <cstring>
+
 namespace {
 
 constexpr const char* kNamespace = "network";
@@ -22,32 +24,41 @@ uint32_t settingsCrc(NetworkSettings settings) {
   return crc32Simple(reinterpret_cast<const uint8_t*>(&settings), sizeof(settings));
 }
 
+bool validStrings(const NetworkSettings& s) {
+  return std::memchr(s.staSsid, 0, sizeof s.staSsid) &&
+         std::memchr(s.staPassword, 0, sizeof s.staPassword) &&
+         std::memchr(s.apSsid, 0, sizeof s.apSsid) &&
+         std::memchr(s.apPassword, 0, sizeof s.apPassword) && std::strlen(s.apSsid) > 0 &&
+         std::strlen(s.apPassword) >= 8;
+}
+
 }  // namespace
 
-bool NetworkConfig::begin() {
-  return preferences_.begin(kNamespace, false);
-}
+bool NetworkConfig::begin() { return preferences_.begin(kNamespace, false); }
 
 bool NetworkConfig::load(NetworkSettings& settings) {
   if (!preferences_.isKey(kSettingsKey)) {
     return false;
   }
 
-  const size_t read = preferences_.getBytes(kSettingsKey, &settings, sizeof(settings));
-  if (read != sizeof(settings)) {
+  NetworkSettings candidate;
+  const size_t read = preferences_.getBytes(kSettingsKey, &candidate, sizeof(candidate));
+  if (read != sizeof(candidate)) {
     return false;
   }
 
-  return settings.crc == settingsCrc(settings);
+  if (candidate.crc != settingsCrc(candidate) || !validStrings(candidate))
+    return false;
+  settings = candidate;
+  return true;
 }
 
 bool NetworkConfig::save(const NetworkSettings& settings) {
+  if (!validStrings(settings))
+    return false;
   NetworkSettings copy = settings;
   copy.crc = settingsCrc(copy);
   return preferences_.putBytes(kSettingsKey, &copy, sizeof(copy)) == sizeof(copy);
 }
 
-bool NetworkConfig::clear() {
-  return preferences_.remove(kSettingsKey);
-}
-
+bool NetworkConfig::clear() { return preferences_.remove(kSettingsKey); }

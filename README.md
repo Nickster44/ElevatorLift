@@ -13,6 +13,21 @@ The new design goals are:
 
 Important: this repository is not a certified elevator controller. The software here is a development baseline. Any real lift must use appropriately rated safety devices, hardwired interlocks, braking/enable circuits, limit switches, emergency stop hardware, enclosure design, and professional review before operation.
 
+## Software Integration Status (2026-09-11)
+
+The active software is a **buildable but hardware-inhibited N16R8 profile**.
+GPIO35-37 are unavailable on this module, and GPIO42 currently couples UART
+translator enable with VFD run permission. Neither is worked around in firmware:
+no replacement GPIOs are invented, the VFD path remains disabled, and uploads
+are blocked. No physical motion or hardware verification has been performed.
+
+Start with the [software integration checklist](docs/software-integration-checklist.md),
+[hardware-dependency handoff](docs/hardware-dependency-handoff.md),
+[firmware guide](firmware/README.md) and [current API contract](webapp/docs/api-contract.md).
+Portable motion/protocol/device logic has regression tests; target commissioning,
+RF integration and several guarded API workflows remain incomplete. The WebUI
+shows unavailable capabilities instead of simulating successful hardware actions.
+
 ## Current Repository Layout
 
 ```text
@@ -114,36 +129,37 @@ The old calibration workflow set floor positions in program mode, then on exit r
 
 These are not proof of the historic first-floor overshoot, but they are credible contributors to intermittent behavior.
 
-## Starter Firmware Direction
+## Firmware Direction
 
-The starter firmware under `firmware/` currently targets an ESP32-S3 with Arduino/PlatformIO because it provides integrated Wi-Fi, multiple UARTs, SPI, adequate RAM/flash, and a straightforward local web server. This is only the first reference target. The code is split around interfaces so the board can later move to another MCU or module if the hardware goals require it.
+The firmware targets the exact N16R8 module using Arduino/PlatformIO and a versioned hardware interface contract. Portable core logic is tested separately from target adapters. A successful build is not permission to deploy.
 
-Key starter modules:
+Key modules:
 
-- `VfdProtocol`: builds EM01-compatible ASCII commands and checks common acknowledgments.
-- `PositionStore`: ESP32 NVS placeholder for persistent state; intended to be replaced by an SPI MRAM driver.
-- `main.cpp`: nonblocking motion service loop, safety input checks, button commands, VFD command refresh, and a local HTTP diagnostic API.
-- `PinMap.h` and `LiftConfig.h`: all provisional hardware choices and tuning constants.
+- `core/Supervisor`: fault-latched motion, service, homing and measured calibration logic.
+- `core/Em01`, `DriveScheduler`: framed/checksummed transactions, telemetry and readback.
+- `core/Devices`, `Configuration`: LS7366R, PM004 MRAM, RTC and integrity-checked records.
+- `core/Rf`: isolated learned-slot/epoch and input arbitration logic.
+- `main.cpp`: inhibited target diagnostics, light output, networking and static hosting.
+- `interface-contract.json`: confirmed pins and explicit unresolved hardware decisions.
 
 ## Local Web Interface/API
 
-The sample firmware starts a web server on port 80. It enables a fallback access point for direct service access. A user can save station network credentials from the local page/API, reboot the controller, and then access it from the local network if the connection succeeds. If station connection fails or is lost, the controller returns to fallback AP access.
+The firmware hosts static WebUI assets on port 80 and a fallback AP. Station credentials can be saved, but remote reboot is deliberately unsupported in the inhibited profile. Failed/lost station connectivity restores AP access. Blank API tokens disable writes.
 
 Endpoints:
 
-- `GET /` - small browser dashboard with live status.
-- `GET /api/status` - JSON status including state, position, target, safety, and last VFD command.
+- `GET /` - embedded WebUI; no automatic demo mode.
+- `GET /api/status` - versioned status, capabilities, blocked reasons and freshness.
+- `GET /api/capabilities` - explicit supported capabilities.
 - `GET /api/network` - current AP/station network status.
 - `POST /api/network` - save station SSID/password and require a reboot.
-- `POST /api/reboot` - reboot after configuration changes.
-- `GET /api/settings` - read local lift settings such as run speed and jog speed.
-- `POST /api/settings` - update guarded local lift settings.
-- `GET /api/logs/recent` - read the current in-memory recent event log.
+- `POST /api/light` - idempotent light output command.
+- `GET /api/logs/recent` - bounded durable MRAM events, unavailable on storage failure.
 - `GET /api/vfd/parameters` - list documented VFD parameter metadata.
-- `GET /api/vfd/parameter?number=N` - request a VFD parameter read.
-- `POST /api/vfd/parameter` - write a stopped-only, range-checked VFD parameter.
-- `POST /api/move?floor=N` - request a move to a configured floor.
-- `POST /api/stop` - request a controlled stop.
+- `POST /api/move?floor=N` - strict input validation, then hardware-inhibited rejection.
+- `POST /api/stop` - supervisor stop request; reports unavailable delivery while UART is inhibited.
+
+Other commissioning, parameter-write, RF, restore and reboot endpoints are explicitly unsupported. See the API contract for remaining work; no UI capability implies hardware verification.
 
 Fallback AP credentials are configured from `firmware/include/Secrets.h`, which is ignored by Git. Station network credentials are saved through the local web API.
 

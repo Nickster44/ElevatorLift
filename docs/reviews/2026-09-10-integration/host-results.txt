@@ -1,0 +1,39 @@
+CONFIRMED protocol documented stop/monitor vectors
+CONFIRMED protocol 45Hz forward vector
+CONFIRMED DEFECT acknowledgement accepts unframed substring
+CONFIRMED DEFECT fresh empty NVS boots idle at invented zero
+CONFIRMED DEFECT boot writes four drive parameters without initial STOP or ACK
+CONFIRMED DEFECT no encoder pulses or VFD replies for one hour still requests run
+CONFIRMED DEFECT overshot stop window continues forward
+CONFIRMED DEFECT stale stop ACK marks new stop idle
+CONFIRMED DEFECT STOP then ACK bypasses fault latch without explicit reset
+CONFIRMED safety-open request rejected and STOP emitted
+CONFIRMED forward active upper limit faults under provisional GPIO mapping
+CONFIRMED missing stop ACK timeout faults
+CONFIRMED DEFECT fault state stops STOP retrying
+CONFIRMED DEFECT top HOME resets coordinate to floor-one zero
+CONFIRMED DEFECT accepted stored stopping offset not used by motion
+CONFIRMED DEFECT settings update changes commanded speed during movement
+CONFIRMED DEFECT invalid floor258 wraps to floor2
+CONFIRMED DEFECT partially numeric command accepted
+CONFIRMED DEFECT parameter266 wraps to FMAX10
+CONFIRMED parameter write blocked while moving
+CONFIRMED DEFECT unauthenticated parameter read sends UART during motion without arbiter
+CONFIRMED configured token rejects unauthorized writes
+CONFIRMED DEFECT reboot accepted while moving without STOP
+CONFIRMED DEFECT main loop restarts with active run state
+CONFIRMED DEFECT UI light endpoint absent
+CONFIRMED DEFECT unsupported advertised setting fields silently ignored
+CONFIRMED position persistence round-trip in simulated Preferences
+CONFIRMED position CRC rejects corrupted simulated blob
+CONFIRMED DEFECT periodic persistence failure not surfaced as fault
+CONFIRMED log retention is32 RAM events despite2048 setting
+CONFIRMED DEFECT initial high button interpreted as new command
+CONFIRMED DEFECT network SSID emitted without JSON escaping
+CONFIRMED DEFECT conflicting limits not rejected at command acceptance
+CONFIRMED DEFECT unexpected idle movement not detected
+CONFIRMED DEFECT simultaneous floor buttons silently choose code-order winner
+CONFIRMED DEFECT safety-open boot writes drive parameters but never sends STOP
+CONFIRMED additional original EM01 manual transmit vectors
+STATUS_JSON {"state":"moving","position":12000,"target":40000,"targetFloor":3,"normalRunTenthsHz":450,"safetyOk":true,"home":false,"lowerLimit":false,"upperLimit":false,"lastVfdCommand":"","lastFault":"","networkMode":"fallback_ap","stationIp":"","apIp":""}
+Checks=37 unexpected=0

@@ -1,0 +1,46 @@
+name: Software integration (no deployment)
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Interface contract
+        run: |
+          node firmware/scripts/generate-contract.mjs --check
+          node firmware/tests/contract.mjs
+          python firmware/tests/test_build_guard.py
+      - name: Portable firmware regression tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror -I firmware/src firmware/tests/core_tests.cpp firmware/src/core/*.cpp -o /tmp/lift-core-tests
+          /tmp/lift-core-tests
+      - name: Web checks and bundle
+        working-directory: webapp
+        run: |
+          npm ci
+          npm run check
+          npm run lint
+          npm test
+          npm run build:embedded
+          node scripts/stage-firmware.mjs
+      - name: Mocked API browser integration (no controller)
+        working-directory: webapp
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
+      - name: Target and filesystem builds only
+        working-directory: firmware
+        run: |
+          python -m pip install platformio==6.1.18
+          pio run
+          pio run -t buildfs

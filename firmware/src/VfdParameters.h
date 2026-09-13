@@ -2,25 +2,10 @@
 
 #include <Arduino.h>
 
-enum class VfdAccessLevel : uint8_t {
-  User,
-  Installer,
-  Advanced,
-  Locked,
-};
+#include "core/ParameterCatalog.h"
 
-struct VfdParameterDefinition {
-  uint8_t number;
-  const char* name;
-  const char* displayName;
-  const char* units;
-  uint16_t minValue;
-  uint16_t maxValue;
-  uint16_t defaultValue;
-  uint16_t scaleDivisor;
-  bool writable;
-  VfdAccessLevel accessLevel;
-};
+using VfdAccessLevel = lift::ParameterAccess;
+using VfdParameterDefinition = lift::ParameterDefinition;
 
 namespace VfdParameters {
 
@@ -32,4 +17,3 @@ String definitionJson(const VfdParameterDefinition& definition);
 String allDefinitionsJson();
 
 }  // namespace VfdParameters
-

@@ -1,0 +1,37 @@
+{
+  "environment": "simulated hooks/JSX/fetch/timers; unmodified page handlers; no DOM/network",
+  "results": [
+    {
+      "confirmed": true,
+      "name": "DEFECT initial display claims live healthy before fetching"
+    },
+    {
+      "confirmed": true,
+      "name": "DEFECT disconnected preview still claims drive communicating"
+    },
+    {
+      "confirmed": true,
+      "name": "actual firmware status JSON is consumed by UI handler"
+    },
+    {
+      "confirmed": true,
+      "name": "DEFECT status loss makes STOP local-only and displays idle"
+    },
+    {
+      "confirmed": true,
+      "name": "DEFECT after untransmitted STOP displays stationary ready"
+    },
+    {
+      "confirmed": true,
+      "name": "DEFECT pending demo timer overwrites reconnected live motion state"
+    },
+    {
+      "confirmed": true,
+      "name": "DEFECT malformed status object reaches render and crashes"
+    },
+    {
+      "confirmed": true,
+      "name": "only four actual client API calls (one unsupported light route)"
+    }
+  ]
+}

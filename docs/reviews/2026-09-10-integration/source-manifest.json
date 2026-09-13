@@ -1,0 +1,346 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "C17A9711A8DB74952E04B9C1244CC0A3E35FC1F93E4C45B676E30EDB708F1808"
+    },
+    {
+      "path": "docs/component-library-request.md",
+      "sha256": "454EA25F09373EBA65EC99C40289DEED62D4F5ABBC55C0D211982E9C8F6DCCE3"
+    },
+    {
+      "path": "docs/field-verification-log.md",
+      "sha256": "7A8ECE2B3FFDE67AB4D946A97BB83B621BA830344C746D5C254680AAB629CA4D"
+    },
+    {
+      "path": "docs/hardware-requirements-matrix.md",
+      "sha256": "3BB3D8D05FA5423258B9651B3010B2CB63E00DF6D4FA94C188F4C469C78E5127"
+    },
+    {
+      "path": "docs/hardware-selection.md",
+      "sha256": "4015CCEDD3B07D796034D5C9A6C122F08FBDD791DB44A61F14023FA4F552A6B7"
+    },
+    {
+      "path": "docs/home-automation-integration.md",
+      "sha256": "EBD3473F3C506DC5A9348DDACC57D34EB7496E66DB72F6253595512627BAA26A"
+    },
+    {
+      "path": "docs/jlcpcb-lcsc-sourcing.md",
+      "sha256": "277D472C9114C0D76C56FEA2D5B25F11FD706787AFAEDB0FD338788205826B09"
+    },
+    {
+      "path": "docs/motion-control-and-calibration.md",
+      "sha256": "1362E70E2AB0BB8E0A910A764FE22021985A7F4273AB92589FD23D93FAC4F9AA"
+    },
+    {
+      "path": "docs/new-controller-requirements.md",
+      "sha256": "36FC753C518FD285E8D77EF6127CB3F7D6224895289F5B53AEFF2EA7FAA6438A"
+    },
+    {
+      "path": "docs/old-system-review.md",
+      "sha256": "532AFCABA1947AFEDFCFD599B64C3736C0739B855B9C890F5D6BF462A1309631"
+    },
+    {
+      "path": "docs/schematic-capture-readiness.md",
+      "sha256": "BF19FF9228C1191D0D55AB0BCD82A712F2773244030665366BD7CB5CE1AA607E"
+    },
+    {
+      "path": "docs/snapeda-library-import.md",
+      "sha256": "B842EF960DBD26D2892FF06A4078D17DEF21B03B11CC4474F54AE434E4C271E8"
+    },
+    {
+      "path": "docs/vfd-serial-protocol.md",
+      "sha256": "7656136FDD5EFF9B6EF35A8F6A8AA96428FFB586717CAD63055F5F4D933EBCCB"
+    },
+    {
+      "path": "docs/webapp-embedded-delivery.md",
+      "sha256": "EEC954FFE0C52856CA4D28014BBFA0803BAFA17CB302A2983811159CE4F9BBCE"
+    },
+    {
+      "path": "docs/webui-vfd-and-storage-plan.md",
+      "sha256": "5B907ED908FBE12A1EFA6027979A0AECE5F2E5DADD28547DE0CC2AB576DCA99A"
+    },
+    {
+      "path": "firmware/README.md",
+      "sha256": "9338F4240628F60B330A3AD5DCBA59CDB3B41F692BE4CC4E1EA33273D30CA02D"
+    },
+    {
+      "path": "firmware/include/LiftConfig.h",
+      "sha256": "20B3AE6F27964ADBF5B238363AFA9533A62CD59EECC25D518D97DE472278894A"
+    },
+    {
+      "path": "firmware/include/PinMap.h",
+      "sha256": "1A052B7163892EB21251CDFDAF81AC1905A2E2A35F5875F444236B31075F188D"
+    },
+    {
+      "path": "firmware/include/Secrets.example.h",
+      "sha256": "C55CC30A7BEC1DF7053BAD60E43591225E84AC637A6D2D50AFCF3C925223C085"
+    },
+    {
+      "path": "firmware/platformio.ini",
+      "sha256": "F3BF8EC635F62EEBCF3FB88B7600101C0A404D6587DF734C8D379154A4134CB5"
+    },
+    {
+      "path": "firmware/src/ApiAuth.cpp",
+      "sha256": "D05192A14BA17D78745C78C5AC2D55127153BAC5B6EB708485F7E0276D5C7F20"
+    },
+    {
+      "path": "firmware/src/ApiAuth.h",
+      "sha256": "6B2990ACFCE35BE4015D682B341B37D7F92D5F47C0609D190A395CD9724F9803"
+    },
+    {
+      "path": "firmware/src/EventLog.cpp",
+      "sha256": "83AA17BE96FCB2FA6169522764B7970DC21BDC8277D897209FF152D5EED0183B"
+    },
+    {
+      "path": "firmware/src/EventLog.h",
+      "sha256": "3A5D13AD5E991090DFAB49B04A4FA4550AA03C7BDD72532FBAFA06C75E85F1E7"
+    },
+    {
+      "path": "firmware/src/LiftSettings.cpp",
+      "sha256": "5479510C3AF5D31A5951152951586FF0F4517CDDAB0DADF459243DDEACBF8E26"
+    },
+    {
+      "path": "firmware/src/LiftSettings.h",
+      "sha256": "02BA0BC672B0F529413146D061317B0FD9D23EB361D0997C45D94D8AF16815B9"
+    },
+    {
+      "path": "firmware/src/NetworkConfig.cpp",
+      "sha256": "703CD3D70E6E3FDFD383307DDD3B74F9CCF9069C4E5F4E961B04C30841AA5F1F"
+    },
+    {
+      "path": "firmware/src/NetworkConfig.h",
+      "sha256": "209615898B4330971705F6C3B10B3B8FB63CE0B4826CB8E65F0BD651661CA2B6"
+    },
+    {
+      "path": "firmware/src/PositionStore.cpp",
+      "sha256": "729889468B56AD44940810634894116AB37FB018D6CE4E342A681E490DA95852"
+    },
+    {
+      "path": "firmware/src/PositionStore.h",
+      "sha256": "A8D73852F0333890D5D33B838EB97149A6A0D51C2ACD68A5F566F1A244BEE90F"
+    },
+    {
+      "path": "firmware/src/VfdParameters.cpp",
+      "sha256": "9BB21565851D3380D862AF08E63B462B516771D56C15F684A048BEBD17417E24"
+    },
+    {
+      "path": "firmware/src/VfdParameters.h",
+      "sha256": "B0E010BCA64BBDADFCBF447E46BB52AB2D30AC18B068566885C7B679324C42D6"
+    },
+    {
+      "path": "firmware/src/VfdProtocol.cpp",
+      "sha256": "805E863BFBCBD1A8033070FC6D7462820C01427BA28501B35B8A84E720480765"
+    },
+    {
+      "path": "firmware/src/VfdProtocol.h",
+      "sha256": "6FA41A2EB4D2C25F40F1DCF8AB2DBB4E2B00119CB77505ED52625545B147B1B3"
+    },
+    {
+      "path": "firmware/src/main.cpp",
+      "sha256": "3D06A85B2323A56A0C6CE6701728EB211A004DE226EA8F561C568856040D9D2E"
+    },
+    {
+      "path": "hardware/ElevatorLift.kicad_pcb",
+      "sha256": "C0E577D0A9DED17620C24E671E690633E245A59F3668810ACCEE221ABB62A559"
+    },
+    {
+      "path": "hardware/ElevatorLift.kicad_pro",
+      "sha256": "C3F0CB6965956B9D3737C24BB6620DDB0CC41A7392EA0AE65AC249224E5934E8"
+    },
+    {
+      "path": "hardware/ElevatorLift.kicad_sch",
+      "sha256": "6C08CE961492E7FB5B6D4EB357B4449A9D32B65DC92489478AFE6A21A49D90E0"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.kicad_sym",
+      "sha256": "DF768ADD4BCF67D6279D620510EDF799B57E2557388CF7D09E615CA0E850A438"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/ESP32-S3-WROOM-1U-N16R8_Corrected.kicad_mod",
+      "sha256": "D04EF4029C9ECADDA97C6FD2EFB2572BD5C857BF09E184750C72C054E7D2C327"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/ESP32-S3-WROOM-1U-N16R8_CorrectedV2.kicad_mod",
+      "sha256": "EA3C20195A51785DCEC9FFB25A8F98538759C8D47334D5B04BE152A3F3358177"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/MountingHole_2.6mm_NPTH.kicad_mod",
+      "sha256": "5F10166DFDC804C2BA48D48E0056B3BDF55B381EB9085E0FA38D3AB5AD20FB26"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/Phoenix_GMKDS-1.5-3-7.62_1717732_Provisional.kicad_mod",
+      "sha256": "4E7162D5E855C917A3BAD6E5DD6BAEA839C01A4F34FEFD96C1A24E85E8CB24AA"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/SAMTEC_TSW-104-07-G-S_ZeroPadded.kicad_mod",
+      "sha256": "D1AAAFC1571A17D241075E5FFB497732E5309142D2106F219C7A20A3F039901A"
+    },
+    {
+      "path": "hardware/ElevatorLift_Custom.pretty/SMA_TE-Linx_CONSMA002_RightAngle.kicad_mod",
+      "sha256": "D07C0628FBB15736FCA44DCA96C483398F04884E9B2BBAE95F1D2B31DA3CA72A"
+    },
+    {
+      "path": "hardware/Encoder_Counter_RevA.kicad_sch",
+      "sha256": "A7648742AC0B867EEB17AEE93D6527E9EF75C8E3DFD7BCB7C9BD22F74087D8C4"
+    },
+    {
+      "path": "hardware/IO.kicad_sch",
+      "sha256": "17F9DC03B7C4BD771AA1CEBE3378F49C1D69A0D0D3C8EFB04C9627F5339BFD3E"
+    },
+    {
+      "path": "hardware/MCU_Storage_RevA.kicad_sch",
+      "sha256": "217181647934430EC6E37467A6736B722837DFF63F47FD40253AE344B8E54BA7"
+    },
+    {
+      "path": "hardware/Power_RevA.kicad_sch",
+      "sha256": "ECE1D4C9253DE3310785FBF80DB03C145EBE2BBC7AE297210D2EC148C4E776DC"
+    },
+    {
+      "path": "hardware/README.md",
+      "sha256": "94CD0E78F9219A96E03A45D0BBF28234151D57E447E652930330613C1AEC63E3"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/20-SSOP.kicad_mod",
+      "sha256": "B81611D915A2ECBEF46F96ED3E9290511FA8DD244FF0FDE2762F023622A580B6"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/CONV_R-78E5.0-0.5.kicad_mod",
+      "sha256": "3B725ACC96458585381E20EFA22AF17FF4CC1414DF784270CBC9633F41DC4D67"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/CONV_RAC10-12SK_277.kicad_mod",
+      "sha256": "797C28EF7752853D3AB354BC383522F5427ED3623BE16897DAE232F673AC9F15"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/DIOM4336X265N.kicad_mod",
+      "sha256": "4EC5BA21E5C4470850770557F4DA54300E25AE84337D7A6F70D6C25F1F0B5354"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/GCT_USB4145-03-0230-C_REVA2.kicad_mod",
+      "sha256": "44821AA90233F80613D08328A24208566662AC19ED9481FA8D10D72EA765DB66"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/RESC1607X60N.kicad_mod",
+      "sha256": "241FC9B1B2DD42811517466DB0821B0B900E35948E69A46F8E97CC66784BAFBD"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/SAMTEC_TSW-104-07-G-S.kicad_mod",
+      "sha256": "B92E50139154CA1F618F32A6891930E5D3E9C1B783402017BF52D0A4CF10BE9A"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/SAMTEC_TSW-106-07-G-S.kicad_mod",
+      "sha256": "190B2CBB88E91F150A263C868AEBBB9CE30CDACD642DCA74F581BDB181A65748"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/SOTFL35P100X50-3N.kicad_mod",
+      "sha256": "DDF2A644C595C80D01497DEF3EF753E0A80D7244B255DFC01BF1EA20136738BD"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/XCVR_ESP32-S3-WROOM-1U-N16R8.kicad_mod",
+      "sha256": "72D8309D7F1ABFBCF6C212F26A63749C1733131E3DA56757E2303E8E4BE72FAD"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/Footprints.pretty/XCVR_RXM-418-LR.kicad_mod",
+      "sha256": "978FC35EE69809EC263D42D7F47BAE7219CF0B1706BA4599E3E59E545DFE626D"
+    },
+    {
+      "path": "hardware/SnapEDA-Library/SnapEDA-Library.kicad_sym",
+      "sha256": "12D0F5FD8A69D351EFE4E22F0C9009792DD7928520438DCE16C849A40D2CC3EA"
+    },
+    {
+      "path": "hardware/VFD_Interface_RevA.kicad_sch",
+      "sha256": "DF04521D341B06A5D2A7E8923ACEF9ECFB795C731053D6D494D2BB7AD887238A"
+    },
+    {
+      "path": "hardware/architecture-blocks.md",
+      "sha256": "4EA1A8F1184C5694C09400F6A9E44F13ED1B4C05195D0C925546412930D27425"
+    },
+    {
+      "path": "hardware/fp-lib-table",
+      "sha256": "06BC562EF1D6F47642556FF0656E36A295F90EE52ED5EE230C6F90EE42C0A007"
+    },
+    {
+      "path": "hardware/reports/pcb-layout-readiness.md",
+      "sha256": "0E661C76CF3255141E6C8D43ECEFFC55E3F4E0A92E55C8780AC6A849EA327857"
+    },
+    {
+      "path": "hardware/reports/schematic-review-summary.md",
+      "sha256": "7B3CAADCCFCFB597E38444A12D84E659026760E02D193A1575A5BB686884527B"
+    },
+    {
+      "path": "hardware/sym-lib-table",
+      "sha256": "AC5CBA897B4633E9DE1F20F2BC53D1A5F1DD418D56AFEBB1C0EF2D2133DB9F5C"
+    },
+    {
+      "path": "webapp/.openai/hosting.json",
+      "sha256": "D2841F8A91A91BAB4F4A1E27671E7D3FE8F02261EB41996F43AC61E6970A9D74"
+    },
+    {
+      "path": "webapp/README.md",
+      "sha256": "0335D09A7E09D29B1ECF432A921755BD6F13D9A891E8902A3DDD886B79071E59"
+    },
+    {
+      "path": "webapp/app/layout.tsx",
+      "sha256": "0C56D011E73A508CE6152EC7012C91C971318CA82242A917E48237E014D3242D"
+    },
+    {
+      "path": "webapp/app/page.tsx",
+      "sha256": "1813DD84A7878D4F6BB4BBEC0855C557302CBD6637C304D891F88F4F7BB03D9F"
+    },
+    {
+      "path": "webapp/build/sites-vite-plugin.ts",
+      "sha256": "ABD6BC3A592961E978AB72FCEB8EE7647824D9A2321EE5B5777B2A05D69526CC"
+    },
+    {
+      "path": "webapp/docs/api-contract.md",
+      "sha256": "1E17E910C0C6E416DDF0121BE1B9EE7F45409E8B3EF9BB6D7621CE21388808C3"
+    },
+    {
+      "path": "webapp/docs/embedded-delivery.md",
+      "sha256": "77F9E9BC3E55D681BE490D8D8E5CC4C7CE80028288004D708F1BE327AA0B6107"
+    },
+    {
+      "path": "webapp/docs/firmware-integration-gaps.md",
+      "sha256": "AD1AFA4DDB49AD1FE2F19EB9E982C43AF3E80096E4DD6C94B0E94DEEC30126B3"
+    },
+    {
+      "path": "webapp/docs/product-and-safety.md",
+      "sha256": "2F4FCE9A4920F810A555BDC39CFE74504DDC8E6FD026B4FEA7DA41D2FC80256B"
+    },
+    {
+      "path": "webapp/embedded/main.tsx",
+      "sha256": "F3B8ACD812446D46DE414B2BEF5770CB8496D840031F90DA0C6C87743DAFA9A3"
+    },
+    {
+      "path": "webapp/next.config.ts",
+      "sha256": "A972C4F0FFA6DD714E7909B02D1AC19D2F2FE3D01F191EFD2C5054BD6F142EC1"
+    },
+    {
+      "path": "webapp/package-lock.json",
+      "sha256": "D56C965DDF7A648C7BC6199C270C49B4DF191BB7F97060083672A9882B4946D3"
+    },
+    {
+      "path": "webapp/package.json",
+      "sha256": "176DEEA033E7B3341557EB7C12AB97528331D26BFABCF5E1C06222653BE18F03"
+    },
+    {
+      "path": "webapp/tsconfig.json",
+      "sha256": "17022E8EDCF284FE6D9A50A11130CC841515CCCF95A0A43C48446F1EE33A667A"
+    },
+    {
+      "path": "webapp/vite.config.ts",
+      "sha256": "5D68239B2F24F42354E8A05CF69B83FD8F3CE34727F2EDF2B55283E4F732C77A"
+    },
+    {
+      "path": "webapp/vite.embedded.config.ts",
+      "sha256": "43637EC7B2B93D1A16307D99E070E0E8D47A93591A36B19BA9B16E7368C1DA44"
+    },
+    {
+      "path": "webapp/worker/index.ts",
+      "sha256": "6F8983AB616309202039AD672B1A46A835BEDE1BB77636DC751613C664F969E5"
+    }
+  ],
+  "reviewedAt": "2026-09-10T21:45:55.9594949-05:00",
+  "head": "1c37a6520e3dacffecb0be541005f5ac88b7dc21"
+}

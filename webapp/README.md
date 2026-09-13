@@ -1,66 +1,66 @@
 # Elevator Lift Web Console
 
-Browser-based operation and service interface for the ESP32-S3 elevator-lift controller. The webapp is developed independently from the motion firmware, then emitted as a small static bundle that the controller can serve from flash.
+The WebUI is a same-origin client of the versioned controller API. It starts
+disconnected, never switches to demo mode, and never manufactures motion,
+calibration, telemetry, pairing, logging or command success. Unsupported hardware
+paths are visibly unavailable. A valid HTTP status response is not motion permission.
 
-## Current status
-
-The first design revision includes:
-
-- A responsive overview with safety state, car position, floor controls, Stop, lift-light control, VFD telemetry, and recent activity.
-- Editable floor nicknames and encoder positions in the lift-setup view.
-- Stop-distance calibration status and all 17 documented EM01 VFD parameters.
-- Current and overload-limit controls presented as lift protection, not a certified weight measurement.
-- RF remote views based on five-button remotes, observed `TX_ID` identities, nicknames, Learn Mode, and decoder erase-all behavior.
-- Event-log, network, API-token, configuration backup/restore, and restricted service-recovery designs.
-- Representative preview data whenever the firmware API is unavailable.
-
-Only status polling, move, stop, and light-toggle requests currently have frontend HTTP calls. Other controls intentionally demonstrate the planned workflow while their firmware contracts are being completed. See [API contract](docs/api-contract.md) for the exact boundary.
-
-The known cross-team gaps are tracked in [firmware and WebUI integration gaps](docs/firmware-integration-gaps.md). Until those contracts are implemented, simulated controls must remain preview-only or unavailable and must not claim that connected hardware changed state.
-
-The WebUI never grants motion authority. Firmware and independent hardware remain responsible for authentication, state validation, safety-loop monitoring, final limits, VFD health, watchdog behavior, and fail-safe motion removal. See [product and safety decisions](docs/product-and-safety.md).
+`lib/controller.ts` validates runtime status shape, versions, counts, capabilities,
+freshness and contradictory permission fields. Encoder counts are decimal strings
+to preserve signed 64-bit values. The server owns floor identity and position.
+STOP always attempts a real request, even when status is disconnected; failure
+is shown and never changes the displayed motion state to idle.
 
 ## Development
 
-Requirements: Node.js 22.13 or later and npm.
+Node 22.13+ and npm:
 
 ```powershell
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000`. If `/api/status` is unavailable at the same origin, the interface identifies itself as using preview data.
-
-Useful checks:
-
-```powershell
+npm ci
 npm run check
-npm run build
+npm run lint
+npm test
 npm run build:embedded
 ```
 
-- `build` validates the full development/Sites application.
-- `build:embedded` creates the static MCU release assets and gzip copies in `dist/embedded`.
-- Generated outputs, dependencies, logs, and TypeScript build metadata are ignored by Git.
+`npm run dev` starts the full development app. For the exact embedded entry:
+`npm exec vite -- --config vite.embedded.config.ts --host 127.0.0.1 --port 5178 --strictPort`.
+Without an API, the page remains disconnected with commands unavailable; it is
+not a simulator. No server connects to physical lift hardware during tests.
 
-## ESP32 delivery
+## Reproducible Browser Test
 
-The September 2026 embedded build measures approximately 247 KB raw and 74 KB gzip. This is about 0.44% of the selected ESP32-S3-WROOM-1U-N16R8 module's 16 MB flash. React runs in the user's browser; the MCU only serves static files and bounded JSON responses.
+From a clean checkout at repository root, with Node 22.13+ and npm installed:
 
-The firmware release should package only the gzip assets, stream them from LittleFS, and serve hashed files with long-lived caching. Full storage, header, concurrency, and verification guidance is in [embedded delivery](docs/embedded-delivery.md).
+```powershell
+cd webapp
+npm ci
+npx playwright install --with-deps chromium
+npm run test:browser
+```
 
-## Project map
+The install command downloads the browser matching the locked Playwright version;
+on Ubuntu it also installs OS dependencies (sudo privileges may be required).
+The runner builds the embedded bundle, starts Vite preview only on
+`http://127.0.0.1:5178`, waits for readiness, runs the test, and closes its server
+on success, failure, or interruption. Port conflicts fail instead of reusing an
+unknown server; stop any existing preview on 5178 first. The run has a 120-second
+deadline after the build. No module, browser-channel or target-URL overrides are used.
 
-| Path | Purpose |
-| --- | --- |
-| `app/page.tsx` | Current interface, state, demo behavior, and API requests |
-| `app/globals.css` | Responsive industrial visual system |
-| `embedded/` | Static browser entry point used for MCU builds |
-| `scripts/compress-embedded.mjs` | Creates maximum-compression gzip assets and reports size |
-| `vite.embedded.config.ts` | Static embedded-build configuration |
-| `docs/api-contract.md` | Connected and proposed controller endpoints |
-| `docs/firmware-integration-gaps.md` | Shared firmware/WebUI contract gaps and acceptance tests |
-| `docs/embedded-delivery.md` | ESP32 storage and serving requirements |
-| `docs/product-and-safety.md` | Durable WebUI behavior and safety decisions |
+`tests/browser.mjs` retains desktop/mobile disconnect, real STOP transport with
+failure reporting, malformed-status rejection, reconnection, and view overflow
+assertions. All controller API requests are mocked: this is browser evidence,
+not target or motion verification. Screenshots go to ignored `test-results/`.
+CI runs this command after the WebUI build; `npm test` remains the separate
+unit/SSR suite. Neither command deploys or contacts a physical controller.
 
-The broader controller requirements remain in the repository-level `docs/`, `firmware/`, and `hardware/` folders.
+## Embedded Delivery
+
+`build:embedded` emits static files plus gzip variants. On 2026-09-11 the bundle
+measured 233,572 raw bytes / 70,809 gzip bytes. `node scripts/stage-firmware.mjs`
+copies the assets and a hash manifest into ignored `firmware/data`. Then
+`pio run -t buildfs` builds the LittleFS image. No deployment/upload is authorized.
+
+See [API](docs/api-contract.md), [remaining integration work](docs/firmware-integration-gaps.md)
+and [delivery constraints](docs/embedded-delivery.md). The current UI deliberately
+does not enable unimplemented setup, drive-write, RF or restore workflows.

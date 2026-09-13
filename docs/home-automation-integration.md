@@ -30,7 +30,13 @@ The controller should expose:
 - `X-Lift-Api-Token` header on write endpoints when a token is configured.
 - Clear JSON errors for rejected, unauthorized, busy, faulted, or unsafe requests.
 
-Current firmware includes optional token checking. If `LIFT_API_TOKEN` is blank, write endpoints remain open for development. A production build should set a long random token and require Home Assistant or another trusted automation hub to include it in the `X-Lift-Api-Token` header.
+Current firmware fails closed: a blank or shorter-than-16-character
+`LIFT_API_TOKEN` disables all writes. A trusted hub must include a configured
+token in the header. The current N16R8 profile is hardware-inhibited: floor
+commands are rejected and STOP reports unavailable delivery through the disabled
+UART path. These examples describe the future operational integration, not a
+working/qualified lift deployment. Poll the v1 capabilities and freshness fields;
+never treat a hub script completing as evidence that the lift moved or stopped.
 
 ## Home Assistant Path
 

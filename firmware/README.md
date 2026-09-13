@@ -1,86 +1,88 @@
-# Firmware Starter
+# Controller Software
 
-This is a PlatformIO starter firmware for an ESP32-S3 reference target. It is intended to prove the controller architecture before the final KiCad board is selected.
+**Buildable, hardware-inhibited development profile. Not deployable. No uploads.**
 
-The current hardware direction is the exact ESP32-S3-WROOM-1U-N16R8 with an LS7366R quadrature counter, PM004MNIATR SPI MRAM, RXM-418-LR/LICAL-DEC-MS001 RF path, local AP/station Wi-Fi, and the bench-gated TXS0104E 3.3 V/5 V VFD UART interface captured in the schematic.
+The current profile targets ESP32-S3-WROOM-1U-N16R8: 16 MB QIO flash, 8 MB octal
+PSRAM and native USB CDC. `interface-contract.json` is the versioned wiring
+contract; `include/PinMap.h` is generated, not independently edited. The netlist
+contract test checks confirmed assignments against the supplied review export.
+GPIO35-37 have no usable definitions. GPIO42 is held LOW and no VFD UART is
+initialized: translator OE and RUN permission are coupled in the current design.
 
-The intended motion strategy is measured deceleration-distance stopping. The controller should preserve the old calibration workflow: after floor positions are set and program mode exits, run in the longer available direction, allow the lift to reach normal speed, command stop, measure the actual deceleration travel, and save that stop offset. A PID loop is not planned for the primary positioning strategy.
+## Implementation Boundaries
 
-## Files
+| Layer | Implementation | Boundary |
+| --- | --- | --- |
+| `core/Supervisor.*` | Unknown startup, three floors, top HOME edge, measured stop, fault latch, service release, limits/progress/overshoot, guards | Host simulation; thresholds uncommissioned |
+| `core/Em01.*`, `DriveScheduler.h` | Bounded framed transactions, checksum, monitor, retries, parameter readback, STOP priority | Not connected to target UART; late same-type reply ambiguity requires bench review |
+| `core/Devices.*` | LS7366R mode/readback and wrap tracking; PM004 word-address SPI; RTC coherent UNIX read; CRC journals | Target adapters build; no physical verification |
+| `core/Configuration.*` | Versioned settings/floors/names/calibration/epoch serialization | Read on target; commissioning/write workflow not exposed |
+| `core/ControllerSession.h`, `SafetyLedger.h` | Durable motion-intent/fault barriers, configuration, homing/program exit and calibration coordination | Host integrated; operational target binding pending |
+| `core/ParameterJobs.h` | Guarded serialized jobs, readback/cache persistence, calibration invalidation | Isolated; no target UART binding |
+| `core/Rf.h` | Release-to-rearm, slot/epoch association, five-command mapping, learn/erase confirmation models | Capture UART, qualified timing and persistent registry still to integrate |
+| `main.cpp` | Inhibited diagnostics, real counter/storage/RTC adapters, light set-state, AP/station, bounded HTTP, LittleFS | No motion, homing, RF learning, settings writes, parameter writes, reboot or OTA |
 
-| File | Purpose |
-| --- | --- |
-| `platformio.ini` | PlatformIO build target |
-| `include/PinMap.h` | Provisional ESP32-S3 pins |
-| `include/LiftConfig.h` | Motion constants and default floor table |
-| `include/Secrets.example.h` | Fallback AP credential template |
-| `src/EventLog.*` | Recent event log scaffold |
-| `src/LiftSettings.*` | Persistent local lift settings |
-| `src/NetworkConfig.*` | Stored station network settings and AP fallback defaults |
-| `src/VfdParameters.*` | VFD parameter metadata and WebUI/API definitions |
-| `src/VfdProtocol.*` | EM01 VFD command framing/checksum |
-| `src/PositionStore.*` | Persistent state placeholder using ESP32 NVS |
-| `src/main.cpp` | Main state machine, web API, inputs, and VFD servicing |
+The old interrupt-counter, fabricated floor defaults, substring ACK, periodic
+NVS-position and RAM-log scaffolds have been removed. Git history retains them.
 
-## Network Setup
+## Build And Test
 
-The controller starts a local fallback access point. Connect to that AP, open the controller page, save the station network SSID/password, then reboot from the page/API. If the controller cannot connect to the saved station network, or if the station connection is later lost, it enables the fallback AP again.
-
-Copy `include/Secrets.example.h` to `include/Secrets.h` only if you want to change the fallback AP credentials at build time:
-
-```cpp
-#pragma once
-#define WIFI_AP_SSID "LiftControllerSetup"
-#define WIFI_AP_PASSWORD "change-me-1234"
-#define LIFT_API_TOKEN ""
-```
-
-`Secrets.h` is intentionally ignored by Git.
-
-If `LIFT_API_TOKEN` is blank, write endpoints are open for development. For production or home automation testing, set a long random token and send it as the `X-Lift-Api-Token` HTTP header on write commands. The controller also advertises `lift.local` by mDNS where supported by the network.
-
-## Build
+From repository root:
 
 ```powershell
-pio run
+node firmware/scripts/generate-contract.mjs --check
+node firmware/tests/contract.mjs
+./firmware/tests/run.ps1
+python firmware/tests/test_build_guard.py
 ```
 
-## API Surface
+From `firmware`: `pio run`. The environment name is retained for existing tooling;
+the board definition is `boards/elevator-n16r8.json`, not the N8 devkit definition.
+PlatformIO upload/uploadfs targets deliberately fail. Do not remove that gate to
+try hardware. See [hardware dependencies](../docs/hardware-dependency-handoff.md).
 
-- `GET /api/status`
-- `GET /api/network`
-- `POST /api/network`
-- `POST /api/reboot`
-- `GET /api/settings`
-- `POST /api/settings`
-- `GET /api/logs/recent`
-- `GET /api/vfd/parameters`
-- `GET /api/vfd/parameter?number=N`
-- `POST /api/vfd/parameter`
-- `POST /api/move?floor=N`
-- `POST /api/stop`
-- `POST /api/light/toggle` (planned; return authoritative light state)
-- `GET/POST /api/floors` (planned; stable floor number, nickname, and encoder position)
-- `GET/POST /api/remotes` (planned WebUI observation/nickname registry; not decoder memory enumeration)
-- `POST /api/remotes/learn` and `POST /api/remotes/erase-all` (planned decoder control with timing/state confirmation)
-- `GET/POST /api/config/backup` and `/api/config/restore` (planned versioned backup with remote-profile reconciliation)
+From `webapp`: `npm ci`, `npm run build:embedded`, then
+`node scripts/stage-firmware.mjs`. From `firmware`, `pio run -t buildfs` builds the
+filesystem image without uploading. Full update constraints are in
+[delivery notes](../webapp/docs/embedded-delivery.md).
 
-Future API work should include token authentication, an automation-safe local REST surface, and optional MQTT/Home Assistant integration. Any WebUI, RF, or automation motion request must pass the same motion prechecks and be logged.
+## Network And Authentication
 
-Write endpoints currently support optional API-token enforcement through the `X-Lift-Api-Token` header. REST is the first home automation interface; MQTT/Home Assistant discovery is planned as a later optional layer.
+Configure unique AP credentials and a random API token of at least 16 characters
+in ignored `include/Secrets.h`. A blank/short token **disables all writes**.
+Only the `X-Lift-Api-Token` header is accepted; never a URL query token. The UI
+holds the entered token in memory, not persistent browser storage. There is no
+TLS on the embedded listener: use a trusted, isolated LAN/AP and an authenticated
+local hub; do not expose this API to the Internet.
 
-## Current Limitations
+The AP starts for setup, closes after station connection and returns within the
+5-second network check interval on loss. Saving network credentials writes NVS
+without reconnecting or restarting. Restart is explicitly required; remote reboot
+is disabled in this profile. Credentials are never returned by the API.
 
-- `PositionStore` uses ESP32 NVS as a placeholder; replace it with an MRAM-backed implementation for the selected Siproin `PM004MNIATR` or compatible SPI MRAM.
-- Position input is still represented by provisional interrupt pins; replace it with an LS7366R-backed position service.
-- Pin assignments are placeholders.
-- Web write endpoints only have optional build-time token authentication so far; final production auth should move to configurable MRAM-backed credentials/API tokens.
-- Network settings use ESP32 NVS for now; final settings should move to the MRAM configuration store.
-- VFD parameter reads/writes send protocol commands and return pending read-back status; complete frame parsing and cache persistence are still TODO.
-- `EventLog` is an in-memory scaffold; final recent logs should move to MRAM.
-- RF receive, pairing, and remote registry support are not implemented yet, but RXM-418-LR compatibility is required.
-- Final RF support must include the LICAL-DEC-MS001 five decoded button lines, TX_ID capture, MODE_IND monitoring, and LEARN control. Record remote nicknames/history in MRAM separately from the decoder's retained learned-address memory.
-- A restricted recovery API must not directly accept arbitrary motion from the browser. If implemented, firmware must also verify cabinet-local keyed authorization and continuous hold-to-run, enforce low-speed jog and a short timeout, keep hardwired E-stop/final-limit/VFD authority intact, and log the full session.
-- Program/calibration mode is not implemented yet. The current `stopOffsetCounts` value is a placeholder and should become an MRAM-backed measured calibration record.
-- Home automation is not implemented yet; the preferred path is local REST first, optional MQTT/Home Assistant later.
-- The motion constants are placeholders and must not be used on real hardware.
+## Storage
+
+PM004MNIATR: 524,288 bytes; two-byte aligned accesses and 18-bit **word** addresses.
+Startup verifies manufacturer bytes and mode registers; unknown latency or
+protection is rejected, not reset blindly. Writes issue WREN, WRITE, WRDI, READ
+and compare. No SPI-flash erase/page-program assumptions are used.
+
+- Bytes 0-1151: two historical position/state records, saved once per second.
+- Bytes 2048-3199: two configuration records.
+- Bytes 4096-5247: two safety-ledger records (latched fault / unfinished motion).
+- Bytes 6144-7295: reserved for two parameter-cache records; not target-bound.
+- Bytes 8192-450559: 768 durable event slots, 576 bytes each, up to 544 payload bytes.
+- Remaining capacity reserved; configurable retention and denser binary event format remain open.
+
+Records use explicit little-endian fields, schema version, length, sequence,
+CRC32 and a last-written commit marker. A torn new record cannot replace the
+previous committed record. The safety ledger records fault transitions immediately;
+its portable motion-intent barrier must be committed before any future RUN.
+Fault snapshots also latch a prior-boot fault, but position
+snapshots never establish incremental encoder continuity. Boot requires homing
+before any future normal motion. RTC time is nullable; no NTP/build-time clock is
+fabricated. RTC setting/backup configuration is not implemented.
+
+See [software checklist](../docs/software-integration-checklist.md) for current
+verification and the remaining integration work. Passing host tests is not lift
+qualification or proof of hard-real-time behavior.

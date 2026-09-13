@@ -1,0 +1,546 @@
+[
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol H1 [MountingHole]",
+    "items": [
+      {
+        "description": "Symbol H1 [MountingHole]",
+        "uuid": "f7ff5035-bb80-44f3-a158-0de8251f548a",
+        "x": 0.3048,
+        "y": 1.905
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.3048,
+    "y": 1.905
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol H2 [MountingHole]",
+    "items": [
+      {
+        "description": "Symbol H2 [MountingHole]",
+        "uuid": "e465f88c-54ee-4eaf-86e0-a2921898c49c",
+        "x": 0.4572,
+        "y": 1.905
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.4572,
+    "y": 1.905
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol H3 [MountingHole]",
+    "items": [
+      {
+        "description": "Symbol H3 [MountingHole]",
+        "uuid": "c34e91a3-3342-4a61-a11e-07fb8521b1d6",
+        "x": 0.6096,
+        "y": 1.905
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.6096,
+    "y": 1.905
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol H4 [MountingHole]",
+    "items": [
+      {
+        "description": "Symbol H4 [MountingHole]",
+        "uuid": "c4fe4660-128a-491a-b088-31cfa5bfed51",
+        "x": 0.762,
+        "y": 1.905
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.762,
+    "y": 1.905
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol J20 [Conn_01x03]",
+    "items": [
+      {
+        "description": "Symbol J20 [Conn_01x03]",
+        "uuid": "aacfb665-7bfa-41ff-900a-946d1bcbc6ae",
+        "x": 0.3048,
+        "y": 0.5969
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.3048,
+    "y": 0.5969
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol PS20 [RAC10-12SK_277]",
+    "items": [
+      {
+        "description": "Symbol PS20 [RAC10-12SK_277]",
+        "uuid": "009ce49f-06c9-4ebb-a9e8-27bceb517127",
+        "x": 1.397,
+        "y": 0.6223
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 1.397,
+    "y": 0.6223
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol PS21 [R-78E5.0-0.5_CORRECTED]",
+    "items": [
+      {
+        "description": "Symbol PS21 [R-78E5.0-0.5_CORRECTED]",
+        "uuid": "ca044b78-3695-4575-b9f4-702fb35bf220",
+        "x": 1.397,
+        "y": 1.1557
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 1.397,
+    "y": 1.1557
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol J40 [Conn_Coaxial]",
+    "items": [
+      {
+        "description": "Symbol J40 [Conn_Coaxial]",
+        "uuid": "30cf2640-c4fa-4d5e-85c2-f9f20f19b6cd",
+        "x": 0.254,
+        "y": 0.5461
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.254,
+    "y": 0.5461
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol U40 [RXM-418-LR]",
+    "items": [
+      {
+        "description": "Symbol U40 [RXM-418-LR]",
+        "uuid": "19c51c39-01dd-4f53-bb64-54ab3e5740f6",
+        "x": 0.6477,
+        "y": 0.5461
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.6477,
+    "y": 0.5461
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol U41 [LICAL-DEC-MS001]",
+    "items": [
+      {
+        "description": "Symbol U41 [LICAL-DEC-MS001]",
+        "uuid": "ba5ff894-2330-4947-a16e-eedf6b94d647",
+        "x": 1.2446,
+        "y": 0.6477
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 1.2446,
+    "y": 0.6477
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol J10 [USB4145-03-0230-C_REVA2]",
+    "items": [
+      {
+        "description": "Symbol J10 [USB4145-03-0230-C_REVA2]",
+        "uuid": "ecb669e7-5200-4bb3-8931-d3938019bab9",
+        "x": 0.6096,
+        "y": 1.0668
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 0.6096,
+    "y": 1.0668
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'SnapEDA': Symbol U12 [TPD2EUSB30ADRTR]",
+    "items": [
+      {
+        "description": "Symbol U12 [TPD2EUSB30ADRTR]",
+        "uuid": "f52e53a3-92a3-4fd6-bdbe-e723a4d9af9e",
+        "x": 1.1176,
+        "y": 1.0668
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 1.1176,
+    "y": 1.0668
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol U10 [ESP32-S3-WROOM-1U-N16R8]",
+    "items": [
+      {
+        "description": "Symbol U10 [ESP32-S3-WROOM-1U-N16R8]",
+        "uuid": "abfc8dd6-a500-4b67-8855-ab615792c2f8",
+        "x": 2.1082,
+        "y": 1.1938
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.1082,
+    "y": 1.1938
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR315 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR315 Pin 1 [Power input, Line]",
+        "uuid": "98def165-3c41-445c-8c4a-e23f09f12433",
+        "x": 2.8956,
+        "y": 0.9402
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.8956,
+    "y": 0.9402
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol U11 Pin 1 [~CE, Input, Inverted]",
+    "items": [
+      {
+        "description": "Symbol U11 Pin 1 [~CE, Input, Inverted]",
+        "uuid": "6ae2944c-2890-4b03-9cfd-ad7c3576b441",
+        "x": 2.8956,
+        "y": 0.9902
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.8956,
+    "y": 0.9902
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR317 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR317 Pin 1 [Power input, Line]",
+        "uuid": "dfeaca57-c9a9-4c1c-904d-dee9c4712226",
+        "x": 3.0607,
+        "y": 0.8652
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 3.0607,
+    "y": 0.8652
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR318 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR318 Pin 1 [Power input, Line]",
+        "uuid": "c709fcaa-0e59-4707-b4e2-11ede95662c5",
+        "x": 3.0607,
+        "y": 1.0652
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 3.0607,
+    "y": 1.0652
+  },
+  {
+    "description": "The current configuration does not include the footprint library 'ElevatorLift_Custom': Symbol J24 [TSW-104-07-G-S]",
+    "items": [
+      {
+        "description": "Symbol J24 [TSW-104-07-G-S]",
+        "uuid": "1b39185e-64de-450f-9cd1-7ed9328c57b8",
+        "x": 2.1971,
+        "y": 0.8001
+      }
+    ],
+    "rule": "footprint_link_issues",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.1971,
+    "y": 0.8001
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR215 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR215 Pin 1 [Power input, Line]",
+        "uuid": "f42b62ee-313b-467f-af15-c6120c6348ba",
+        "x": 2.4662,
+        "y": 1.0918
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.4662,
+    "y": 1.0918
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR216 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR216 Pin 1 [Power input, Line]",
+        "uuid": "bd000143-cd88-4a4e-bfb1-b2b120b573fd",
+        "x": 2.4662,
+        "y": 1.1668
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.4662,
+    "y": 1.1668
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR217 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR217 Pin 1 [Power input, Line]",
+        "uuid": "1f01bf8d-6b0c-4db2-a2c3-94f112b56dc0",
+        "x": 2.6162,
+        "y": 0.9168
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.6162,
+    "y": 0.9168
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol #PWR218 Pin 1 [Power input, Line]",
+    "items": [
+      {
+        "description": "Symbol #PWR218 Pin 1 [Power input, Line]",
+        "uuid": "1c4f04fa-249f-4b21-923d-03c099927473",
+        "x": 2.6162,
+        "y": 1.2168
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.6162,
+    "y": 1.2168
+  },
+  {
+    "description": "Symbol pin or wire end off connection grid: Symbol U32 Pin 9 [~DFLAG, Output, Inverted]",
+    "items": [
+      {
+        "description": "Symbol U32 Pin 9 [~DFLAG, Output, Inverted]",
+        "uuid": "c0859f7a-0ac3-41b2-9d5f-b88a11fe5df6",
+        "x": 2.7662,
+        "y": 1.0918
+      }
+    ],
+    "rule": "endpoint_off_grid",
+    "severity": "warning",
+    "sheet": "/",
+    "x": 2.7662,
+    "y": 1.0918
+  },
+  {
+    "description": "Local and global labels have same name: Global Label '+12V'",
+    "items": [
+      {
+        "description": "Global Label '+12V'",
+        "uuid": "a523703f-2118-45ad-9796-b98e251106e1",
+        "x": 2.5019,
+        "y": 0.6223
+      },
+      {
+        "description": "Label '+12V'",
+        "uuid": "3612c051-fde2-49bb-b4c8-67b66831b400",
+        "x": 1.1938,
+        "y": 1.8669
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/Power/",
+    "x": 2.5019,
+    "y": 0.6223
+  },
+  {
+    "description": "Local and global labels have same name: Global Label '+5V'",
+    "items": [
+      {
+        "description": "Global Label '+5V'",
+        "uuid": "51b3fc6c-4527-4cf7-913e-01e3a22ae04c",
+        "x": 2.5019,
+        "y": 1.1557
+      },
+      {
+        "description": "Label '+5V'",
+        "uuid": "13b638b4-1eea-467a-9f58-51920e3bc22c",
+        "x": 2.2479,
+        "y": 1.1303
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/Power/",
+    "x": 2.5019,
+    "y": 1.1557
+  },
+  {
+    "description": "Local and global labels have same name: Global Label 'GND'",
+    "items": [
+      {
+        "description": "Global Label 'GND'",
+        "uuid": "4ba6bc9a-622d-4a46-b2e5-80b6fece75ec",
+        "x": 2.5019,
+        "y": 2.1209
+      },
+      {
+        "description": "Label 'GND'",
+        "uuid": "3a20e746-553b-4181-8c2a-fa572c5aa73b",
+        "x": 1.9939,
+        "y": 0.762
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/Power/",
+    "x": 2.5019,
+    "y": 2.1209
+  },
+  {
+    "description": "Local and global labels have same name: Global Label '+3V3'",
+    "items": [
+      {
+        "description": "Global Label '+3V3'",
+        "uuid": "9a65b441-3bdf-4375-924c-f670318ac6d1",
+        "x": 2.7051,
+        "y": 1.7526
+      },
+      {
+        "description": "Label '+3V3'",
+        "uuid": "06624b75-cba4-4df6-a7ae-96e5281740f3",
+        "x": 2.3495,
+        "y": 1.8669
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/Power/",
+    "x": 2.7051,
+    "y": 1.7526
+  },
+  {
+    "description": "Local and global labels have same name: Global Label 'RF_MODE_IND'",
+    "items": [
+      {
+        "description": "Global Label 'RF_MODE_IND'",
+        "uuid": "51af2138-ea60-445c-9969-eac66ece57b3",
+        "x": 2.2606,
+        "y": 0.9906
+      },
+      {
+        "description": "Label 'RF_MODE_IND'",
+        "uuid": "660e39b6-b654-4fe9-ba25-bcecd8499d86",
+        "x": 1.2192,
+        "y": 0.8763
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/MCU_Storage/",
+    "x": 2.2606,
+    "y": 0.9906
+  },
+  {
+    "description": "Local and global labels have same name: Global Label 'VFD_ENABLE'",
+    "items": [
+      {
+        "description": "Global Label 'VFD_ENABLE'",
+        "uuid": "e4375e9c-971e-4189-8017-71964085fb9a",
+        "x": 2.2606,
+        "y": 1.3208
+      },
+      {
+        "description": "Label 'VFD_ENABLE'",
+        "uuid": "05bbecef-a520-49eb-a851-753a9bf212f9",
+        "x": 1.1557,
+        "y": 0.6858
+      }
+    ],
+    "rule": "same_local_global_label",
+    "severity": "warning",
+    "sheet": "/MCU_Storage/",
+    "x": 2.2606,
+    "y": 1.3208
+  },
+  {
+    "description": "Pins of type Bidirectional and Power output are connected: Symbol U11 Pin 3 [~WP/SIO2, Bidirectional, Inverted]",
+    "items": [
+      {
+        "description": "Symbol U11 Pin 3 [~WP/SIO2, Bidirectional, Inverted]",
+        "uuid": "717b605d-132b-4387-a09f-bcc62cf32714",
+        "x": 2.8956,
+        "y": 0.9402
+      },
+      {
+        "description": "Symbol #FLG0203 Pin 1 [Power output, Line]",
+        "uuid": "7d0e9560-7317-452d-b7a6-aca65627b103",
+        "x": 2.7051,
+        "y": 1.7272
+      }
+    ],
+    "rule": "pin_to_pin",
+    "severity": "warning",
+    "sheet": "/MCU_Storage/",
+    "x": 2.8956,
+    "y": 0.9402
+  },
+  {
+    "description": "Pins of type Bidirectional and Power output are connected: Symbol U11 Pin 7 [~HOLD/SIO3, Bidirectional, Inverted]",
+    "items": [
+      {
+        "description": "Symbol U11 Pin 7 [~HOLD/SIO3, Bidirectional, Inverted]",
+        "uuid": "90155d43-875b-4311-ba72-ffd957b63d24",
+        "x": 2.8956,
+        "y": 0.9652
+      },
+      {
+        "description": "Symbol #FLG0203 Pin 1 [Power output, Line]",
+        "uuid": "7d0e9560-7317-452d-b7a6-aca65627b103",
+        "x": 2.7051,
+        "y": 1.7272
+      }
+    ],
+    "rule": "pin_to_pin",
+    "severity": "warning",
+    "sheet": "/MCU_Storage/",
+    "x": 2.8956,
+    "y": 0.9652
+  }
+]
