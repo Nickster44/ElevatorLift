@@ -10,7 +10,7 @@ enum class State { Unknown, Idle, Moving, Homing, Service, Calibrating, Stopping
 enum class Source : uint8_t { Web, Automation, Rf, Local };
 struct Inputs {
   bool hardwareReady = false, safety = false, limitsKnown = false, upper = false, lower = false;
-  bool key = false, hold = false, up = false, down = false, home = false;
+  bool keyKnown = false, key = false, hold = false, up = false, down = false, home = false;
   bool encoderHealthy = false, communicationHealthy = false, storageHealthy = false;
   bool stopped = false;  // Fresh monitor status=0 AND frequency=0, never STOP ACK.
   int64_t position = 0;

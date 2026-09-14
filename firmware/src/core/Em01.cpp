@@ -45,9 +45,9 @@ bool Em01::request(char op, unsigned value, unsigned parameter, uint32_t now) {
 std::string Em01::transmit(uint32_t now) {
   if (!busy())
     return {};
-  if (sent_ && now - sentMs_ < 150)
+  if (sent_ && now - sentMs_ < VfdTiming::ReplyTimeoutMs)
     return {};
-  if (attempts_ >= 3) {
+  if (attempts_ >= VfdTiming::Attempts) {
     result = Result::Timeout;
     poisoned_ = true;
     telemetry.valid = false;
@@ -60,7 +60,7 @@ std::string Em01::transmit(uint32_t now) {
   return outgoing_;
 }
 void Em01::receive(char b, uint32_t now) {
-  if (!busy() || !sent_ || now - sentMs_ >= 150)
+  if (!busy() || !sent_ || now - sentMs_ >= VfdTiming::ReplyTimeoutMs)
     return;
   if (!buffer_.empty() && now - lastByteMs_ > 30)
     buffer_.clear();

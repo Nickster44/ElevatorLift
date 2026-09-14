@@ -2,6 +2,8 @@
 #include <array>
 #include <cstdint>
 #include <string>
+
+#include "VfdTiming.h"
 namespace lift {
 struct Telemetry {
   bool valid = false;
@@ -25,7 +27,7 @@ class Em01 {
   std::string transmit(uint32_t now);
   void receive(char byte, uint32_t now);
   bool healthy(uint32_t now) const {
-    return telemetry.valid && now - telemetry.sampledMs <= 500 && !poisoned_;
+    return telemetry.valid && now - telemetry.sampledMs <= VfdTiming::MonitorFreshMs && !poisoned_;
   }
   bool confirmedStopped(uint32_t now) const {
     return healthy(now) && telemetry.status == 0 && telemetry.frequency == 0;

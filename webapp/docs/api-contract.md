@@ -1,6 +1,6 @@
 # Controller API v1
 
-Status contract version 1 corresponds to `firmware/interface-contract.json`.
+Status contract version 2 (API envelope version 1) corresponds to `firmware/interface-contract.json`.
 `webapp/lib/controller.ts` is the executable response validator, and
 `tests/fixtures/status.json` is an inhibited example. Firmware serializes JSON
 with ArduinoJson, including SSID escaping. No live-to-demo fallback exists.
@@ -16,7 +16,33 @@ and nullable decimal-string coordinates. Position is a signed decimal string;
 Permission fields: `motionAllowed`, `canMoveUp`, `canMoveDown`, `blockedReasons`,
 `stoppedConfirmed`, `deploymentReady`, safety/home and nullable limit/service-key
 inputs. The Rev-A inhibited profile always denies motion and returns unknown
-limits/key, not false/healthy. Its blocked reasons explicitly include HW-01/HW-02.
+limits/key until electrical readings stabilize. Active means LOW for all three.
+`inputsQualified` is distinct from these raw debounced readings and remains false:
+open-wire/field-power loss cannot be distinguished from open contacts by GPIO alone.
+Block reasons are software-motion-inhibit, field-inputs-unqualified and physical-qualification-required.
+HW-01/HW-02 wiring defects are closed, not physical qualification.
+
+Optional additive `manualControl` status reports `active` (key asserted), `hold`,
+`up`, `down`, `safetyHealthy`, `inputsKnown`, `requestedDirection` (-1/0/1) and
+`motionEnabled` (false in v2). Direction is physical input intent, not a RUN command.
+The WebUI shows this distinction. `/api/move` returns 409 `manual_control_priority`
+when the key is asserted or raw manual inputs are unknown. STOP remains available.
+Release/conflict/safety events use source `manual` and result
+`stop-queued-not-confirmed-stopped`; they never clear a latched fault.
+
+`vfd` reports communications enabled/healthy, STOP transmitted/acknowledged, and
+`monitorStopped`. None alone grants motion or proves physical stopping; public
+`stoppedConfirmed` remains false. UART communications do not depend on `safetyOk`.
+
+Optional additive VFD fields: `communicationFault` (latched session failure),
+`stopRefreshMs` (300), `replyTimeoutMs` (150), and `watchdog` containing `state`,
+`timeoutMs` and `ageMs`. Missing readback yields null values and state `unknown`;
+readback older than 10 seconds also yields state `unknown`. Other states are
+`disabled` (TIME=0), `too-short` (<1000 ms), `within-software-policy` (1000 ms), and
+`outside-policy` (>1000 ms). This is the development write policy, not a claim that
+other values are invalid in the VFD. The UI independently expires old readbacks.
+Watchdog state changes and first communication timeout are logged. Failure continues
+STOP-only refresh, without clearing the fault or automatically resuming other traffic.
 
 `capabilities` are boolean flags, not a promise inferred from visible controls.
 `telemetry=null` means unavailable; if present it has a separate `ageMs`.
@@ -38,9 +64,9 @@ monotonic browser clock and is checked again when dispatching non-STOP commands.
 | POST `/api/network` | Validated SSID/password saved in NVS; restart required, no automatic restart |
 | POST `/api/light` | Idempotent `on=true` or `on=false`; returns status |
 | POST `/api/move` | Strict floor 1-3; current profile returns 409 `hardware_unresolved` |
-| POST `/api/stop` | Supervisor stop request; current profile returns 503 `stop_delivery_unavailable_hardware_inhibited`, never claims physical stop |
+| POST `/api/stop` | Supervisor stop plus queued UART STOP, 202 status; 503 `stop_delivery_unavailable` if UART unavailable; never claims physical stop |
 | GET `/api/logs/recent` | Up to 16 durable events, or 503 when MRAM is unavailable |
-| GET `/api/vfd/parameters` | Metadata only; `available=false`, no fabricated readback |
+| GET `/api/vfd/parameters` | Metadata plus timestamped raw cache `readings` (number/supported/rawValue/ageMs); `available` requires fresh healthy monitor; parameter 13 unsupported |
 | Other `/api/` routes | 501 `unsupported_capability` |
 
 All POSTs require a configured token >=16 characters in `X-Lift-Api-Token`.
@@ -77,3 +103,7 @@ the target. Their portable logic is described in the software checklist. Add
 controller handlers, tests and UI controls together; do not advertise a capability
 merely because a portable class exists. REST automation uses the same supervisor
 and authentication as the WebUI. MQTT/Google Home remain hub-side future work.
+
+Individual on-demand parameter jobs remain planned; diagnostic background READ
+cache is now implemented. The UI expires parameter cache display after 5 seconds,
+including elapsed time since the response. Drive writes remain inhibited.

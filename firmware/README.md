@@ -6,15 +6,42 @@ The current profile targets ESP32-S3-WROOM-1U-N16R8: 16 MB QIO flash, 8 MB octal
 PSRAM and native USB CDC. `interface-contract.json` is the versioned wiring
 contract; `include/PinMap.h` is generated, not independently edited. The netlist
 contract test checks confirmed assignments against the supplied review export.
-GPIO35-37 have no usable definitions. GPIO42 is held LOW and no VFD UART is
-initialized: translator OE and RUN permission are coupled in the current design.
+Contract v2 adopts the 2026-09-13 finalized mapping: limits GPIO43/44, key GPIO3,
+communications-only OE GPIO42. GPIO35-37 have no usable definitions. AUX is removed.
+UART0 debug/IDF logging is disabled and UART0 detached before configuring input pins;
+native USB remains the application console. ROM/bootloader output predates setup
+and cannot be suppressed by this application; R62 and boot-waveform testing remain gates.
+GPIO42 starts LOW, then enables only the TXS0104E after UART1 initialization.
+Only STOP, monitor and parameter READ commands are target-bound; no RUN or WRITE.
+
+Active-low readings require 100 ms stability with sample gaps <=25 ms. A transition,
+invalid level or missing sample invalidates readiness immediately. Pulled-up single
+inputs cannot distinguish open contacts from broken wires/absent field power.
+`FieldContinuityQualified=false` therefore keeps input qualification false, in
+addition to the unchanged global motion/upload inhibit. No setting or web override
+can remove either gate. The external hardwired safety loop is the sole motion authority.
 
 ## Implementation Boundaries
+
+Manual switch release now requests EM01 STOP independently of motion readiness.
+`ManualStop.h` samples raw active-low key/hold/direction/SAFETY_MON before UART,
+HTTP, SPI and persistence work each loop. Key/hold release, direction loss/change,
+both directions, safety loss, invalid input or a sampling gap requests STOP without
+waiting for the 100 ms qualification filter. Repeated pending STOP requests coalesce
+so bounded protocol retries still expire. UART transmission remains subject to TX
+buffer availability; this is not a verified real-time or physical-stop guarantee.
+Key takeover requests STOP and rejects WebUI floor calls. Manual RUN remains inhibited.
+
+The isolated normal RF map is D0 floor 1, D1 light toggle, D2 floor 3, D3 floor 2,
+D4 STOP. Diagnostic baud defaults to 9600 and is configurable in the model; the
+decoder jumper configuration must match this UART rate, not remote RF timing.
+Target RF capture/programming movement and the operational v3 profile remain incomplete.
 
 | Layer | Implementation | Boundary |
 | --- | --- | --- |
 | `core/Supervisor.*` | Unknown startup, three floors, top HOME edge, measured stop, fault latch, service release, limits/progress/overshoot, guards | Host simulation; thresholds uncommissioned |
-| `core/Em01.*`, `DriveScheduler.h` | Bounded framed transactions, checksum, monitor, retries, parameter readback, STOP priority | Not connected to target UART; late same-type reply ambiguity requires bench review |
+| `core/Em01.*`, `DiagnosticVfd.h` | UART1 diagnostic STOP, monitor and readback, bounded retries/freshness | No RUN/WRITE; `DriveScheduler` remains isolated; late same-type reply ambiguity requires bench review |
+| `core/FieldInputs.h` | Debounced active-low electrical readings, freshness and separate continuity qualification | No continuity/power-loss claim; target qualification remains false |
 | `core/Devices.*` | LS7366R mode/readback and wrap tracking; PM004 word-address SPI; RTC coherent UNIX read; CRC journals | Target adapters build; no physical verification |
 | `core/Configuration.*` | Versioned settings/floors/names/calibration/epoch serialization | Read on target; commissioning/write workflow not exposed |
 | `core/ControllerSession.h`, `SafetyLedger.h` | Durable motion-intent/fault barriers, configuration, homing/program exit and calibration coordination | Host integrated; operational target binding pending |
@@ -24,6 +51,22 @@ initialized: translator OE and RUN permission are coupled in the current design.
 
 The old interrupt-counter, fabricated floor defaults, substring ACK, periodic
 NVS-position and RAM-log scaffolds have been removed. Git history retains them.
+
+Diagnostic traffic uses 100 ms slots with periodic STOP refresh due every 300 ms,
+interleaving monitor/read transactions and reading TIME first. Parameter 13 is skipped
+because readback is unresolved. Reads use raw protocol units and
+timestamped cache values, not persisted commissioning settings. Three failed attempts
+poison the session until reset; STOP-only refresh continues, automatic reconnect is not.
+API STOP returns queued status, never a stopped claim. Telemetry requires a validated
+monitor younger than 500 ms; `monitorStopped` is only drive evidence, not physical
+stopping. Public `stoppedConfirmed` remains false in this unqualified profile.
+
+`VfdTiming.h` separates periodic refresh from 150 ms reply retries and the drive's
+TIME watchdog. Read-back watchdog state is exposed/logged as unknown, disabled,
+too-short, outside-policy or within-software-policy, never as physical qualification.
+The isolated installer write workflow now permits TIME=0010 only (1 second);
+shorter settings conflict with the retry/refresh margin. No drive setting is written
+automatically and no target parameter-write/RUN capability has been enabled.
 
 ## Build And Test
 

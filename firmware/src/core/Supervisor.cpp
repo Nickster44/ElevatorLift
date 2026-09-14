@@ -48,6 +48,8 @@ const char* Supervisor::readiness() const {
     return "safety_open";
   if (!inputs.limitsKnown)
     return "limits_unknown";
+  if (!inputs.keyKnown)
+    return "service_key_unknown";
   if (inputs.upper && inputs.lower)
     return "limit_conflict";
   if (!inputs.encoderHealthy)
@@ -197,7 +199,7 @@ const char* Supervisor::configure(const Config& next) {
 }
 const char* Supervisor::resetFault() {
   // Fault reset is deliberately independent of STOP and never restores position validity.
-  if (!inputs.hardwareReady || !inputs.key || inputs.hold || !inputs.safety ||
+  if (!inputs.hardwareReady || !inputs.keyKnown || !inputs.key || inputs.hold || !inputs.safety ||
       !inputs.limitsKnown || inputs.upper || inputs.lower || !inputs.encoderHealthy ||
       !inputs.communicationHealthy || !inputs.storageHealthy || !stationary())
     return "fault_reset_not_ready";
@@ -244,7 +246,7 @@ void Supervisor::tick(const Inputs& n, uint32_t now) {
     fail("safety_open");
     return;
   }
-  if (!n.limitsKnown || (n.upper && n.lower)) {
+  if (!n.limitsKnown || !n.keyKnown || (n.upper && n.lower)) {
     fail("limit_conflict_or_unknown");
     return;
   }

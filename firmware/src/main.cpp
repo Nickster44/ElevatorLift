@@ -5,6 +5,8 @@
 #include <SPI.h>
 #include <WiFi.h>
 #include <Wire.h>
+#include <esp_log.h>
+#include <esp_rom_sys.h>
 #include <mbedtls/sha256.h>
 
 #include "NetworkConfig.h"
@@ -12,7 +14,10 @@
 #include "VfdParameters.h"
 #include "core/Configuration.h"
 #include "core/Devices.h"
+#include "core/DiagnosticVfd.h"
+#include "core/FieldInputs.h"
 #include "core/HttpRequest.h"
+#include "core/ManualStop.h"
 #include "core/SafetyLedger.h"
 #include "core/Supervisor.h"
 #if __has_include("Secrets.h")
@@ -61,6 +66,25 @@ lift::SafetyLedger safetyLedger(safetyRecords);
 lift::ConfigurationStore configurationStore(configurationRecords);
 lift::Configuration configuration;
 lift::Supervisor supervisor;
+lift::FieldInputs fieldInputs;
+lift::DiagnosticVfd diagnosticVfd;
+lift::ManualStop manualStop;
+HardwareSerial VfdSerial(1);
+bool vfdUartReady = false;
+constexpr bool FieldContinuityQualified = false;
+int discardUartLog(const char*, va_list) { return 0; }
+void serviceVfd(uint32_t now) {
+  if (!vfdUartReady)
+    return;
+  for (unsigned n = 0; n < 64 && VfdSerial.available(); ++n)
+    diagnosticVfd.receive(char(VfdSerial.read()), now);
+  // All frames fit in the hardware TX queue; do not block the supervisor loop.
+  if (VfdSerial.availableForWrite() >= 32) {
+    const auto frame = diagnosticVfd.transmit(now);
+    if (!frame.empty())
+      VfdSerial.write(reinterpret_cast<const uint8_t*>(frame.data()), frame.size());
+  }
+}
 NetworkConfig networkStore;
 NetworkSettings network;
 WiFiServer http(80);
@@ -75,6 +99,8 @@ bool responding = false, ap = false, counterReady = false, storageReady = false,
      fsReady = false;
 int64_t position = 0;
 const char* previousFault = "";
+const char* previousWatchdogState = "unknown";
+bool vfdFailureLogged = false;
 char bootId[17] = {};
 uint32_t lastWriteRequestMs = 0;
 String counts(int64_t n) {
@@ -169,16 +195,35 @@ JsonDocument status() {
   d["motionAllowed"] = false;
   d["canMoveUp"] = false;
   d["canMoveDown"] = false;
-  d["stoppedConfirmed"] = false;
+  d["stoppedConfirmed"] = false;  // Physical qualification is still absent.
   d["safetyOk"] = supervisor.inputs.safety;
   d["home"] = supervisor.inputs.home;
-  d["upperLimit"] = nullptr;
-  d["lowerLimit"] = nullptr;
-  d["serviceKey"] = nullptr;
+  const uint32_t now = millis();
+  if (fieldInputs.upper.fresh(now))
+    d["upperLimit"] = fieldInputs.upper.active;
+  else
+    d["upperLimit"] = nullptr;
+  if (fieldInputs.lower.fresh(now))
+    d["lowerLimit"] = fieldInputs.lower.active;
+  else
+    d["lowerLimit"] = nullptr;
+  if (fieldInputs.key.fresh(now))
+    d["serviceKey"] = fieldInputs.key.active;
+  else
+    d["serviceKey"] = nullptr;
+  d["inputsQualified"] = fieldInputs.qualified(now, FieldContinuityQualified);
+  d["manualControl"]["active"] = manualStop.key;
+  d["manualControl"]["hold"] = manualStop.hold;
+  d["manualControl"]["up"] = manualStop.up;
+  d["manualControl"]["down"] = manualStop.down;
+  d["manualControl"]["safetyHealthy"] = manualStop.safety;
+  d["manualControl"]["inputsKnown"] = manualStop.known;
+  d["manualControl"]["requestedDirection"] = manualStop.requestedDirection;
+  d["manualControl"]["motionEnabled"] = false;
   d["fault"] = supervisor.fault;
   auto reasons = d["blockedReasons"].to<JsonArray>();
-  for (const char* r : {"HW-01-unavailable-input-gpios", "HW-02-coupled-uart-run-enable",
-                        "physical-qualification-required"})
+  for (const char* r :
+       {"software-motion-inhibit", "field-inputs-unqualified", "physical-qualification-required"})
     reasons.add(r);
   auto caps = d["capabilities"].to<JsonObject>();
   for (const char* cap :
@@ -186,6 +231,7 @@ JsonDocument status() {
         "rfLearn", "rfErase", "backup", "restore", "reboot", "auxiliary"})
     caps[cap] = false;
   caps["status"] = true;
+  caps["vfdRead"] = vfdUartReady;
   caps["network"] = tokenConfigured();
   caps["light"] = tokenConfigured();
   caps["logs"] = storageReady;
@@ -203,6 +249,31 @@ JsonDocument status() {
   d["light"]["on"] = supervisor.light;
   d["light"]["feedbackVerified"] = false;
   d["telemetry"] = nullptr;
+  if (diagnosticVfd.healthy(now)) {
+    const auto& t = diagnosticVfd.protocol().telemetry;
+    d["telemetry"]["ageMs"] = now - t.sampledMs;
+    d["telemetry"]["frequency"] = t.frequency;
+    d["telemetry"]["current"] = t.current;
+    d["telemetry"]["busVolts"] = t.busVolts;
+    d["telemetry"]["temperature"] = t.temperature;
+  }
+  d["vfd"]["commsEnabled"] = vfdUartReady;
+  d["vfd"]["healthy"] = diagnosticVfd.healthy(now);
+  d["vfd"]["stopTransmitted"] = diagnosticVfd.stopTransmitted;
+  d["vfd"]["stopAcknowledged"] = diagnosticVfd.acknowledged();
+  d["vfd"]["monitorStopped"] = diagnosticVfd.monitorStopped(now);
+  d["vfd"]["communicationFault"] = diagnosticVfd.failed;
+  d["vfd"]["stopRefreshMs"] = lift::VfdTiming::StopRefreshMs;
+  d["vfd"]["replyTimeoutMs"] = lift::VfdTiming::ReplyTimeoutMs;
+  d["vfd"]["watchdog"]["state"] = diagnosticVfd.watchdogState(now);
+  const auto& p = diagnosticVfd.protocol();
+  if (p.parameters[12] >= 0) {
+    d["vfd"]["watchdog"]["timeoutMs"] = p.parameters[12] * 100;
+    d["vfd"]["watchdog"]["ageMs"] = now - p.parameterSampleMs[12];
+  } else {
+    d["vfd"]["watchdog"]["timeoutMs"] = nullptr;
+    d["vfd"]["watchdog"]["ageMs"] = nullptr;
+  }
   d["calibration"]["valid"] = false;
   d["calibration"]["distance"] = nullptr;
   d["devices"]["counter"] = counterReady ? "sampled-unverified" : "unavailable";
@@ -276,11 +347,20 @@ void dispatch() {
       return;
     }
     supervisor.command({true, 0, lift::Source::Web}, millis());
-    event("stop", "web", "hardware_path_unavailable");
-    error(503, "stop_delivery_unavailable_hardware_inhibited");
+    if (!vfdUartReady) {
+      error(503, "stop_delivery_unavailable");
+      return;
+    }
+    diagnosticVfd.stop(millis());
+    event("stop", "web", "queued-not-confirmed-stopped");
+    reply(202, status());
     return;
   }
   if (path == "/api/move" && post) {
+    if (manualStop.key || !manualStop.known) {
+      error(409, "manual_control_priority");
+      return;
+    }
     uint32_t floor = 0;
     if (args.size() != 1 || !args.count("floor") ||
         !lift::parseUnsigned(args["floor"].c_str(), 3, floor) || floor < 1) {
@@ -374,8 +454,22 @@ void dispatch() {
   if (path == "/api/vfd/parameters" && !post) {
     JsonDocument d;
     d["apiVersion"] = 1;
-    d["available"] = false;
-    d["reason"] = "HW-02-coupled-uart-run-enable";
+    d["available"] = diagnosticVfd.healthy(millis());
+    d["reason"] = d["available"].as<bool>() ? "diagnostic-readback-only" : "vfd_unavailable";
+    auto readings = d["readings"].to<JsonArray>();
+    for (unsigned n = 0; n < 17; ++n) {
+      auto r = readings.add<JsonObject>();
+      r["number"] = n;
+      const auto& p = diagnosticVfd.protocol();
+      r["supported"] = n != 13;
+      if (p.parameters[n] >= 0) {
+        r["rawValue"] = p.parameters[n];
+        r["ageMs"] = millis() - p.parameterSampleMs[n];
+      } else {
+        r["rawValue"] = nullptr;
+        r["ageMs"] = nullptr;
+      }
+    }
     JsonDocument definitions;
     deserializeJson(definitions, VfdParameters::allDefinitionsJson());
     d["definitions"] = definitions;
@@ -473,9 +567,14 @@ void startAp() {
 }  // namespace
 void setup() {
   snprintf(bootId, sizeof bootId, "%08x%08x", esp_random(), esp_random());
-  // No VFD UART begin/transmit. GPIO42 stays LOW: translator OE and run permission are coupled.
-  for (int p : {Pins::CoupledVfdEnable, Pins::LightControl, Pins::AuxControl, Pins::RfLearn,
-                Pins::StatusLed}) {
+  // ROM output occurs before setup. Suppress application UART0 logging before reclaiming pins.
+  Serial0.setDebugOutput(false);
+  Serial0.end();
+  esp_rom_install_channel_putc(1, nullptr);
+  esp_rom_install_channel_putc(2, nullptr);
+  esp_log_level_set("*", ESP_LOG_NONE);
+  esp_log_set_vprintf(discardUartLog);
+  for (int p : {Pins::VfdCommsEnable, Pins::LightControl, Pins::RfLearn, Pins::StatusLed}) {
     digitalWrite(p, LOW);
     pinMode(p, OUTPUT);
   }
@@ -483,11 +582,15 @@ void setup() {
     digitalWrite(p, HIGH);
     pinMode(p, OUTPUT);
   }
-  for (int p :
-       {Pins::SafetyLoop, Pins::HomeSwitch, Pins::HoldToRun, Pins::ServiceUp, Pins::ServiceDown,
-        Pins::RfD0, Pins::RfD1, Pins::RfD2, Pins::RfD3, Pins::RfD4, Pins::RfTxId, Pins::RfModeInd})
+  for (int p : {Pins::SafetyLoop, Pins::HomeSwitch, Pins::HoldToRun, Pins::ServiceUp,
+                Pins::ServiceDown, Pins::UpperLimit, Pins::LowerLimit, Pins::ServiceKey, Pins::RfD0,
+                Pins::RfD1, Pins::RfD2, Pins::RfD3, Pins::RfD4, Pins::RfTxId, Pins::RfModeInd})
     pinMode(p, INPUT);
   Serial.begin(115200);
+  VfdSerial.begin(9600, SERIAL_8N1, Pins::VfdRx, Pins::VfdTx);
+  vfdUartReady = bool(VfdSerial);
+  // OE is communications only. It never supplies hardwired motion permission.
+  digitalWrite(Pins::VfdCommsEnable, vfdUartReady ? HIGH : LOW);
   SPI.begin(Pins::SpiClock, Pins::SpiMiso, Pins::SpiMosi);
   Wire.begin(Pins::I2cSda, Pins::I2cScl, 100000);
   Wire.setTimeOut(5);
@@ -524,6 +627,26 @@ void setup() {
 }
 void loop() {
   uint32_t now = millis();
+  // Sample release paths before any UART scheduling, HTTP, SPI or persistent logging.
+  const char* manualEvent = manualStop.update(
+      digitalRead(Pins::ServiceKey), digitalRead(Pins::HoldToRun), digitalRead(Pins::ServiceUp),
+      digitalRead(Pins::ServiceDown), digitalRead(Pins::SafetyLoop), now);
+  if (manualEvent) {
+    supervisor.stop(now);
+    diagnosticVfd.stop(now);
+  }
+  serviceVfd(now);
+  if (diagnosticVfd.failed && !vfdFailureLogged) {
+    event("vfd_communication_timeout", "vfd", "fault-latched-stop-refresh-only");
+    vfdFailureLogged = true;
+  }
+  const char* watchdogState = diagnosticVfd.watchdogState(now);
+  if (strcmp(watchdogState, previousWatchdogState)) {
+    event("vfd_watchdog_state", "vfd", watchdogState);
+    previousWatchdogState = watchdogState;
+  }
+  if (manualEvent)
+    event(manualEvent, "manual", "stop-queued-not-confirmed-stopped");
   if (now - lastSample >= 10) {
     counterReady = counterReady && counter.sample(position);
     lift::Inputs i;
@@ -536,10 +659,19 @@ void loop() {
     i.hold = digitalRead(Pins::HoldToRun) == LOW;
     i.up = digitalRead(Pins::ServiceUp) == LOW;
     i.down = digitalRead(Pins::ServiceDown) == LOW;
+    fieldInputs.upper.sample(digitalRead(Pins::UpperLimit), now);
+    fieldInputs.lower.sample(digitalRead(Pins::LowerLimit), now);
+    fieldInputs.key.sample(digitalRead(Pins::ServiceKey), now);
+    i.upper = fieldInputs.upper.active;
+    i.lower = fieldInputs.lower.active;
+    i.key = fieldInputs.key.active;
+    i.limitsKnown = i.keyKnown = fieldInputs.qualified(now, FieldContinuityQualified);
+    i.hardwareReady = Pins::DeploymentReady;
+    i.communicationHealthy = diagnosticVfd.healthy(now);
+    i.stopped = diagnosticVfd.monitorStopped(now);
+    i.frequency = diagnosticVfd.protocol().telemetry.frequency;
     supervisor.tick(i, now);
     lastSample = now;
-    digitalWrite(Pins::CoupledVfdEnable, LOW);
-    digitalWrite(Pins::AuxControl, LOW);
     digitalWrite(Pins::RfLearn, LOW);
     if (previousFault != supervisor.fault) {
       if (storageReady && !safetyLedger.latchFault())

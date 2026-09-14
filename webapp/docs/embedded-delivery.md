@@ -8,8 +8,8 @@ Measured September 2026 output:
 
 | Bundle | Size |
 | --- | ---: |
-| HTML + CSS + JavaScript, raw | 233,572 bytes |
-| HTML + CSS + JavaScript, gzip | 70,809 bytes |
+| HTML + CSS + JavaScript, raw | 237,468 bytes |
+| HTML + CSS + JavaScript, gzip | 71,835 bytes |
 | Staging limit (raw plus compressed) | 2 MiB |
 
 The current `firmware/partitions.csv` reserves two 4 MiB application slots,

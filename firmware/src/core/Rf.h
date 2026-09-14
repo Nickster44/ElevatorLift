@@ -5,6 +5,7 @@
 namespace lift {
 class Rf {
  public:
+  uint32_t diagnosticBaud = 9600;  // Must match decoder jumpers, not remote RF timing.
   struct Observation {
     bool known = false;
     uint8_t slot = 0;
@@ -117,15 +118,15 @@ class Rf {
     armed_ = false;
     if (!mappingVerified)
       return b;
-    if (mask & 8) {
+    if (mask & 16) {
       b.stop = true;
       return b;
     }
     if (!last.known || now - last.atMs > 200 || last.epoch != epoch ||
         associated[last.slot] != epoch)
       return b;
-    b.floorMask = mask & 7;
-    b.toggleLight = mask & 16;
+    b.floorMask = (mask & 1) | ((mask & 8) ? 2u : 0u) | (mask & 4);
+    b.toggleLight = mask & 2;
     return b;
   }
 

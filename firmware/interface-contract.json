@@ -1,32 +1,31 @@
 {
-  "version": 1,
-  "profile": "rev-a-review-inhibited",
+  "version": 2,
+  "profile": "rev-a-2026-09-13-diagnostics-inhibited",
   "module": "ESP32-S3-WROOM-1U-N16R8",
-  "evidence": "docs/reviews/2026-09-10-integration/netlist-summary.json",
+  "evidence": "docs/reviews/2026-09-13-pin-comms-fourlayer/connectivity-checks.json",
   "deploymentReady": false,
   "pins": {
-    "SafetyLoop": 1, "HomeSwitch": 2, "AuxControl": 3,
+    "SafetyLoop": 1, "HomeSwitch": 2, "ServiceKey": 3,
     "RfD0": 4, "RfD1": 5, "RfD2": 6, "RfD3": 7, "RfD4": 8,
     "MramCs": 9, "CounterCs": 10, "SpiMosi": 11, "SpiClock": 12, "SpiMiso": 13,
     "RfLearn": 14, "RfTxId": 15, "RfModeInd": 16,
     "VfdTx": 17, "VfdRx": 18, "UsbDm": 19, "UsbDp": 20,
     "StatusLed": 21, "HoldToRun": 38, "ServiceUp": 39, "ServiceDown": 40,
-    "LightControl": 41, "CoupledVfdEnable": 42, "I2cSda": 47, "I2cScl": 48
+    "LightControl": 41, "VfdCommsEnable": 42, "UpperLimit": 43, "LowerLimit": 44,
+    "I2cSda": 47, "I2cScl": 48
   },
   "unresolved": {
-    "UpperLimit": {"exportedGpio": 35, "gpio": null, "dependency": "HW-01"},
-    "LowerLimit": {"exportedGpio": 36, "gpio": null, "dependency": "HW-01"},
-    "ServiceKey": {"exportedGpio": 37, "gpio": null, "dependency": "HW-01"},
-    "UartTranslatorEnable": {"gpio": null, "dependency": "HW-02"},
-    "RunPermission": {"gpio": null, "dependency": "HW-02"}
+    "FieldInputQualification": {"qualified": false, "dependency": "field-wiring-open-wire-and-power-loss-qualification"}
   },
+  "inputs": {"activeLow": true, "stableMs": 100, "maxSampleGapMs": 25, "disconnectDetection": "not-observable-from-single-pulled-up-input", "uart0Console": "disabled-before-limit-input-configuration"},
+  "motionAuthority": "external-hardwired-safety-loop-only-no-mcu-run-permission-output",
   "peripherals": {
     "counter": {"part": "LS7366R-S", "mode": 0, "hz": 1000000, "quadrature": 4, "bytes": 4},
     "mram": {"part": "PM004MNIATR", "mode": 0, "hz": 1000000, "bytes": 524288, "wordAddressed": true},
     "rtc": {"part": "RV-3028-C7", "address": 82, "hz": 100000},
-    "vfd": {"part": "EM01", "baud": 9600, "framing": "8N1", "enabled": false},
-    "rf": {"receiver": "RXM-418-LR", "decoder": "LICAL-DEC-MS001", "identity": "learned-slot-and-association-epoch", "baud": null, "baudDependency": "HW-05-JP41-JP42", "buttonMappingVerified": false}
+    "vfd": {"part": "EM01", "baud": 9600, "framing": "8N1", "enabled": true, "allowedOperations": ["STOP", "MONITOR", "READ"], "enablePurpose": "translator-only", "resetEnable": false},
+    "rf": {"receiver": "RXM-418-LR", "decoder": "LICAL-DEC-MS001", "identity": "learned-slot-and-association-epoch", "baud": 9600, "baudConfigurable": true, "baudDependency": "match-decoder-JP41-JP42-not-remote-timing", "buttonMappingVerified": false, "normalButtonMap": ["floor-1", "light-toggle", "floor-3", "floor-2", "stop"], "targetMotionEnabled": false}
   },
   "coordinates": {"floorCount": 3, "positiveDirection": "up", "home": "near-floor-3", "commissioned": false},
-  "blockedReasons": ["HW-01-unavailable-input-gpios", "HW-02-coupled-uart-run-enable", "physical-qualification-required"]
+  "blockedReasons": ["software-motion-inhibit", "field-inputs-unqualified", "physical-qualification-required"]
 }

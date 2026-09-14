@@ -13,13 +13,31 @@ The new design goals are:
 
 Important: this repository is not a certified elevator controller. The software here is a development baseline. Any real lift must use appropriately rated safety devices, hardwired interlocks, braking/enable circuits, limit switches, emergency stop hardware, enclosure design, and professional review before operation.
 
-## Software Integration Status (2026-09-11)
+## Software Integration Status (2026-09-13)
 
 The active software is a **buildable but hardware-inhibited N16R8 profile**.
-GPIO35-37 are unavailable on this module, and GPIO42 currently couples UART
-translator enable with VFD run permission. Neither is worked around in firmware:
-no replacement GPIOs are invented, the VFD path remains disabled, and uploads
-are blocked. No physical motion or hardware verification has been performed.
+GPIO35-37 are unavailable on this module. The 2026-09-13 hardware update moves
+LIMIT_UP/LIMIT_DOWN/SERVICE_KEY to GPIO43/44/3 and makes GPIO42 a communications-only
+UART enable, removing the MCU RUN and optional AUX circuits. Software contract v2
+now adopts this revision. GPIO3 is input-only, UART0 application logging is disabled,
+and UART1 supports STOP/monitor/readback while safety is open. RUN, drive writes,
+motion and uploads remain inhibited. Stable input levels do not prove wire continuity.
+No physical motion or hardware verification has been performed.
+
+VFD communication now includes periodic STOP refresh (300 ms scheduled interval),
+monitor/read traffic, and a separate bounded reply-retry policy. The drive's TIME
+watchdog is read and reported, never automatically changed; communication failure
+keeps STOP refresh active without restarting motion or clearing faults.
+
+The manual-release STOP path is now target-bound: key/hold/direction release or
+invalid direction/safety input queues STOP before ordinary work. Input intent is
+reported separately from actual motion permission. The requested operational v3
+profile, RF programming and calibration expansion are not complete; v2 remains inhibited.
+
+See the [hardware change and routing handoff](docs/reviews/2026-09-13-pin-comms-fourlayer.md).
+The PCB is synchronized and has four copper layers, but remains unrouted and
+not layout-release/fabrication ready; isolation keepouts and fabricator-specific
+stackup/USB geometry still need completion.
 
 Start with the [software integration checklist](docs/software-integration-checklist.md),
 [hardware-dependency handoff](docs/hardware-dependency-handoff.md),
@@ -157,7 +175,7 @@ Endpoints:
 - `GET /api/logs/recent` - bounded durable MRAM events, unavailable on storage failure.
 - `GET /api/vfd/parameters` - list documented VFD parameter metadata.
 - `POST /api/move?floor=N` - strict input validation, then hardware-inhibited rejection.
-- `POST /api/stop` - supervisor stop request; reports unavailable delivery while UART is inhibited.
+- `POST /api/stop` - queues diagnostic STOP (202), or reports unavailable UART (503); neither transmission nor acknowledgement proves physical stopping.
 
 Other commissioning, parameter-write, RF, restore and reboot endpoints are explicitly unsupported. See the API contract for remaining work; no UI capability implies hardware verification.
 

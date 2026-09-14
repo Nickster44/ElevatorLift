@@ -30,6 +30,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [logs, setLogs] = useState<unknown[]>([]);
   const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [parametersReceived, setParametersReceived] = useState(0);
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
   const mounted = useRef(false);
@@ -74,8 +75,14 @@ export default function Home() {
     fields: Record<string, string>,
     kind: "status" | "network" = "status",
   ) {
-    if(path!=="/api/stop"&&(connection!=="Connected"||!isFresh(status,received,performance.now()))) {
-      setMessage("Request blocked: controller status is stale or disconnected.");
+    if (
+      path !== "/api/stop" &&
+      (connection !== "Connected" ||
+        !isFresh(status, received, performance.now()))
+    ) {
+      setMessage(
+        "Request blocked: controller status is stale or disconnected.",
+      );
       return;
     }
     setBusy(true);
@@ -86,7 +93,11 @@ export default function Home() {
       if (kind === "status") {
         // Commands never invent a motion transition. A later poll owns the display.
         validateStatus(value);
-        setMessage("Controller accepted the request; awaiting fresh status.");
+        setMessage(
+          path === "/api/stop"
+            ? "STOP queued; physical stopping is unconfirmed."
+            : "Controller accepted the request; awaiting fresh status.",
+        );
       } else {
         if (
           !value ||
@@ -136,6 +147,7 @@ export default function Home() {
           await jsonRequest("/api/vfd/parameters", token),
         ),
       );
+      setParametersReceived(performance.now());
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -257,7 +269,39 @@ export default function Home() {
             </section>
             <section className="console-section">
               <h3>Controller state</h3>
+              <p>
+                Manual inputs:{" "}
+                {!fresh || !status?.manualControl?.inputsKnown
+                  ? "Unknown"
+                  : status.manualControl.requestedDirection === 1
+                    ? "UP requested; motion inhibited"
+                    : status.manualControl.requestedDirection === -1
+                      ? "DOWN requested; motion inhibited"
+                      : "No direction requested"}
+              </p>
               <dl className="metrics">
+                {(["upperLimit", "lowerLimit", "serviceKey"] as const).map(
+                  (k) => (
+                    <div key={k}>
+                      <dt>{k}</dt>
+                      <dd>
+                        {!fresh || status?.[k] == null
+                          ? "Unknown"
+                          : status[k]
+                            ? "Active (LOW)"
+                            : "Inactive (HIGH)"}
+                      </dd>
+                    </div>
+                  ),
+                )}
+                <div>
+                  <dt>Field qualification</dt>
+                  <dd>
+                    {fresh && status?.inputsQualified
+                      ? "Qualified"
+                      : "Unqualified"}
+                  </dd>
+                </div>
                 <div>
                   <dt>Motion</dt>
                   <dd>{fresh ? status?.state : "Unknown"}</dd>
@@ -304,7 +348,43 @@ export default function Home() {
           <>
             <section className="console-section">
               <h3>VFD telemetry</h3>
+              <p>
+                Drive watchdog:{" "}
+                {fresh &&
+                status?.vfd.watchdog &&
+                status.vfd.watchdog.state !== "unknown" &&
+                status.vfd.watchdog.ageMs !== null &&
+                status.vfd.watchdog.ageMs + now - received <= 10000
+                  ? `${status.vfd.watchdog.timeoutMs} ms (${status.vfd.watchdog.state})`
+                  : "Unknown"}
+              </p>
+              <p>
+                Communication fault:{" "}
+                {fresh
+                  ? status?.vfd.communicationFault === true
+                    ? "Latched; STOP refresh only"
+                    : status?.vfd.communicationFault === false
+                      ? "Not latched"
+                      : "Unknown"
+                  : "Unknown"}
+              </p>
               <dl className="metrics">
+                <div>
+                  <dt>Communications</dt>
+                  <dd>
+                    {fresh && status?.vfd.healthy
+                      ? "Responding"
+                      : "Unavailable"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>STOP acknowledgement</dt>
+                  <dd>
+                    {fresh && status?.vfd.stopAcknowledged
+                      ? "Received; not stop proof"
+                      : "Unconfirmed"}
+                  </dd>
+                </div>
                 {(
                   ["frequency", "current", "busVolts", "temperature"] as const
                 ).map((k) => (
@@ -324,9 +404,7 @@ export default function Home() {
               </p>
               <button disabled>Calibration unavailable</button>
               <h3>Drive parameters</h3>
-              <p>
-                Live read/write unavailable: UART enable hardware dependency.
-              </p>
+              <p>Diagnostic readback only. Parameter writes are inhibited.</p>
               <button disabled={!fresh} onClick={() => void readParameters()}>
                 Read parameter catalog
               </button>
@@ -352,7 +430,16 @@ export default function Home() {
                           {p.min / p.scaleDivisor} - {p.max / p.scaleDivisor}{" "}
                           {p.units}
                         </td>
-                        <td>Unavailable</td>
+                        <td>
+                          {p.supported === false
+                            ? "Unsupported"
+                            : fresh &&
+                                p.rawValue != null &&
+                                p.ageMs != null &&
+                                p.ageMs + now - parametersReceived <= 5000
+                              ? `${p.rawValue / p.scaleDivisor} ${p.units}`
+                              : "Unavailable"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -368,7 +455,7 @@ export default function Home() {
             <button disabled>Set floor positions</button>{" "}
             <button disabled>Home to upper reference</button>
             <h3>Service controls</h3>
-            <p>Physical service-key assignment unresolved. No web override.</p>
+            <p>Field inputs are not motion-qualified. No web override.</p>
           </section>
         )}
         {view === "Remotes" && (

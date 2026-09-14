@@ -3,7 +3,7 @@
 namespace Pins {
 constexpr int SafetyLoop = 1;
 constexpr int HomeSwitch = 2;
-constexpr int AuxControl = 3;
+constexpr int ServiceKey = 3;
 constexpr int RfD0 = 4;
 constexpr int RfD1 = 5;
 constexpr int RfD2 = 6;
@@ -26,9 +26,11 @@ constexpr int HoldToRun = 38;
 constexpr int ServiceUp = 39;
 constexpr int ServiceDown = 40;
 constexpr int LightControl = 41;
-constexpr int CoupledVfdEnable = 42;
+constexpr int VfdCommsEnable = 42;
+constexpr int UpperLimit = 43;
+constexpr int LowerLimit = 44;
 constexpr int I2cSda = 47;
 constexpr int I2cScl = 48;
-constexpr unsigned ContractVersion = 1;
+constexpr unsigned ContractVersion = 2;
 constexpr bool DeploymentReady = false;
 }

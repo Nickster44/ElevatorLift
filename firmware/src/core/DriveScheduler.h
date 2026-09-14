@@ -2,7 +2,7 @@
 #include "Em01.h"
 #include "Supervisor.h"
 namespace lift {
-// Isolated until UART OE and RUN permission have independent, reviewed interfaces.
+// Operational scheduler remains isolated from the inhibited target.
 class DriveScheduler {
  public:
   Em01 protocol;
@@ -13,13 +13,13 @@ class DriveScheduler {
       supervisor.fail("vfd_alarm");
     if (!supervisor.inputs.hardwareReady)
       return;
-    // A priority stop can abandon RUN, but never an ambiguous parameter-read session.
+    // STOP preempts any pending operation; protocol failure remains latched.
     if (supervisor.stopRequested && !stopping_) {
       stopping_ = true;
       protocol.preemptStop(now);
       monitorNext_ = true;
     }
-    if (!protocol.busy() && now - lastRequest_ >= 30) {
+    if (!protocol.busy() && now - lastRequest_ >= VfdTiming::TrafficSlotMs) {
       if (monitorNext_)
         protocol.request('0', 0, 0, now);
       else

@@ -1,6 +1,6 @@
 # EM01 VFD Serial Protocol Notes
 
-Source: `_old_resources/EM01 Manual User_EN-V1.02.pdf`, pages 27-30.
+Source: `_old_resources/EM01 Manual User_EN-V1.02.pdf`, pages 26-30.
 
 The old controller used the EM01 ASCII serial protocol at 9600 baud. Messages are framed with `(` and `)` and end with two checksum characters.
 
@@ -118,7 +118,24 @@ Parameter 13 appears in both the writeable setting list and read-only expansion-
 
 ## Design Notes
 
-- Repeat commands only from a bounded retry policy.
+- Keep periodic command refresh separate from bounded retries of one unanswered transaction.
+- Page 26 requires continuous orders or requests. Parameter 12 `TIME` is the drive's
+  missing-communication watchdog in tenths of a second; zero disables that function.
+  It is not the controller's reply timeout. Pages 27-28 describe repeating an
+  unanswered command after 100 ms; the current reply deadline is a conservative 150 ms.
+- The inhibited target refreshes STOP approximately every 300 ms, interleaving monitor
+  and parameter reads in 100 ms traffic slots. TIME is read first, not automatically
+  written. An in-flight transaction is allowed its bounded retries; an explicit STOP
+  preempts it. Periodic refresh does not erase still-fresh monitor evidence.
+- `core/VfdTiming.h` centralizes 150 ms reply timeout, three attempts, 500 ms monitor
+  freshness, 100 ms traffic slots and 300 ms STOP refresh. These are scheduled targets,
+  not measured real-time guarantees. Worst-case UART/network/storage delays require bench tests.
+- Exhausted retries latch communication failure. The target continues STOP-only refresh;
+  it does not automatically resume reads or RUN, reset faults, or imply physical stopping.
+- The isolated parameter-write workflow now accepts TIME=0010 (1 second) only: the
+  existing 1-second ceiling is retained and the too-short 0.2-0.9-second choices removed.
+  This development policy is not a universal EM01 requirement or hardware qualification.
+  No TIME setting is changed automatically; target writes remain inhibited.
 - Parse complete frames and verify checksums before acting on responses.
 - Treat VFD alarm status as a latched controller fault.
 - Do not rely on serial stop alone for safety. The board should have a fail-safe VFD enable/stop path.

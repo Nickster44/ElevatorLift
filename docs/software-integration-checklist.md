@@ -1,7 +1,10 @@
 # Software Integration Checklist
 
-2026-09-11 milestone; reproducibility rechecked 2026-09-12.
+2026-09-11 milestone; hardware contract v2 adopted 2026-09-13.
 **Partial software integration, not deployment qualification.**
+Latest follow-up: [VFD heartbeat report](reviews/2026-09-13-vfd-heartbeat.md).
+The [2026-09-13 software handoff report](reviews/2026-09-13-firmware-handoff.md)
+records exact changed files, v2 behavior, verification and remaining bench dependencies.
 The starting review reproduced defects in baseline `1c37a65`. Its 37 host checks
 and eight WebUI observations are evidence of defects, not passing safety tests.
 The original review directory and hardware files remain untouched.
@@ -12,7 +15,8 @@ The original review directory and hardware files remain untouched.
 - [x] Generated pin header; netlist/GPIO conflict regression test.
 - [x] Explicit N16R8 board, QIO flash/OPI PSRAM, native USB and 16 MB partitions.
 - [x] Upload/uploadfs guard; no build/upload command connects to hardware.
-- [ ] Resolve HW-01/HW-02, qualify pin/power/reset behavior before operational profile.
+- [x] Adopt finalized HW-01/HW-02 wiring: GPIO43/44/3 inputs, GPIO42 communications-only.
+- [ ] Qualify field continuity, pin/power/reset and hardwired authority before operational profile.
 
 ## Milestone 2: Motion And Devices
 
@@ -36,6 +40,14 @@ The original review directory and hardware files remain untouched.
 - [x] Isolated parameter jobs: service guards, invalidate calibration before writes,
   verified readback, durable cache and configuration updates.
 - [x] Isolated RF erase confirmation model; timing remains unqualified.
+- [x] Diagnostic UART1 STOP/monitor/readback independent of safety; no RUN/WRITE path.
+- [x] Periodic STOP refresh, separate reply retries, latched-failure STOP-only traffic,
+  and read-only TIME watchdog state exposed through the API and Drive view.
+- [x] Active-low input debounce/freshness, explicit unqualified continuity state and unknown-key guard.
+- [x] Target-bound manual release/conflict/safety-loss STOP before ordinary loop work;
+  pending STOP coalescing, input-intent status and manual-key WebUI priority.
+- [x] Host normal RF map updated to owner-specified D0-D4 actions; default diagnostic baud 9600.
+- [ ] Requested operational v3, target RF programming/capture and expanded directional calibration.
 - [ ] Operational UART scheduler/parameter jobs/cache, counter-reference handshake,
   program exit workflow and calibration persistence wired into target APIs.
 - [x] Immediate durable fault-transition ledger and conservative boot replay.
@@ -66,11 +78,11 @@ The original review directory and hardware files remain untouched.
 | `npx playwright install --with-deps chromium` | Pass | Browser binaries matching locked Playwright 1.58.2 |
 | `node firmware/scripts/generate-contract.mjs --check` | Pass | Generated pins match JSON |
 | `node firmware/tests/contract.mjs` | Pass | Exported nets, unavailable pins, inhibit and N16R8 |
-| `./firmware/tests/run.ps1` | Pass, 2619 assertions | Portable C++ simulation, including 581 torn-write cut points |
+| `./firmware/tests/run.ps1` | Pass, 3953 assertions | Portable C++ simulation, including heartbeat timing, watchdog policy, failure latching and timer wrap |
 | `pio run` | Pass | ESP32-S3 cross-build, not target execution |
 | `npm run check` / `npm run lint` | Pass | TypeScript / static checking |
-| `npm test` | Pass, 9 tests | Runtime API validation, failures and SSR |
-| `npm run build:embedded` | Pass | Approximately 234 KB raw / 71 KB gzip; exact sizes in generated manifest |
+| `npm test` | Pass, 13 tests | Runtime API v2 validation, watchdog state, manual intent, diagnostic cache, STOP evidence, failures and SSR |
+| `npm run build:embedded` | Pass | 237,468 raw / 71,835 gzip bytes; contract-v2 manifest |
 | Asset stage + `pio run -t buildfs` | Pass | LittleFS image, no upload |
 | `npm run test:browser` with locked Playwright Chromium | Pass, 1440x1000 and 390x844 | Mocked-API disconnect, real STOP transport/failure reporting, malformed status, reconnect, six views and no horizontal overflow; not target or motion verification |
 | `python firmware/tests/test_build_guard.py` | Pass | Upload guards exercised with a fake build environment, no hardware access |
@@ -84,7 +96,10 @@ failure exits, and no remaining listener on port 5178. The old ad hoc browser-pa
 claim is superseded by this locked-dependency run; no external module or Edge
 override was used. See the clean-checkout sequence in [webapp README](../webapp/README.md).
 
-All listed validation commands were rerun locally on Windows on 2026-09-12.
+All listed validation commands passed the v2 rerun on Windows on 2026-09-13.
+Browser tests additionally cover accepted/queued STOP without motion permission
+and diagnostic cache/unsupported readback display. Inputs have not been electrically
+qualified: open/disconnected/power-absent ambiguity remains an explicit motion gate.
 Ubuntu execution awaits CI. The installer requires network access; Playwright
 1.63.0's download timed out locally, while the committed 1.58.2 pin installed and
 passed normally. Browser coverage is Chromium only. `npm ci` reports 21 dependency

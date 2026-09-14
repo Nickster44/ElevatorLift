@@ -1,0 +1,482 @@
+{
+  "result": "PASS",
+  "checkCount": 227,
+  "checks": [
+    "U10 exact N16R8 variant",
+    "U10.37 = LIMIT_UP",
+    "U10.36 = LIMIT_DOWN",
+    "U10.15 = SERVICE_KEY",
+    "U10.35 = VFD_COMMS_ENABLE",
+    "PSRAM pin 28 has no external connection",
+    "PSRAM pin 29 has no external connection",
+    "PSRAM pin 30 has no external connection",
+    "VFD_COMMS_ENABLE exact endpoints",
+    "SERVICE_KEY exact endpoints",
+    "LIMIT_DOWN exact endpoints",
+    "LIMIT_UP exact endpoints",
+    "LIMIT_UP conditioning preserved through R62",
+    "R62 is 1k",
+    "SERVICE_KEY pull-up retained",
+    "OE default pulldown retained",
+    "R25 removed",
+    "U25 removed",
+    "J25 removed",
+    "TP26 removed",
+    "R59 removed",
+    "R60 removed",
+    "Q41 removed",
+    "F41 removed",
+    "D42 removed",
+    "J47 removed",
+    "No obsolete AUX/RUN/enable nets",
+    "J11.3 disconnected from former UART",
+    "J11.4 disconnected from former UART",
+    "J24.01 preserved",
+    "J24.02 preserved",
+    "J24.03 preserved",
+    "J24.04 preserved",
+    "TX path preserved",
+    "RX path preserved",
+    "Safety monitoring preserved",
+    "Home monitoring preserved",
+    "IPC query succeeded",
+    "U10 evidence is live IPC",
+    "PCB U10.1 agrees with export",
+    "PCB U10.2 agrees with export",
+    "PCB U10.3 agrees with export",
+    "PCB U10.4 agrees with export",
+    "PCB U10.5 agrees with export",
+    "PCB U10.6 agrees with export",
+    "PCB U10.7 agrees with export",
+    "PCB U10.8 agrees with export",
+    "PCB U10.9 agrees with export",
+    "PCB U10.10 agrees with export",
+    "PCB U10.11 agrees with export",
+    "PCB U10.12 agrees with export",
+    "PCB U10.13 agrees with export",
+    "PCB U10.14 agrees with export",
+    "PCB U10.15 agrees with export",
+    "PCB U10.16 agrees with export",
+    "PCB U10.17 agrees with export",
+    "PCB U10.18 agrees with export",
+    "PCB U10.19 agrees with export",
+    "PCB U10.20 agrees with export",
+    "PCB U10.21 agrees with export",
+    "PCB U10.22 agrees with export",
+    "PCB U10.23 agrees with export",
+    "PCB U10.24 agrees with export",
+    "PCB U10.25 agrees with export",
+    "PCB U10.26 agrees with export",
+    "PCB U10.27 agrees with export",
+    "PCB U10.28 agrees with export",
+    "PCB U10.29 agrees with export",
+    "PCB U10.30 agrees with export",
+    "PCB U10.31 agrees with export",
+    "PCB U10.32 agrees with export",
+    "PCB U10.33 agrees with export",
+    "PCB U10.34 agrees with export",
+    "PCB U10.35 agrees with export",
+    "PCB U10.36 agrees with export",
+    "PCB U10.37 agrees with export",
+    "PCB U10.38 agrees with export",
+    "PCB U10.39 agrees with export",
+    "PCB U10.40 agrees with export",
+    "PCB U10.41_1 agrees with export",
+    "PCB U10.41_2 agrees with export",
+    "PCB U10.41_3 agrees with export",
+    "PCB U10.41_4 agrees with export",
+    "PCB U10.41_5 agrees with export",
+    "PCB U10.41_6 agrees with export",
+    "PCB U10.41_7 agrees with export",
+    "PCB U10.41_8 agrees with export",
+    "PCB U10.41_9 agrees with export",
+    "IPC query succeeded",
+    "U24 evidence is live IPC",
+    "PCB U24.1 agrees with export",
+    "PCB U24.2 agrees with export",
+    "PCB U24.3 agrees with export",
+    "PCB U24.4 agrees with export",
+    "PCB U24.5 agrees with export",
+    "PCB U24.6 agrees with export",
+    "PCB U24.7 agrees with export",
+    "PCB U24.8 agrees with export",
+    "PCB U24.9 agrees with export",
+    "PCB U24.10 agrees with export",
+    "PCB U24.11 agrees with export",
+    "PCB U24.12 agrees with export",
+    "PCB U24.13 agrees with export",
+    "PCB U24.14 agrees with export",
+    "IPC query succeeded",
+    "R24 evidence is live IPC",
+    "PCB R24.1 agrees with export",
+    "PCB R24.2 agrees with export",
+    "IPC query succeeded",
+    "R62 evidence is live IPC",
+    "PCB R62.1 agrees with export",
+    "PCB R62.2 agrees with export",
+    "IPC query succeeded",
+    "R51 evidence is live IPC",
+    "PCB R51.1 agrees with export",
+    "PCB R51.2 agrees with export",
+    "IPC query succeeded",
+    "U42 evidence is live IPC",
+    "PCB U42.1 agrees with export",
+    "PCB U42.2 agrees with export",
+    "PCB U42.3 agrees with export",
+    "PCB U42.4 agrees with export",
+    "PCB U42.5 agrees with export",
+    "PCB U42.6 agrees with export",
+    "PCB U42.7 agrees with export",
+    "PCB U42.8 agrees with export",
+    "PCB U42.9 agrees with export",
+    "PCB U42.10 agrees with export",
+    "PCB U42.11 agrees with export",
+    "PCB U42.12 agrees with export",
+    "PCB U42.13 agrees with export",
+    "PCB U42.14 agrees with export",
+    "PCB U42.15 agrees with export",
+    "PCB U42.16 agrees with export",
+    "IPC query succeeded",
+    "U43 evidence is live IPC",
+    "PCB U43.1 agrees with export",
+    "PCB U43.2 agrees with export",
+    "PCB U43.3 agrees with export",
+    "PCB U43.4 agrees with export",
+    "PCB U43.5 agrees with export",
+    "PCB U43.6 agrees with export",
+    "PCB U43.7 agrees with export",
+    "PCB U43.8 agrees with export",
+    "PCB U43.9 agrees with export",
+    "PCB U43.10 agrees with export",
+    "PCB U43.11 agrees with export",
+    "PCB U43.12 agrees with export",
+    "PCB U43.13 agrees with export",
+    "PCB U43.14 agrees with export",
+    "PCB U43.15 agrees with export",
+    "PCB U43.16 agrees with export",
+    "IPC query succeeded",
+    "J24 evidence is live IPC",
+    "PCB J24.01 agrees with export",
+    "PCB J24.02 agrees with export",
+    "PCB J24.03 agrees with export",
+    "PCB J24.04 agrees with export",
+    "IPC query succeeded",
+    "J11 evidence is live IPC",
+    "PCB J11.1 agrees with export",
+    "PCB J11.2 agrees with export",
+    "PCB J11.3 agrees with export",
+    "PCB J11.4 agrees with export",
+    "PCB J11.5 agrees with export",
+    "PCB J11.6 agrees with export",
+    "IPC query succeeded",
+    "U31 evidence is live IPC",
+    "PCB U31.1 agrees with export",
+    "PCB U31.2 agrees with export",
+    "PCB U31.3 agrees with export",
+    "PCB U31.4 agrees with export",
+    "PCB U31.5 agrees with export",
+    "PCB U31.6 agrees with export",
+    "PCB U31.7 agrees with export",
+    "PCB U31.8 agrees with export",
+    "PCB U31.9 agrees with export",
+    "PCB U31.10 agrees with export",
+    "PCB U31.11 agrees with export",
+    "PCB U31.12 agrees with export",
+    "PCB U31.13 agrees with export",
+    "PCB U31.14 agrees with export",
+    "IPC query succeeded",
+    "U20 evidence is live IPC",
+    "PCB U20.1 agrees with export",
+    "PCB U20.2 agrees with export",
+    "PCB U20.3 agrees with export",
+    "PCB U20.4 agrees with export",
+    "PCB U20.5 agrees with export",
+    "PCB U20.6 agrees with export",
+    "IPC query succeeded",
+    "C23 evidence is live IPC",
+    "PCB C23.1 agrees with export",
+    "PCB C23.2 agrees with export",
+    "IPC query succeeded",
+    "C26 evidence is live IPC",
+    "PCB C26.1 agrees with export",
+    "PCB C26.2 agrees with export",
+    "IPC query succeeded",
+    "L20 evidence is live IPC",
+    "PCB L20.1 agrees with export",
+    "PCB L20.2 agrees with export",
+    "IPC query succeeded",
+    "J40 evidence is live IPC",
+    "PCB J40.1 agrees with export",
+    "PCB J40.2 agrees with export",
+    "PCB J40.2 agrees with export",
+    "PCB J40.2 agrees with export",
+    "PCB J40.2 agrees with export",
+    "IPC query succeeded",
+    "U40 evidence is live IPC",
+    "PCB U40.1 agrees with export",
+    "PCB U40.2 agrees with export",
+    "PCB U40.3 agrees with export",
+    "PCB U40.4 agrees with export",
+    "PCB U40.5 agrees with export",
+    "PCB U40.6 agrees with export",
+    "PCB U40.7 agrees with export",
+    "PCB U40.8 agrees with export",
+    "PCB U40.9 agrees with export",
+    "PCB U40.10 agrees with export",
+    "PCB U40.11 agrees with export",
+    "PCB U40.12 agrees with export",
+    "PCB U40.13 agrees with export",
+    "PCB U40.14 agrees with export",
+    "PCB U40.15 agrees with export",
+    "PCB U40.16 agrees with export"
+  ],
+  "componentCount": 126,
+  "netCount": 140,
+  "u10": [
+    {
+      "pin": "1",
+      "function": "GND_1",
+      "net": "GND"
+    },
+    {
+      "pin": "2",
+      "function": "3V3_2",
+      "net": "+3V3"
+    },
+    {
+      "pin": "3",
+      "function": "EN_3",
+      "net": "/MCU_Storage/ESP_EN"
+    },
+    {
+      "pin": "4",
+      "function": "IO4_4",
+      "net": "RF_D0"
+    },
+    {
+      "pin": "5",
+      "function": "IO5_5",
+      "net": "RF_D1"
+    },
+    {
+      "pin": "6",
+      "function": "IO6_6",
+      "net": "RF_D2"
+    },
+    {
+      "pin": "7",
+      "function": "IO7_7",
+      "net": "RF_D3"
+    },
+    {
+      "pin": "8",
+      "function": "IO15_8",
+      "net": "RF_TX_ID"
+    },
+    {
+      "pin": "9",
+      "function": "IO16_9",
+      "net": "RF_MODE_IND"
+    },
+    {
+      "pin": "10",
+      "function": "IO17_10",
+      "net": "VFD_TX_3V3"
+    },
+    {
+      "pin": "11",
+      "function": "IO18_11",
+      "net": "VFD_RX_3V3"
+    },
+    {
+      "pin": "12",
+      "function": "IO8_12",
+      "net": "RF_D4"
+    },
+    {
+      "pin": "13",
+      "function": "IO19_13",
+      "net": "/MCU_Storage/USB_D-"
+    },
+    {
+      "pin": "14",
+      "function": "IO20_14",
+      "net": "/MCU_Storage/USB_D+"
+    },
+    {
+      "pin": "15",
+      "function": "IO3_15",
+      "net": "SERVICE_KEY"
+    },
+    {
+      "pin": "16",
+      "function": "IO46_16",
+      "net": "unconnected-(U10-IO46-Pad16)"
+    },
+    {
+      "pin": "17",
+      "function": "IO9_17",
+      "net": "MRAM_CS_N"
+    },
+    {
+      "pin": "18",
+      "function": "IO10_18",
+      "net": "COUNTER_CS_N"
+    },
+    {
+      "pin": "19",
+      "function": "IO11_19",
+      "net": "SPI_MOSI"
+    },
+    {
+      "pin": "20",
+      "function": "IO12_20",
+      "net": "SPI_SCK"
+    },
+    {
+      "pin": "21",
+      "function": "IO13_21",
+      "net": "SPI_MISO"
+    },
+    {
+      "pin": "22",
+      "function": "IO14_22",
+      "net": "RF_LEARN"
+    },
+    {
+      "pin": "23",
+      "function": "IO21_23",
+      "net": "/MCU_Storage/STATUS_LED"
+    },
+    {
+      "pin": "24",
+      "function": "IO47_24",
+      "net": "I2C_SDA"
+    },
+    {
+      "pin": "25",
+      "function": "IO48_25",
+      "net": "I2C_SCL"
+    },
+    {
+      "pin": "26",
+      "function": "IO45_26",
+      "net": "unconnected-(U10-IO45-Pad26)"
+    },
+    {
+      "pin": "27",
+      "function": "IO0_27",
+      "net": "/MCU_Storage/ESP_BOOT"
+    },
+    {
+      "pin": "28",
+      "function": "IO35_28",
+      "net": "unconnected-(U10-IO35-Pad28)"
+    },
+    {
+      "pin": "29",
+      "function": "IO36_29",
+      "net": "unconnected-(U10-IO36-Pad29)"
+    },
+    {
+      "pin": "30",
+      "function": "IO37_30",
+      "net": "unconnected-(U10-IO37-Pad30)"
+    },
+    {
+      "pin": "31",
+      "function": "IO38_31",
+      "net": "HOLD_TO_RUN"
+    },
+    {
+      "pin": "32",
+      "function": "IO39_32",
+      "net": "SERVICE_UP"
+    },
+    {
+      "pin": "33",
+      "function": "IO40_33",
+      "net": "SERVICE_DOWN"
+    },
+    {
+      "pin": "34",
+      "function": "IO41_34",
+      "net": "LIGHT_CTRL"
+    },
+    {
+      "pin": "35",
+      "function": "IO42_35",
+      "net": "VFD_COMMS_ENABLE"
+    },
+    {
+      "pin": "36",
+      "function": "RXD0_36",
+      "net": "LIMIT_DOWN"
+    },
+    {
+      "pin": "37",
+      "function": "TXD0_37",
+      "net": "LIMIT_UP"
+    },
+    {
+      "pin": "38",
+      "function": "IO2_38",
+      "net": "HOME"
+    },
+    {
+      "pin": "39",
+      "function": "IO1_39",
+      "net": "SAFETY_MON"
+    },
+    {
+      "pin": "40",
+      "function": "GND_40",
+      "net": "GND"
+    },
+    {
+      "pin": "41_1",
+      "function": "GND_41_1",
+      "net": "GND"
+    },
+    {
+      "pin": "41_2",
+      "function": "GND_41_2",
+      "net": "GND"
+    },
+    {
+      "pin": "41_3",
+      "function": "GND_41_3",
+      "net": "GND"
+    },
+    {
+      "pin": "41_4",
+      "function": "GND_41_4",
+      "net": "GND"
+    },
+    {
+      "pin": "41_5",
+      "function": "GND_41_5",
+      "net": "GND"
+    },
+    {
+      "pin": "41_6",
+      "function": "GND_41_6",
+      "net": "GND"
+    },
+    {
+      "pin": "41_7",
+      "function": "GND_41_7",
+      "net": "GND"
+    },
+    {
+      "pin": "41_8",
+      "function": "GND_41_8",
+      "net": "GND"
+    },
+    {
+      "pin": "41_9",
+      "function": "GND_41_9",
+      "net": "GND"
+    }
+  ]
+}

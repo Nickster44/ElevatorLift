@@ -16,10 +16,12 @@ separate [hardware dependencies](../../docs/hardware-dependency-handoff.md).
 
 ## Still Required Before Operational Integration
 
-1. Resolve HW-01/HW-02 before creating an operational target profile. Never merely
+1. HW-01/HW-02 wiring is adopted by software contract v2. Complete input continuity,
+   boot/reset and independent safety-authority bench qualification before an operational profile. Never merely
    flip `hardwareReady` or capability flags. Review hardwired enable and watchdog
    behavior independently of software; demonstrate timing under slow clients.
-2. Integrate `DriveScheduler` and `Em01` with actual UART TX/RX, serialized parameter
+2. Diagnostic STOP/monitor/readback now uses UART1 independently of safety, with
+   communications-only GPIO42. Integrate operational `DriveScheduler`, serialized parameter
    jobs and alarms. Portable parameter jobs now validate metadata, enforce service
    guards, invalidate calibration before writes and persist verified readback/cache;
    these are not operational target bindings.

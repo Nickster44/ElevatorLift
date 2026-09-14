@@ -22,13 +22,30 @@ try {
   ]) {
     const page = await browser.newPage({ viewport });
     let mode = "offline",
-      stops = 0;
+      stops = 0,
+      stopAccepted = false;
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.route("**/api/**", async (route) => {
       const path = new URL(route.request().url()).pathname;
       if (path === "/api/stop") {
         ++stops;
+        if (stopAccepted) {
+          await route.fulfill({
+            status: 202,
+            contentType: "application/json",
+            body: JSON.stringify({
+              ...fixture,
+              sequence: ++fixture.sequence,
+              vfd: {
+                ...fixture.vfd,
+                stopTransmitted: true,
+                stopAcknowledged: true,
+              },
+            }),
+          });
+          return;
+        }
         await route.fulfill({
           status: 503,
           contentType: "application/json",
@@ -47,7 +64,11 @@ try {
           contentType: "application/json",
           body: JSON.stringify({
             apiVersion: 1,
-            available: false,
+            available: true,
+            readings: [
+              { number: 4, supported: true, rawValue: 10, ageMs: 0 },
+              { number: 13, supported: false, rawValue: null, ageMs: null },
+            ],
             definitions: [
               {
                 number: 4,
@@ -81,7 +102,17 @@ try {
         body: JSON.stringify(
           mode === "malformed"
             ? {}
-            : { ...fixture, sequence: ++fixture.sequence },
+            : {
+                ...fixture,
+                sequence: ++fixture.sequence,
+                vfd: {
+                  ...fixture.vfd,
+                  communicationFault: false,
+                  stopRefreshMs: 300,
+                  replyTimeoutMs: 150,
+                  watchdog: { state: "disabled", timeoutMs: 0, ageMs: 0 },
+                },
+              },
         ),
       });
     });
@@ -105,6 +136,18 @@ try {
       .getByRole("status")
       .filter({ hasText: "Controller connected" })
       .waitFor();
+    stopAccepted = true;
+    await page.getByText("Manual inputs: No direction requested").waitFor();
+    await page.getByRole("button", { name: "Controlled lift stop" }).click();
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "physical stopping is unconfirmed" })
+      .waitFor();
+    assert.equal(stops, 2);
+    assert.equal(
+      await page.getByRole("button", { name: "Call floor 1" }).isEnabled(),
+      false,
+    );
     assert.equal(
       (await page.getByText("Unknown", { exact: true }).count()) > 0,
       true,
@@ -139,10 +182,15 @@ try {
     for (const view of ["Drive", "Setup", "Remotes", "Logs", "System"]) {
       await page.getByRole("button", { name: view, exact: true }).click();
       if (view === "Drive") {
+        await page.getByText("Drive watchdog: 0 ms (disabled)").waitFor();
         await page
           .getByRole("button", { name: "Read parameter catalog" })
           .click();
         await page.getByText("04 Deceleration ramp").waitFor();
+        await page.getByRole("cell", { name: "1 s", exact: true }).waitFor();
+        await page
+          .getByRole("cell", { name: "Unsupported", exact: true })
+          .waitFor();
       }
       assert.equal(
         await page.evaluate(

@@ -6,9 +6,12 @@
 #include "core/Configuration.h"
 #include "core/ControllerSession.h"
 #include "core/Devices.h"
+#include "core/DiagnosticVfd.h"
 #include "core/DriveScheduler.h"
 #include "core/Em01.h"
+#include "core/FieldInputs.h"
 #include "core/HttpRequest.h"
+#include "core/ManualStop.h"
 #include "core/ParameterJobs.h"
 #include "core/Rf.h"
 #include "core/SafetyLedger.h"
@@ -26,7 +29,7 @@ struct Rig {
   Inputs i;
   uint32_t now = 0;
   Rig() {
-    i.hardwareReady = i.safety = i.limitsKnown = i.encoderHealthy = i.storageHealthy =
+    i.hardwareReady = i.safety = i.limitsKnown = i.keyKnown = i.encoderHealthy = i.storageHealthy =
         i.communicationHealthy = i.stopped = true;
     s.config.floors = {0, 20000, 40000};
     s.config.home = 39500;
@@ -494,8 +497,8 @@ void deviceTests() {
   CHECK(!rtc.readUnix(time));
   Supervisor s;
   Inputs i;
-  i.hardwareReady = i.safety = i.limitsKnown = i.encoderHealthy = i.communicationHealthy =
-      i.storageHealthy = i.stopped = i.key = i.hold = i.up = true;
+  i.hardwareReady = i.safety = i.limitsKnown = i.keyKnown = i.encoderHealthy =
+      i.communicationHealthy = i.storageHealthy = i.stopped = i.key = i.hold = i.up = true;
   i.sampleMs = 0;
   s.tick(i, 0);
   i.sampleMs = 400;
@@ -551,7 +554,7 @@ void requestTests() {
   rf.buttons(0, 6, true);
   CHECK(!rf.buttons(1, 7, true).floorMask);
   rf.buttons(0, 8, true);
-  CHECK(rf.buttons(8, 9, true).stop);
+  CHECK(rf.buttons(16, 9, true).stop);
   CHECK(rf.beginLearn(true, 100));
   rf.tickLearn(false, true, 160);
   CHECK(!rf.learnOutput);
@@ -679,6 +682,9 @@ void parameterJobTests() {
   session.configuration.motion = rig.s.config;
   Em01 protocol;
   ParameterJobs jobs(protocol, session, cache);
+  for (unsigned timeout : {0u, 1u, 2u, 9u, 11u})
+    CHECK(std::string(jobs.start(true, 12, timeout, ParameterAccess::Installer, 420)) ==
+          "serial_timeout_policy");
   CHECK(jobs.start(true, 266, 10, ParameterAccess::Advanced, 420));
   CHECK(jobs.start(true, 13, 1, ParameterAccess::Advanced, 420));
   CHECK(jobs.start(true, 12, 0, ParameterAccess::Advanced, 420));
@@ -699,6 +705,15 @@ void parameterJobTests() {
   CHECK(loaded.loadCache());
   CHECK(loaded.values[4] == 20);
   CHECK(loaded.sampledMs[4] == 0);
+  CHECK(!jobs.start(true, 12, 10, ParameterAccess::Installer, 450));
+  CHECK(protocol.transmit(450) == Em01::frame("(4120010)"));
+  for (char b : Em01::frame("(4)"))
+    protocol.receive(b, 451);
+  CHECK(protocol.transmit(452) == Em01::frame("(512)"));
+  for (char b : Em01::frame("(50010)"))
+    protocol.receive(b, 453);
+  jobs.tick(454);
+  CHECK(std::string(jobs.result) == "verified");
   CHECK(!jobs.start(false, 4, 0, ParameterAccess::Installer, 600));
   protocol.transmit(600);
   for (char c : Em01::frame("(504)"))
@@ -719,6 +734,224 @@ void parameterJobTests() {
   CHECK(session.supervisor.state == State::Fault);
   CHECK(std::string(jobs.result) == "transaction_failed");
 }
+void handoffTests() {
+  FieldInputs f;
+  CHECK(!f.qualified(0, true));
+  for (uint32_t t = 0; t <= 100; t += 10) {
+    f.upper.sample(1, t);
+    f.lower.sample(1, t);
+    f.key.sample(0, t);
+  }
+  CHECK(f.readingsKnown(100));
+  CHECK(f.key.active && !f.upper.active && !f.lower.active);
+  CHECK(!f.qualified(100, false));  // Stable signals cannot prove wire continuity.
+  CHECK(f.qualified(100, true));    // Simulated independent continuity evidence only.
+  CHECK(!f.qualified(126, true));
+  f.key.sample(1, 110);
+  CHECK(!f.qualified(110, true));  // Release immediately invalidates qualification.
+  for (uint32_t t = 120; t <= 220; t += 10) {
+    f.upper.sample(0, t);
+    f.lower.sample(0, t);
+    f.key.sample(1, t);
+  }
+  CHECK(!f.qualified(220, true));  // Both limits asserted.
+  f.upper.sample(-1, 230);
+  CHECK(!f.upper.known);
+  f.upper.sample(1, 240);
+  f.upper.sample(1, 340);
+  CHECK(!f.upper.known);  // Missing samples restart qualification.
+  for (int upper : {-1, 0, 1})
+    for (int lower : {-1, 0, 1})
+      for (int key : {-1, 0, 1}) {
+        FieldInputs disconnected;
+        for (uint32_t t = 0; t <= 100; t += 10) {
+          disconnected.upper.sample(upper, t);
+          disconnected.lower.sample(lower, t);
+          disconnected.key.sample(key, t);
+        }
+        CHECK(!disconnected.qualified(100, false));
+        Rig rig;
+        rig.known();
+        rig.i.limitsKnown = rig.i.keyKnown = disconnected.qualified(100, false);
+        rig.tick(500);
+        CHECK(!rig.s.permitted());
+        CHECK(!rig.s.runRequested());
+      }
+  Rig moving;
+  moving.move();
+  moving.i.keyKnown = false;
+  moving.tick(410);
+  CHECK(moving.s.state == State::Fault);
+  CHECK(moving.s.stopRequested);
+  DiagnosticVfd d;
+  CHECK(d.transmit(0) == Em01::frame("(3)"));
+  CHECK(d.stopTransmitted);
+  CHECK(!d.monitorStopped(0));
+  for (char b : Em01::frame("(3)"))
+    d.receive(b, 1);
+  CHECK(d.acknowledged());
+  CHECK(!d.monitorStopped(1));
+  for (uint32_t t = 100; t <= 4000; t += 100) {
+    auto tx = d.transmit(t);
+    CHECK(!tx.empty());
+    CHECK(Em01::valid(tx));
+    CHECK(tx[1] == '0' || tx[1] == '3' || tx[1] == '5');  // No RUN/WRITE even with open safety.
+    if (tx[1] == '5')
+      CHECK(tx.substr(2, 2) != "13");
+    auto response = Em01::frame(tx[1] == '0'   ? "(032500000250000)"
+                                : tx[1] == '3' ? "(3)"
+                                               : "(50010)");
+    for (char b : response)
+      d.receive(b, t + 1);
+  }
+  CHECK(d.healthy(4001));
+  d.stop(4010);
+  CHECK(!d.monitorStopped(4010));
+  CHECK(d.transmit(4010) == Em01::frame("(3)"));
+  d.transmit(4160);
+  d.transmit(4310);
+  d.transmit(4460);
+  CHECK(d.failed);
+  CHECK(!d.healthy(4460));
+  CHECK(d.transmit(4600).empty());
+  d.stop(4700);
+  CHECK(d.transmit(4700) == Em01::frame("(3)"));
+  CHECK(!d.healthy(4700));
+}
+void manualReleaseTests() {
+  for (unsigned button = 0; button < 5; ++button) {
+    Rf rf;
+    rf.capture(1, 0);
+    CHECK(rf.associate(1));
+    rf.buttons(0, 0, true);
+    auto b = rf.buttons(1u << button, 1, true);
+    CHECK(b.floorMask == (button == 0 ? 1u : button == 2 ? 4u : button == 3 ? 2u : 0u));
+    CHECK(b.toggleLight == (button == 1));
+    CHECK(b.stop == (button == 4));
+    CHECK(!rf.buttons(1u << button, 2, true).floorMask);
+    CHECK(rf.diagnosticBaud == 9600);
+  }
+  // Enumerate every electrical key/hold/up/down/safety combination, active LOW.
+  for (int mask = 0; mask < 32; ++mask) {
+    ManualStop m;
+    const int k = mask & 1 ? 0 : 1, h = mask & 2 ? 0 : 1, u = mask & 4 ? 0 : 1,
+              d = mask & 8 ? 0 : 1, s = mask & 16 ? 0 : 1;
+    CHECK(m.update(k, h, u, d, s, 0));
+    const int expected = k == 0 && h == 0 && s == 0 && u != d ? (u == 0 ? 1 : -1) : 0;
+    CHECK(m.requestedDirection == expected);
+    CHECK(!m.update(k, h, u, d, s, 1));
+    // From held UP, each loss removes the request and queues STOP on the first sample.
+    ManualStop held;
+    held.update(0, 0, 0, 1, 0, 0);
+    const char* result = held.update(k, h, u, d, s, 1);
+    if (expected != 1) {
+      CHECK(result);
+      CHECK(held.requestedDirection != 1);
+    }
+  }
+  ManualStop m;
+  m.update(0, 0, 1, 0, 0, 0);
+  CHECK(m.requestedDirection == -1);
+  CHECK(m.update(0, 0, 1, 1, 0, 1));
+  CHECK(m.requestedDirection == 0);
+  CHECK(!m.update(0, 0, 1, 1, 0, 2));
+  CHECK(m.update(0, 0, 0, 0, 0, 3));
+  CHECK(m.requestedDirection == 0);
+  CHECK(m.update(-1, 0, 0, 1, 0, 4));
+  CHECK(!m.known);
+  CHECK(m.requestedDirection == 0);
+  CHECK(m.update(0, 0, 0, 1, 0, 100));
+  CHECK(m.requestedDirection == 0);
+  DiagnosticVfd vfd;
+  CHECK(vfd.transmit(0) == Em01::frame("(3)"));
+  for (char b : Em01::frame("(3)"))
+    vfd.receive(b, 1);
+  CHECK(vfd.transmit(100) == Em01::frame("(0)"));
+  vfd.stop(101);
+  CHECK(vfd.transmit(101) == Em01::frame("(3)"));  // Preempt monitor, not its retry.
+  for (uint32_t t = 102; t < 251; ++t) {
+    vfd.stop(t);
+    CHECK(vfd.transmit(t).empty());
+  }
+  CHECK(vfd.transmit(251) == Em01::frame("(3)"));
+  vfd.stop(300);
+  CHECK(vfd.transmit(401) == Em01::frame("(3)"));
+  CHECK(vfd.transmit(551).empty());
+  CHECK(vfd.failed);
+  vfd.stop(552);
+  CHECK(vfd.transmit(552) == Em01::frame("(3)"));
+  CHECK(!vfd.monitorStopped(552));
+}
+void heartbeatTests() {
+  DiagnosticVfd d;
+  unsigned stopCount = 0, monitorCount = 0, readCount = 0;
+  uint32_t previousStop = 0;
+  for (uint32_t t = 0; t <= 30000; t += 10) {
+    const auto tx = d.transmit(t);
+    if (tx.empty())
+      continue;
+    CHECK(tx[1] == '3' || tx[1] == '0' || tx[1] == '5');
+    if (tx[1] == '3') {
+      if (stopCount++)
+        CHECK(t - previousStop <= VfdTiming::StopRefreshMs);
+      previousStop = t;
+    } else if (tx[1] == '0')
+      ++monitorCount;
+    else {
+      if (!readCount++)
+        CHECK(tx.substr(2, 2) == "12");
+    }
+    for (char b : Em01::frame(tx[1] == '3'   ? "(3)"
+                              : tx[1] == '0' ? "(032500000250000)"
+                                             : "(50010)"))
+      d.receive(b, t + 1);
+    if (t > 100)
+      CHECK(d.healthy(t + 1));  // Periodic STOP must not invalidate monitor samples.
+  }
+  CHECK(stopCount >= 100);
+  CHECK(monitorCount > 50);
+  CHECK(readCount > 50);
+  CHECK(std::string(d.watchdogState(30001)) == "within-software-policy");
+  CHECK(std::string(d.watchdogState(50000)) == "unknown");
+  for (const auto& pair :
+       std::vector<std::pair<std::string, std::string>>{{"(50000)", "disabled"},
+                                                        {"(50002)", "too-short"},
+                                                        {"(50010)", "within-software-policy"},
+                                                        {"(50020)", "outside-policy"}}) {
+    DiagnosticVfd v;
+    CHECK(v.transmit(0) == Em01::frame("(3)"));
+    for (char b : Em01::frame("(3)"))
+      v.receive(b, 1);
+    v.transmit(100);
+    for (char b : Em01::frame("(032500000250000)"))
+      v.receive(b, 101);
+    CHECK(v.transmit(200) == Em01::frame("(512)"));
+    for (char b : Em01::frame(pair.first))
+      v.receive(b, 201);
+    CHECK(std::string(v.watchdogState(202)) == pair.second);
+  }
+  DiagnosticVfd failed;
+  CHECK(failed.transmit(0) == Em01::frame("(3)"));
+  failed.transmit(150);
+  failed.transmit(300);
+  failed.transmit(450);
+  CHECK(failed.failed);
+  CHECK(failed.transmit(599).empty());
+  CHECK(failed.transmit(600) == Em01::frame("(3)"));
+  for (char b : Em01::frame("(3)"))
+    failed.receive(b, 601);
+  CHECK(failed.failed);
+  CHECK(!failed.healthy(601));
+  CHECK(failed.transmit(700).empty());
+  CHECK(failed.transmit(900) == Em01::frame("(3)"));
+  // Unsigned timing remains correct across millis() wrap.
+  DiagnosticVfd wrap;
+  const uint32_t start = 0xffffff00u;
+  CHECK(wrap.transmit(start) == Em01::frame("(3)"));
+  for (char b : Em01::frame("(3)"))
+    wrap.receive(b, start + 1);
+  CHECK(wrap.transmit(start + 300) == Em01::frame("(3)"));
+}
 int main() {
   try {
     motionTests();
@@ -728,6 +961,9 @@ int main() {
     deviceTests();
     sessionTests();
     parameterJobTests();
+    handoffTests();
+    manualReleaseTests();
+    heartbeatTests();
     std::cout << "PASS " << checks << " assertions (host simulation only)\n";
     return 0;
   } catch (const std::exception& e) {

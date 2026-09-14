@@ -11,6 +11,11 @@ to preserve signed 64-bit values. The server owns floor identity and position.
 STOP always attempts a real request, even when status is disconnected; failure
 is shown and never changes the displayed motion state to idle.
 
+Hardware contract v2 adopts the 2026-09-13 handoff. Stable active-low input readings
+are displayed separately from field qualification (still false). Diagnostic UART
+STOP/monitor/readback is supported while safety is open; no RUN or write capability
+is enabled. Queued STOP and acknowledgement never imply physical stopping.
+
 ## Development
 
 Node 22.13+ and npm:
@@ -56,8 +61,8 @@ unit/SSR suite. Neither command deploys or contacts a physical controller.
 
 ## Embedded Delivery
 
-`build:embedded` emits static files plus gzip variants. On 2026-09-11 the bundle
-measured 233,572 raw bytes / 70,809 gzip bytes. `node scripts/stage-firmware.mjs`
+`build:embedded` emits static files plus gzip variants. On 2026-09-13 the bundle
+measured 237,468 raw bytes / 71,835 gzip bytes. `node scripts/stage-firmware.mjs`
 copies the assets and a hash manifest into ignored `firmware/data`. Then
 `pio run -t buildfs` builds the LittleFS image. No deployment/upload is authorized.
 

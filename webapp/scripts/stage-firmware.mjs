@@ -12,6 +12,12 @@ import { fileURLToPath } from "node:url";
 const source = fileURLToPath(new URL("../dist/embedded/", import.meta.url));
 const target = fileURLToPath(new URL("../../firmware/data/", import.meta.url));
 const files = [];
+const contract = JSON.parse(
+  await readFile(
+    new URL("../../firmware/interface-contract.json", import.meta.url),
+    "utf8",
+  ),
+);
 let previous = [];
 try {
   previous = JSON.parse(
@@ -47,7 +53,11 @@ for (const f of files) {
 }
 await writeFile(
   join(target, "bundle-manifest.json"),
-  JSON.stringify({ apiVersion: 1, contractVersion: 1, files }, null, 2),
+  JSON.stringify(
+    { apiVersion: 1, contractVersion: contract.version, files },
+    null,
+    2,
+  ),
 );
 for (const old of previous) {
   const path = resolve(target, old.path);

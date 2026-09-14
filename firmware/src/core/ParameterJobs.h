@@ -30,7 +30,8 @@ class ParameterJobs {
         return "installer_access_required";
       if (value < definition.minValue || value > definition.maxValue)
         return "parameter_out_of_range";
-      if (number == 12 && (value < 2 || value > 10))
+      if (number == 12 &&
+          (value < VfdTiming::MinWatchdogTenths || value > VfdTiming::MaxWatchdogTenths))
         return "serial_timeout_policy";
       if (number == 10 && value < session_.supervisor.config.speed)
         return "maximum_below_run_speed";

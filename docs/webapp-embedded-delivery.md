@@ -8,7 +8,7 @@ Measured on the 2026-09-11 integration revision:
 
 | Asset class | Raw | Gzip |
 | --- | ---: | ---: |
-| HTML + CSS + JavaScript | 233,572 bytes | 70,809 bytes |
+| HTML + CSS + JavaScript | 237,468 bytes | 71,835 bytes |
 
 The selected `ESP32-S3-WROOM-1U-N16R8` has 16 MB flash and 8 MB PSRAM.
 `firmware/partitions.csv` now defines two 4 MiB app slots and a 0x7e0000-byte

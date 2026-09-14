@@ -1,9 +1,10 @@
 {
-  "apiVersion":1,"contractVersion":1,"bootId":"1234567890abcdef","sequence":1,"uptimeMs":1000,"sampleAgeMs":0,
+  "apiVersion":1,"contractVersion":2,"bootId":"1234567890abcdef","sequence":1,"uptimeMs":1000,"sampleAgeMs":0,
   "state":"unknown-position","deploymentReady":false,"position":"0","positionValid":false,
   "currentFloor":null,"targetFloor":null,"motionAllowed":false,"canMoveUp":false,"canMoveDown":false,"stoppedConfirmed":false,
   "safetyOk":false,"home":false,"upperLimit":null,"lowerLimit":null,"serviceKey":null,"fault":"",
-  "blockedReasons":["HW-01-unavailable-input-gpios","HW-02-coupled-uart-run-enable","physical-qualification-required"],
+  "inputsQualified":false,"manualControl":{"active":false,"hold":false,"up":false,"down":false,"safetyHealthy":false,"inputsKnown":true,"requestedDirection":0,"motionEnabled":false},"vfd":{"commsEnabled":true,"healthy":false,"stopTransmitted":false,"stopAcknowledged":false,"monitorStopped":false},
+  "blockedReasons":["software-motion-inhibit","field-inputs-unqualified","physical-qualification-required"],
   "capabilities":{"status":true,"motion":false,"light":false,"network":false,"logs":false},
   "floors":[{"floor":1,"name":"Landing 1","position":null},{"floor":2,"name":"Landing 2","position":null},{"floor":3,"name":"Landing 3","position":null}],
   "light":{"on":false,"feedbackVerified":false},"telemetry":null,"calibration":{"valid":false,"distance":null},
