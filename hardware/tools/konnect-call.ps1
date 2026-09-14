@@ -7,6 +7,9 @@ param(
 
     [string[]]$Toolsets = @(),
 
+    # Optional destination for a PNG image returned by the MCP tool.
+    [string]$ImageOutput,
+
     [string]$PluginRoot = $env:KONNECT_PLUGIN_ROOT
 )
 
@@ -105,7 +108,18 @@ try {
         }
     }
 
-    if ($result.result.content.Count -gt 0) {
+    if ($ImageOutput) {
+        if ([IO.Path]::GetExtension($ImageOutput) -ne '.png') {
+            throw 'ImageOutput must be a PNG artifact, never a KiCad source file.'
+        }
+        $png = $result.result.content | Where-Object {
+            $_.type -eq 'image' -and $_.mimeType -eq 'image/png'
+        } | Select-Object -First 1
+        if (-not $png) { throw 'Konnect did not return a PNG image.' }
+        [IO.File]::WriteAllBytes($ImageOutput, [Convert]::FromBase64String($png.data))
+        Write-Output $ImageOutput
+    }
+    elseif ($result.result.content.Count -gt 0) {
         $result.result.content[0].text
     }
     else {

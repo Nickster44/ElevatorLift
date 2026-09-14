@@ -1,0 +1,15 @@
+{
+  "design_rules": [
+    "Four-layer routing plan: F.Cu components and short critical signals; In1.Cu continuous SELV GND reference; In2.Cu SELV power distribution and constrained signals; B.Cu remaining signals/components. No SELV copper on any layer under the mains island or across the isolation corridor. No routing or copper zones are created during preparation.",
+    "Maintain at least 3.2 mm MAINS-to-SELV separation on every copper layer and in every future zone. MAINS class covers /Power/AC_L_RAW, /Power/AC_L_FUSED, /Power/AC_N. Never override it downward with local clearance. A verified all-layer no-copper isolation corridor is a pre-routing gate; netclass clearance alone does not enforce cross-layer projected isolation.",
+    "USB_D+/USB_D-: route together on one outer layer over uninterrupted SELV GND; no stubs or plane splits. Keep away from mains, regulator switching loops, VFD wiring and 418 MHz RF. Existing USB_DIFF values are provisional, not controlled impedance; final differential width/gap and dielectric/copper stackup require the chosen fabricator.",
+    "RF: U10 is ESP32-S3-WROOM-1U with external antenna connector, not the PCB-antenna variant. Keep its mating cable/antenna mechanically clear; use the selected external antenna manufacturer keepout. Keep J40 CONSMA002 to U40 RXM-418-LR RF_IN path short and clean with suitable ground reference and no branching. Do not invent a no-ground region under the RF feed; required antenna keepouts must come from selected antenna documentation.",
+    "VFD UART, SPI, I2C, safety and service monitoring signals must reference continuous SELV GND and stay away from mains, high-current loads and switching loops. Safety-monitor optocouplers share controller GND and do not establish an independent galvanic safety barrier.",
+    "U20 AP63203: minimize VIN-capacitor-GND loop, SW-to-L20 and BST-capacitor loop; keep sensitive feedback away from SW copper. C23/C26 were locally moved closer to U20 during four-layer preparation. Preserve their compact placement; verify routed loop geometry and regulator performance before release."
+  ],
+  "fab_constraints": {
+    "layer_count": 4
+  },
+  "naming_conventions": {},
+  "sourcing": {}
+}

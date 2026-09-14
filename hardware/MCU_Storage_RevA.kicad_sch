@@ -4450,6 +4450,28 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "GPIO35/36/37: octal PSRAM, NC. GPIO43/44: limit inputs, no UART0 header.\nGPIO3 SERVICE_KEY: R53 10k pulls HIGH=open; LOW=closed. Keep default JTAG eFuses.\nKeep EFUSE_STRAP_JTAG_SEL=0; validate key states and supply sequencing during reset.\nFirmware: GPIO3/43/44 inputs, UART0 console disabled, GPIO42 UART OE only."
+		(exclude_from_sim no)
+		(at 160 185 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1520b90f-e610-4e6f-b060-7e7a96f54cfc")
+	)
+	(text "U14 reverse-blocks USB VBUS into +5V. USB alone does NOT supply the 3V3 MCU rail.\nUse the approved isolated low-voltage bench supply procedure; do not assume USB-only operation."
+		(exclude_from_sim no)
+		(at 80 58 0)
+		(effects
+			(font
+				(size 1.1 1.1)
+			)
+			(justify left bottom)
+		)
+		(uuid "1dffefc8-bd05-4f34-aebb-f36476bb1f42")
+	)
 	(text "ESP32-S3 native USB: GPIO19 = D-, GPIO20 = D+. U12 is the dedicated USB ESD array; CC1/CC2 each use 5.1k sink pull-downs."
 		(exclude_from_sim no)
 		(at 35 170 0)
@@ -4460,17 +4482,6 @@
 			(justify left bottom)
 		)
 		(uuid "a9fcfabb-959e-447b-a4b0-858badb69bb4")
-	)
-	(text "U14 reverse-blocks USB VBUS before joining the regulated +5V rail, allowing safe USB programming with or without the AC/DC supply present."
-		(exclude_from_sim no)
-		(at 80 58 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "f9a489b5-f866-4690-b132-dfb2704dd311")
 	)
 	(no_connect
 		(at 318.77 157.48)
@@ -4489,12 +4500,32 @@
 		(uuid "4faa7f98-83a7-4e44-89cf-ff964d2e7fa8")
 	)
 	(no_connect
+		(at 226.06 116.84)
+		(uuid "5e3f8436-ede8-4bc7-a502-a4d2aed346c4")
+	)
+	(no_connect
+		(at 73.66 203.2)
+		(uuid "6097296c-32ed-4902-837f-ea8c789291af")
+	)
+	(no_connect
+		(at 73.66 205.74)
+		(uuid "62ac081b-5f1d-4b53-9c96-949a9c1f38cc")
+	)
+	(no_connect
 		(at 318.77 152.4)
 		(uuid "7edc331c-4f51-403e-acac-5205cde864e9")
 	)
 	(no_connect
 		(at 78.74 104.14)
 		(uuid "83318b3a-b0e2-40a9-94db-1f32c45b3be9")
+	)
+	(no_connect
+		(at 226.06 119.38)
+		(uuid "a5457551-baab-442b-9735-0141f9fe5396")
+	)
+	(no_connect
+		(at 226.06 114.3)
+		(uuid "a8243e18-86b5-4ff2-a9d3-376222ef72f2")
 	)
 	(no_connect
 		(at 125.73 86.36)
@@ -4616,6 +4647,16 @@
 	)
 	(wire
 		(pts
+			(xy 308.61 143.51) (xy 306.07 144.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e47cd499-1e2d-4b5e-bdb9-09441101d1eb")
+	)
+	(wire
+		(pts
 			(xy 347.98 154.94) (xy 355.6 154.94)
 		)
 		(stroke
@@ -4633,16 +4674,6 @@
 			(justify left bottom)
 		)
 		(uuid "03deb062-b4c2-4308-b671-124b9161d16d")
-	)
-	(label "UART0_TX"
-		(at 195.58 101.6 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "1af40cbb-e16b-4fd6-b361-62b2d300e9c8")
 	)
 	(label "ESP_EN"
 		(at 167.64 88.9 180)
@@ -4754,16 +4785,6 @@
 		)
 		(uuid "5b9b366d-f508-4da5-bbd3-d58cf8dc7273")
 	)
-	(label "UART0_RX"
-		(at 73.66 203.2 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "7222fdb2-6d07-4cae-9c0e-970be6854b0a")
-	)
 	(label "ESP_BOOT"
 		(at 73.66 198.12 0)
 		(effects
@@ -4793,16 +4814,6 @@
 			(justify left bottom)
 		)
 		(uuid "8cf42068-2caa-4b08-8989-2c016fdc25d6")
-	)
-	(label "UART0_RX"
-		(at 195.58 99.06 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "8d7c9c60-7056-4664-a6e8-3a68c54db3f4")
 	)
 	(label "USB_VBUS_5V"
 		(at 43.18 99.06 180)
@@ -4914,16 +4925,6 @@
 		)
 		(uuid "ce06a3b9-95ab-4392-af5b-9bc6d986eb78")
 	)
-	(label "UART0_TX"
-		(at 73.66 205.74 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d18fa6e9-b618-4375-ad6b-9032e4a2ee60")
-	)
 	(label "USB_D-"
 		(at 78.74 106.68 0)
 		(effects
@@ -4985,7 +4986,7 @@
 		(uuid "f41c69b3-0a21-4c61-b7a1-667b88fb861f")
 	)
 	(label "RTC_VBACKUP"
-		(at 306.07 144.78 90)
+		(at 308.61 143.51 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5068,18 +5069,18 @@
 			)
 		)
 	)
-	(global_label "SERVICE_KEY"
+	(global_label "LIMIT_UP"
 		(shape input)
-		(at 226.06 119.38 0)
+		(at 195.58 101.6 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
-		(uuid "1161bb95-f286-4f22-b487-5ba9e7a6b165")
+		(uuid "136aa663-c130-459c-9075-cd0dea391c7f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 226.06 119.38 0)
+			(at 195.58 101.6 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5310,28 +5311,6 @@
 			)
 		)
 	)
-	(global_label "LIMIT_UP"
-		(shape input)
-		(at 226.06 114.3 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "4f8d9fef-7409-4afe-a092-8e97be768515")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 226.06 114.3 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "RF_MODE_IND"
 		(shape input)
 		(at 226.06 99.06 0)
@@ -5388,6 +5367,28 @@
 		(uuid "62c04dce-2ccb-4a44-8213-e272e8a3da45")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 322.58 99.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "SERVICE_KEY"
+		(shape input)
+		(at 193.04 114.3 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "648dfc18-72ec-432c-9bcd-6942ee94af7f")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 193.04 114.3 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5464,28 +5465,6 @@
 			)
 		)
 	)
-	(global_label "LIMIT_DOWN"
-		(shape input)
-		(at 226.06 116.84 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "7b6499a7-08b6-4b06-bb83-15f707b57c14")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 226.06 116.84 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "HOME"
 		(shape input)
 		(at 195.58 111.76 180)
@@ -5552,28 +5531,6 @@
 			)
 		)
 	)
-	(global_label "AUX_CTRL"
-		(shape input)
-		(at 193.04 114.3 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "967cc6cc-dfa1-40b0-99d4-8358121608b4")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 193.04 114.3 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "SPI_MOSI"
 		(shape input)
 		(at 322.58 96.52 0)
@@ -5586,6 +5543,28 @@
 		(uuid "9820349d-e36f-4bfe-8dd4-2ac64329554b")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 322.58 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VFD_COMMS_ENABLE"
+		(shape input)
+		(at 226.06 132.08 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "a65ee79e-7f20-4c7a-8353-2dda74c01722")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 226.06 132.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5674,6 +5653,28 @@
 		(uuid "bd7c5e0b-3a9c-4cc0-8b43-090e964cbfe8")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 195.58 116.84 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "LIMIT_DOWN"
+		(shape input)
+		(at 195.58 99.06 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "bf5d9d49-d536-4cc7-b784-58d56f1ce39b")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 195.58 99.06 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5806,28 +5807,6 @@
 		(uuid "db69c20b-7a03-4595-af61-9d80ac822e28")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 195.58 134.62 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VFD_ENABLE"
-		(shape output)
-		(at 226.06 132.08 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "e4375e9c-971e-4189-8017-71964085fb9a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 226.06 132.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8162,7 +8141,7 @@
 				)
 			)
 		)
-		(property "Value" "UART RECOVERY / BOOT"
+		(property "Value" "BOOT RESET HEADER - UART PINS 3/4 NC"
 			(at 68.58 195.58 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9286,6 +9265,17 @@
 				)
 			)
 		)
+		(property "Hardware_Contract" "2026-09-12: LIMIT_UP GPIO43/p37; LIMIT_DOWN GPIO44/p36; SERVICE_KEY GPIO3/p15 active-low. GPIO35/36/37 reserved for octal PSRAM: NC. GPIO42 only VFD_COMMS_ENABLE. Native USB programming; UART0 disabled after boot. Keep default JTAG eFuses; SERVICE_KEY HIGH=open, LOW=closed; R53 10k pull-up."
+			(at 210.82 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "1ff4ef19-1509-49d7-9f6b-70030588a3a4")
 		)
@@ -9891,7 +9881,7 @@
 			)
 		)
 		(property "Value" "RV-3028-C7 RTC"
-			(at 313.69 146.05 0)
+			(at 315.976 146.558 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

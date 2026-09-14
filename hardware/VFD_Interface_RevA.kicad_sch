@@ -1918,33 +1918,7 @@
 		)
 		(uuid "12216a70-3213-4a47-afc7-35162be0ddbc")
 	)
-	(text "This RUN/ENABLE output is an operational stop path only. It is not a safety-rated circuit and does not replace the hardwired safety chain."
-		(exclude_from_sim no)
-		(at 95 185 0)
-		(effects
-			(font
-				(size 1.15 1.15)
-				(bold yes)
-				(color 180 0 0 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "47341b83-bf0b-4294-a40a-d0218c385a4a")
-	)
-	(text "U25 presents an isolated open collector for a low-current VFD digital input. Verify VFD terminal voltage, polarity and required sink current before fitting J25."
-		(exclude_from_sim no)
-		(at 95 130 0)
-		(effects
-			(font
-				(size 1.1 1.1)
-				(bold yes)
-				(color 180 90 0 1)
-			)
-			(justify left bottom)
-		)
-		(uuid "7ff89fb7-1651-411e-bc2b-6ef0607ef754")
-	)
-	(text "ISOLATED VFD RUN / ENABLE"
+	(text "COMMUNICATIONS ONLY - NO MCU RUN OUTPUT"
 		(exclude_from_sim no)
 		(at 95 125 0)
 		(effects
@@ -1954,7 +1928,18 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "c5f0db60-f7cb-4c39-927a-e080b074df9e")
+		(uuid "96615efa-b3c5-41a5-b4e3-b5972a7794c8")
+	)
+	(text "OE = VFD_COMMS_ENABLE (GPIO42), default LOW via R24. UART mapping unchanged: ESP TX -> VFD RX; ESP RX <- VFD TX."
+		(exclude_from_sim no)
+		(at 90 30 0)
+		(effects
+			(font
+				(size 1.1 1.1)
+			)
+			(justify left bottom)
+		)
+		(uuid "bad0775f-a379-4198-b7eb-eadfcec0e7be")
 	)
 	(text "VFD UART LEVEL TRANSLATION"
 		(exclude_from_sim no)
@@ -1968,16 +1953,16 @@
 		)
 		(uuid "d314cb18-9a47-4e28-a796-fc221fec684a")
 	)
-	(text "TXS0104E OE is pulled low and enabled only by VFD_ENABLE. UART mapping: ESP TX -> VFD RX; ESP RX <- VFD TX."
+	(text "R25/U25/J25/TP26 removed. Communications may operate with the safety chain open for STOP and readback.\nThe separate external hardwired safety loop remains the sole RUN permission authority.\nVerify VFD configuration and wiring prohibit serial commands from bypassing the hardwired inhibit."
 		(exclude_from_sim no)
-		(at 90 30 0)
+		(at 95 133 0)
 		(effects
 			(font
-				(size 1.1 1.1)
+				(size 1.2 1.2)
 			)
 			(justify left bottom)
 		)
-		(uuid "f4e73df8-235c-4fcf-ad6d-e4f0581bc40a")
+		(uuid "f0bb1e9b-9012-45c1-b54b-7604fb40d552")
 	)
 	(no_connect
 		(at 160.02 82.55)
@@ -1995,10 +1980,6 @@
 		(at 139.7 82.55)
 		(uuid "7e12b3f4-fa6e-4fe3-a75b-b64eb7c9521b")
 	)
-	(no_connect
-		(at 224.79 152.4)
-		(uuid "f70ca38d-8dd7-4cb1-b0ac-b30971c785a2")
-	)
 	(wire
 		(pts
 			(xy 139.7 80.01) (xy 137.16 80.01)
@@ -2008,16 +1989,6 @@
 			(type default)
 		)
 		(uuid "428a5fc1-f1ba-4d0c-a4f9-9cba56e81e21")
-	)
-	(wire
-		(pts
-			(xy 123.19 152.4) (xy 142.24 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c94af8c3-a070-4349-a04f-7a1fde5cbe94")
 	)
 	(wire
 		(pts
@@ -2038,16 +2009,6 @@
 			(type default)
 		)
 		(uuid "e37caaa5-905a-4ddb-8a48-4f0ef05d314d")
-	)
-	(label "VFD_ENABLE"
-		(at 115.57 68.58 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "05bbecef-a520-49eb-a851-753a9bf212f9")
 	)
 	(label "VFD_RX_5V"
 		(at 160.02 77.47 0)
@@ -2079,26 +2040,6 @@
 		)
 		(uuid "449cc11e-6fba-431e-ac37-f94f44aeeea9")
 	)
-	(label "VFD_ENABLE"
-		(at 115.57 152.4 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "6d8e6f46-0cbd-4ace-9597-a4528230f0b5")
-	)
-	(label "VFD_RUN_C"
-		(at 157.48 152.4 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "7e3da28b-c49e-485e-b930-578b882db73b")
-	)
 	(label "VFD_RX_5V"
 		(at 209.55 80.01 180)
 		(effects
@@ -2108,16 +2049,6 @@
 			(justify right bottom)
 		)
 		(uuid "805df4fc-ee7a-487e-bce4-563a399faef6")
-	)
-	(label "VFD_RUN_C"
-		(at 190.5 152.4 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "974f3bd5-efaf-41c2-b7d0-4a7ca10b3317")
 	)
 	(label "VFD_TX_5V"
 		(at 199.39 82.55 0)
@@ -2129,16 +2060,6 @@
 		)
 		(uuid "af58b1e1-b6dd-4416-8416-91efa60163e3")
 	)
-	(label "VFD_RUN_E"
-		(at 157.48 157.48 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "b3685876-c2cf-4840-8cb2-24e01cbdecd3")
-	)
 	(label "VFD_RX_5V"
 		(at 190.5 77.47 0)
 		(effects
@@ -2149,35 +2070,15 @@
 		)
 		(uuid "bd4f9c49-860e-45d0-ac57-199065ac4492")
 	)
-	(label "VFD_RUN_E"
-		(at 224.79 154.94 0)
+	(label "VFD_COMMS_ENABLE"
+		(at 115.57 68.58 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "bf7b9b52-1d21-4555-b540-3b0f3a0696f3")
-	)
-	(label "VFD_ENABLE"
-		(at 139.7 74.93 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "c09695ee-d4f6-49ef-a30f-323c7ad73940")
-	)
-	(label "VFD_RUN_C"
-		(at 224.79 157.48 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "f1f4f4d6-b4bb-448b-8637-17d7b2f140ce")
+		(uuid "fe59b670-5cc2-4aed-ab3b-1c0cf045e9c7")
 	)
 	(global_label "VFD_TX_3V3"
 		(shape input)
@@ -2201,7 +2102,7 @@
 			)
 		)
 	)
-	(global_label "VFD_ENABLE"
+	(global_label "VFD_COMMS_ENABLE"
 		(shape input)
 		(at 137.16 74.93 180)
 		(effects
@@ -2210,7 +2111,7 @@
 			)
 			(justify right)
 		)
-		(uuid "9a7f182d-b7cc-4546-8af9-5c42719b0c63")
+		(uuid "79dc997d-d559-4cf6-82f7-42627c337348")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 137.16 74.93 0)
 			(hide yes)
@@ -2323,6 +2224,17 @@
 			)
 		)
 		(property "Manufacturer" "Texas Instruments"
+			(at 149.86 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Control_Authority" "OE = GPIO42 VFD_COMMS_ENABLE only; R24 10k holds OE LOW at reset. Communications may be enabled with safety open for STOP/readback. No MCU RUN output fitted. External hardwired safety loop remains RUN authority; verify VFD configuration prevents serial bypass."
 			(at 149.86 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -2652,206 +2564,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Isolator:TLP291")
-		(at 149.86 154.94 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "310fdbb6-218c-4d22-af6d-bd3b7bf54a74")
-		(property "Reference" "U25"
-			(at 144.78 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "VFD RUN OPEN COLLECTOR"
-			(at 149.86 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Package_SO:SOIC-4_4.55x2.6mm_P1.27mm"
-			(at 149.86 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "https://toshiba.semicon-storage.com/info/docget.jsp?did=12884&prodName=TLP291"
-			(at 149.86 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "DC Optocoupler, Vce 80V, CTR 50-100%, SOP4"
-			(at 149.86 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "TLP291"
-			(at 149.86 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Toshiba"
-			(at 149.86 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "3"
-			(uuid "a6c44edd-f68e-4e01-9a3b-50aab89c0866")
-		)
-		(pin "2"
-			(uuid "259a868b-26ce-451a-918c-57e2ca35b0e9")
-		)
-		(pin "1"
-			(uuid "6230ea36-9d13-45ab-a8c0-6c226c982181")
-		)
-		(pin "4"
-			(uuid "3f56643f-b8db-4210-83a4-32b9f47dbec9")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/d8035c27-9481-48bc-b99c-c1bc78f420cb"
-					(reference "U25")
-					(unit 1)
-				)
-			)
-			(project "VFD_Interface_RevA"
-				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
-					(reference "U25")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 119.38 152.4 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "3bae6c7f-4cf5-4cce-9cc7-7286f81d4570")
-		(property "Reference" "R25"
-			(at 119.38 150.368 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "680R"
-			(at 119.38 152.4 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 119.38 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 119.38 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 119.38 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "334e4e76-0c34-483b-a4b6-d5a7e6b0b42f")
-		)
-		(pin "2"
-			(uuid "64035467-0fc1-4175-bf29-d0fdf575adf0")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/d8035c27-9481-48bc-b99c-c1bc78f420cb"
-					(reference "R25")
-					(unit 1)
-				)
-			)
-			(project "VFD_Interface_RevA"
-				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
-					(reference "R25")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 209.55 77.47 270)
 		(unit 1)
@@ -2929,88 +2641,6 @@
 			(project "VFD_Interface_RevA"
 				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
 					(reference "#PWR109")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 190.5 152.4 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "79d7837d-fc2b-4cd6-806e-9fe182f8bec8")
-		(property "Reference" "TP26"
-			(at 183.642 152.4 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VFD RUN COLLECTOR"
-			(at 185.42 152.4 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Plated_Hole_D2.0mm"
-			(at 190.5 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 190.5 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "test point"
-			(at 190.5 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "d836f375-0900-4cbd-8107-c0592799cbae")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/d8035c27-9481-48bc-b99c-c1bc78f420cb"
-					(reference "TP26")
-					(unit 1)
-				)
-			)
-			(project "VFD_Interface_RevA"
-				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
-					(reference "TP26")
 					(unit 1)
 				)
 			)
@@ -3349,94 +2979,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
-		(at 219.71 154.94 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "ae2119c7-f1fb-4b49-b442-780c75ee1de4")
-		(property "Reference" "J25"
-			(at 219.71 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "ED300/3 VFD RUN C / E / SPARE"
-			(at 219.71 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "TerminalBlock_Altech:Altech_AK300_1x03_P5.00mm_45-Degree"
-			(at 219.71 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 219.71 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 219.71 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "7a454d18-55da-4db3-b4b3-c1d1ae98e870")
-		)
-		(pin "2"
-			(uuid "569708bd-66b0-4046-8387-c5b079f5bdb0")
-		)
-		(pin "3"
-			(uuid "a8e0a01d-0032-4284-8dbf-da76bbdd71e2")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/d8035c27-9481-48bc-b99c-c1bc78f420cb"
-					(reference "J25")
-					(unit 1)
-				)
-			)
-			(project "VFD_Interface_RevA"
-				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
-					(reference "J25")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:C")
 		(at 165.1 44.45 0)
 		(unit 1)
@@ -3524,89 +3066,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 142.24 157.48 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "b9ce7681-daf7-4d48-be7a-abc6e6f0a5e1")
-		(property "Reference" "#PWR111"
-			(at 135.89 157.48 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 138.43 157.48 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 142.24 157.48 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 142.24 157.48 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 142.24 157.48 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "c946969a-72e2-45bc-b587-c42e93246e83")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/d8035c27-9481-48bc-b99c-c1bc78f420cb"
-					(reference "#PWR111")
-					(unit 1)
-				)
-			)
-			(project "VFD_Interface_RevA"
-				(path "/91532fc9-cae5-4edc-93bc-39887f2f1f69"
-					(reference "#PWR111")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector:TestPoint")
 		(at 190.5 77.47 90)
 		(unit 1)
@@ -3637,7 +3096,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TestPoint:TestPoint_Plated_Hole_D2.0mm"
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
 			(at 190.5 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -3968,7 +3427,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TestPoint:TestPoint_Plated_Hole_D2.0mm"
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
 			(at 199.39 82.55 0)
 			(hide yes)
 			(show_name no)

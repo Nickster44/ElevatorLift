@@ -3694,6 +3694,18 @@
 		)
 		(uuid "14db91ed-7f7f-4952-8a72-5cfd21c0ff5f")
 	)
+	(text "OPTOCOUPLER-CONDITIONED 12 V FIELD INPUTS"
+		(exclude_from_sim no)
+		(at 20 108 0)
+		(effects
+			(font
+				(size 2 2)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "195370ba-dd74-465d-bc73-2085021eec75")
+	)
 	(text "PROTECTED 12 V LOW-SIDE OUTPUTS"
 		(exclude_from_sim no)
 		(at 285 108 0)
@@ -3765,17 +3777,16 @@
 		)
 		(uuid "7e36f9ab-1294-4088-9760-0f902871855b")
 	)
-	(text "ISOLATED 12 V FIELD INPUTS"
+	(text "Optional AUX output removed (R59/R60/Q41/F41/D42/J47).\nGPIO3 is now SERVICE_KEY, never an output.\nField inputs remain active LOW (contact closed to GND).\nR62 limits GPIO43 ROM UART contention; validate startup."
 		(exclude_from_sim no)
-		(at 20 108 0)
+		(at 290 220 0)
 		(effects
 			(font
-				(size 2 2)
-				(bold yes)
+				(size 1.2 1.2)
 			)
 			(justify left bottom)
 		)
-		(uuid "858f9bcd-00aa-478f-9546-8b45b0ad7859")
+		(uuid "9cdff23b-01a5-4a79-baaa-4e55190c682d")
 	)
 	(text "RXM-418-LR and LICAL-DEC-MS001 both operate from 3.3 V here; direct logic avoids unnecessary level shifting."
 		(exclude_from_sim no)
@@ -3913,16 +3924,6 @@
 	)
 	(wire
 		(pts
-			(xy 347.98 240.03) (xy 347.98 242.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "14ba6e5a-bc2d-44e5-8c97-02cd1ad78899")
-	)
-	(wire
-		(pts
 			(xy 121.92 87.63) (xy 119.38 87.63)
 		)
 		(stroke
@@ -3970,6 +3971,16 @@
 			(type default)
 		)
 		(uuid "1a71cc41-769b-46ac-9c10-12307ee96b87")
+	)
+	(wire
+		(pts
+			(xy 106.68 172.72) (xy 106.68 182.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2219bfe3-feae-4700-a78e-3b3c1688a050")
 	)
 	(wire
 		(pts
@@ -4120,16 +4131,6 @@
 			(type default)
 		)
 		(uuid "4805c441-ccf1-40ae-9b53-c18b4d86a504")
-	)
-	(wire
-		(pts
-			(xy 316.23 234.95) (xy 313.69 234.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "49cae6f4-5d0f-44a5-b813-b03df8afaef6")
 	)
 	(wire
 		(pts
@@ -4330,16 +4331,6 @@
 			(type default)
 		)
 		(uuid "7848afa1-9250-412e-8099-9b0d31195b65")
-	)
-	(wire
-		(pts
-			(xy 330.2 254) (xy 330.2 256.54)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "78752586-54b9-42aa-ae59-aafff3e24e78")
 	)
 	(wire
 		(pts
@@ -4553,16 +4544,6 @@
 	)
 	(wire
 		(pts
-			(xy 323.85 234.95) (xy 340.36 234.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bbd0d822-d83a-408f-a1f7-114b3dbd9cab")
-	)
-	(wire
-		(pts
 			(xy 121.92 74.93) (xy 119.38 74.93)
 		)
 		(stroke
@@ -4660,16 +4641,6 @@
 			(type default)
 		)
 		(uuid "e4f7e270-8928-4719-986b-3dfbcac88dc2")
-	)
-	(wire
-		(pts
-			(xy 384.81 222.25) (xy 387.35 222.25)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e511f147-8f21-4840-914a-32b661c97e08")
 	)
 	(wire
 		(pts
@@ -4851,36 +4822,6 @@
 		)
 		(uuid "0c53e98b-d9e3-40c3-acab-f1d20cb632aa")
 	)
-	(label "AUX_SW"
-		(at 364.49 238.76 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1727e1f3-654d-4cc7-82b8-248fc5caf67b")
-	)
-	(label "AUX_GATE"
-		(at 330.2 246.38 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "178ef45e-2fa9-43ed-93b5-f7180d4b9b52")
-	)
-	(label "AUX_12V_FUSED"
-		(at 349.25 209.55 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1c956429-ee47-4a91-b502-5acd1dc5d962")
-	)
 	(label "RF_BAUD0_CFG"
 		(at 95.25 73.66 0)
 		(effects
@@ -4981,16 +4922,6 @@
 		)
 		(uuid "5919ea02-154e-4537-b055-89be0359b893")
 	)
-	(label "LIGHT_SUPPLY_RAW"
-		(at 341.63 209.55 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "654d42f4-d668-4da3-ae07-34abc121eceb")
-	)
 	(label "RF_MODE_IND"
 		(at 121.92 87.63 180)
 		(effects
@@ -5020,26 +4951,6 @@
 			(justify left bottom)
 		)
 		(uuid "6dd65aab-13cf-4110-9c5d-1d675266bd1f")
-	)
-	(label "AUX_GATE"
-		(at 340.36 234.95 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "715a7ae1-8038-4249-bc05-61743a30a681")
-	)
-	(label "AUX_12V_FUSED"
-		(at 364.49 231.14 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "7189bb60-8f9f-449b-93b1-92de0cff8bc3")
 	)
 	(label "EXT_LIGHT_12V"
 		(at 330.2 129.54 0)
@@ -5181,16 +5092,6 @@
 		)
 		(uuid "bc7eb4e2-6741-4566-aa3f-db3b4b2c3a40")
 	)
-	(label "AUX_SW"
-		(at 384.81 224.79 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "c0426437-4d17-4e76-9dde-643b9319597a")
-	)
 	(label "LIGHT_SW"
 		(at 364.49 168.91 0)
 		(effects
@@ -5220,26 +5121,6 @@
 			(justify left bottom)
 		)
 		(uuid "c81c609b-44f4-429c-8d74-ac1cab3d52d2")
-	)
-	(label "AUX_SW"
-		(at 347.98 229.87 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "d316700a-db91-4d57-8b6d-93ca87c87d1b")
-	)
-	(label "AUX_12V_FUSED"
-		(at 384.81 227.33 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "de57998e-5002-42ec-b280-ad0f5917ae1f")
 	)
 	(label "RF_LEARN_REQ"
 		(at 190.5 59.69 0)
@@ -5785,28 +5666,6 @@
 			)
 		)
 	)
-	(global_label "LIMIT_UP"
-		(shape input)
-		(at 95.25 172.72 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "4d1fc53a-204d-47e8-be13-39199616a935")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 95.25 172.72 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "GND"
 		(shape input)
 		(at 87.63 82.55 180)
@@ -6183,28 +6042,6 @@
 	)
 	(global_label "GND"
 		(shape input)
-		(at 347.98 242.57 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "98450fc8-e063-466d-9564-0f31c3f9fdac")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 347.98 242.57 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "GND"
-		(shape input)
 		(at 203.2 95.25 0)
 		(effects
 			(font
@@ -6237,28 +6074,6 @@
 		(uuid "9a20d12d-f849-4422-a4f3-6e21b46b33eb")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 275.59 29.21 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "AUX_CTRL"
-		(shape input)
-		(at 313.69 234.95 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "9b1c9d17-bd33-4c5b-8689-685dd3b5898a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 313.69 234.95 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6347,6 +6162,28 @@
 		(uuid "a4d0e1b6-b743-40af-8db1-d6f1cc133b9a")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 116.84 172.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "LIMIT_UP"
+		(shape input)
+		(at 114.3 182.88 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "a9193edf-edae-424e-ae85-98c1f20dcf13")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.3 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6753,28 +6590,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape input)
-		(at 387.35 222.25 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "dec31ba2-7f71-433c-bf19-74626b97ea34")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 387.35 222.25 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "+3V3"
 		(shape input)
 		(at 289.56 29.21 0)
@@ -6941,28 +6756,6 @@
 		(uuid "f45810b7-5d1d-4116-b926-e226e599345f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 224.79 127 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "GND"
-		(shape input)
-		(at 330.2 256.54 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "f5a3a3ac-847a-4d75-aba7-47f3bafaa492")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 330.2 256.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8134,96 +7927,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:AO3400A")
-		(at 345.44 234.95 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "4cffcff2-101c-4f07-8b35-9a7cf3ea8fcc")
-		(property "Reference" "Q41"
-			(at 350.52 233.045 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "AO3400A"
-			(at 350.52 234.95 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 345.44 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf"
-			(at 345.44 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"
-			(at 345.44 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "4fbcb370-aa99-4b05-a0e8-a701e71b2ddd")
-		)
-		(pin "3"
-			(uuid "1fd479c9-a8ca-4f21-b748-05b5c44144aa")
-		)
-		(pin "2"
-			(uuid "b705bf09-62d3-4ecd-b870-0c8b71556dd2")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "Q41")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "Q41")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:D_Schottky")
 		(at 185.42 72.39 0)
 		(unit 1)
@@ -8391,6 +8094,96 @@
 			(project "IO"
 				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
 					(reference "JP42")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 110.49 182.88 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "54128bbf-29ac-4ae8-a219-1ce570139ee4")
+		(property "Reference" "R62"
+			(at 110.49 180.848 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1k"
+			(at 110.49 182.88 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 110.49 182.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 110.49 182.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 110.49 182.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Purpose" "Limits contention current to about 3.3mA if GPIO43 UART0 drives HIGH during ROM boot with U42C ON. Disable UART0 console and configure GPIO43 input before trusting LIMIT_UP. Existing 10k pull-up and active-low optocoupler unchanged."
+			(at 110.49 182.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "47852fff-5b70-457a-80de-9bedf1b7341f")
+		)
+		(pin "1"
+			(uuid "bcada9dd-e74f-4839-b62f-3d60ee0d0590")
+		)
+		(instances
+			(project "ElevatorLift"
+				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
+					(reference "R62")
 					(unit 1)
 				)
 			)
@@ -8741,91 +8534,6 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 320.04 234.95 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "69df0a0a-b31b-444b-816b-705ab0b71b8d")
-		(property "Reference" "R59"
-			(at 322.072 234.95 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100R"
-			(at 320.04 234.95 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 320.04 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 320.04 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 320.04 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "84a85f4b-9599-471e-9297-314104bfdae4")
-		)
-		(pin "2"
-			(uuid "c9a93ff8-e86d-432b-9cab-3627ac47a34b")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "R59")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "R59")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
 		(at 240.03 193.04 90)
 		(unit 1)
 		(body_style 1)
@@ -8991,91 +8699,6 @@
 			(project "IO"
 				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
 					(reference "C42")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:Polyfuse")
-		(at 345.44 209.55 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "74558d3e-f8db-4dd9-8ca0-e8ad846253ce")
-		(property "Reference" "F41"
-			(at 342.9 209.55 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "500mA HOLD"
-			(at 347.98 209.55 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Fuse:Fuse_1812_4532Metric"
-			(at 345.44 209.55 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 345.44 209.55 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resettable fuse, polymeric positive temperature coefficient"
-			(at 345.44 209.55 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "abea8208-8146-4135-9451-278e74740bab")
-		)
-		(pin "2"
-			(uuid "4f53bad4-5fc7-4f52-a557-e607eebd6d7e")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "F41")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "F41")
 					(unit 1)
 				)
 			)
@@ -9654,6 +9277,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 240.03 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Reset_Strap" "10k to 3V3 biases GPIO3 HIGH with key open or 12V absent; closed powered key pulls LOW. Both valid with default EFUSE_STRAP_JTAG_SEL=0, DIS_USB_JTAG=0. Do not enable pad-JTAG selection; verify key-open/key-closed and rail sequencing on prototype."
 			(at 240.03 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -10421,94 +10055,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
-		(at 379.73 224.79 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "b6c7f538-69bf-4eea-9dca-2cfa46f0088f")
-		(property "Reference" "J47"
-			(at 379.73 229.87 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "ED300/3 AUX + / SW- / GND"
-			(at 379.73 219.71 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "TerminalBlock_Altech:Altech_AK300_1x03_P5.00mm_45-Degree"
-			(at 379.73 224.79 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 379.73 224.79 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 379.73 224.79 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "c8a133ef-b02c-4692-a01d-87a2b403944f")
-		)
-		(pin "2"
-			(uuid "918198f5-6829-4283-a8d2-5a710dfb3dbe")
-		)
-		(pin "3"
-			(uuid "fd3b3b30-83f9-4458-b668-b47c3a05e5a6")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "J47")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "J47")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "SnapEDA:LICAL-DEC-MS001")
 		(at 124.46 64.77 0)
 		(unit 1)
@@ -11083,91 +10629,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:D_TVS")
-		(at 364.49 234.95 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "d0010024-dd2d-4314-9c2e-19fd92125f5f")
-		(property "Reference" "D42"
-			(at 361.95 234.95 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "SMBJ15A"
-			(at 367.03 234.95 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Diode_SMD:D_SMA"
-			(at 364.49 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 364.49 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Bidirectional transient-voltage-suppression diode"
-			(at 364.49 234.95 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "87f719a2-bd73-42f5-aab5-7210bb98fa14")
-		)
-		(pin "1"
-			(uuid "b4ca8f58-60c4-4f97-849d-fcefcdf6cbe3")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "D42")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "D42")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 59.69 172.72 90)
 		(unit 1)
@@ -11368,7 +10829,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TestPoint:TestPoint_Plated_Hole_D2.0mm"
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
 			(at 90.17 44.45 0)
 			(hide yes)
 			(show_name no)
@@ -12644,91 +12105,6 @@
 				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
 					(reference "U42")
 					(unit 3)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 330.2 250.19 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "f50ef563-e2ff-4a91-a1e3-771f542a93ca")
-		(property "Reference" "R60"
-			(at 330.2 248.158 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100k"
-			(at 330.2 250.19 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 330.2 250.19 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 330.2 250.19 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 330.2 250.19 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b0e66e16-e515-477d-8ed4-0ad78f1269a0")
-		)
-		(pin "2"
-			(uuid "5dd9545b-fe68-44cd-a074-00da39999f60")
-		)
-		(instances
-			(project "ElevatorLift"
-				(path "/3f6d7a2b-3e6c-4d8d-8c9d-9e876640d4e8/06e3c240-f857-4f50-8e62-b0389e493f88"
-					(reference "R60")
-					(unit 1)
-				)
-			)
-			(project "IO"
-				(path "/fe547d97-fdd0-4d4d-8937-a6eaead86df5"
-					(reference "R60")
-					(unit 1)
 				)
 			)
 		)
