@@ -23,7 +23,7 @@ The original review directory and hardware files remain untouched.
 - [x] Portable supervisor: unknown startup, three floors, upward HOME edge reference,
   directional limits, progress/wrong-direction/overshoot/idle-motion faults,
   STOP priority, fault latching, service hold release/timeout, guarded settings/reset.
-- [x] Measured calibration chooses farther end, requires sustained configured speed,
+- [x] Isolated single-record calibration chooses farther end, requires sustained configured speed,
   records STOP position, waits for fresh stopped evidence plus encoder stability,
   checks distance and invalidates on configuration changes. No PID.
 - [x] EM01 bounded frames/checksums, three attempts, timeout poisoning, parameter
@@ -47,7 +47,7 @@ The original review directory and hardware files remain untouched.
 - [x] Target-bound manual release/conflict/safety-loss STOP before ordinary loop work;
   pending STOP coalescing, input-intent status and manual-key WebUI priority.
 - [x] Host normal RF map updated to owner-specified D0-D4 actions; default diagnostic baud 9600.
-- [ ] Requested operational v3, target RF programming/capture and expanded directional calibration.
+- [ ] Operational v3, target RF programming/capture, explicit WebUI calibration start and direction-specific persistence.
 - [ ] Operational UART scheduler/parameter jobs/cache, counter-reference handshake,
   program exit workflow and calibration persistence wired into target APIs.
 - [x] Immediate durable fault-transition ledger and conservative boot replay.

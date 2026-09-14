@@ -1,4 +1,4 @@
-# New Controller Requirements Draft
+# Controller Requirements
 
 Implementation status is tracked in [software integration checklist](software-integration-checklist.md).
 The N16R8 profile is hardware-inhibited pending [hardware dependencies](hardware-dependency-handoff.md).
@@ -16,7 +16,7 @@ Requirements below are design intent, not a claim that every target capability i
 - Lack of expected encoder movement while commanding motion should fault.
 - Stop timeout must fault unless fresh VFD monitor data confirms stopped/zero frequency and the encoder is stable. An acknowledgement alone must not clear the stopping state or a fault latch.
 - Primary floor stopping should use a measured deceleration-distance offset, not a PID position loop.
-- Calibration mode should preserve the old behavior: after floor positions are set and program mode exits, run toward the farther top/bottom end, reach normal speed, command stop, measure actual stop distance, and save that calibration value.
+- Start calibration explicitly from the WebUI after three valid ordered floors are programmed. Select upward travel at/below the Floor 1/Floor 3 midpoint, downward above it; reach normal speed with sufficient travel, STOP, measure coast distance, and persist a direction-specific offset. See the motion/calibration document for implementation gaps.
 - If VFD deceleration, max frequency, normal run speed, or encoder scaling changes, the stop-distance calibration should be marked stale or require recalibration.
 
 ## Position Sensing
@@ -24,7 +24,7 @@ Requirements below are design intent, not a claim that every target capability i
 - Use a quadrature counter IC rather than application-level edge interrupts.
 - Read position from a single monotonic count source.
 - Define count polarity so upward motion and downward motion are unambiguous.
-- Store current position in MRAM frequently enough to recover from reset.
+- Store position snapshots in MRAM for diagnostics; snapshots cannot restore valid incremental position after reset. Require a reference handshake before normal motion.
 - Store homing/calibration records with CRC and sequence numbers.
 - Use home and final limit switches to validate counter position.
 - The current installation's homing reed switch is near the top, close to floor 3. Homing/recovery text and direction should therefore assume upward travel to the home reference unless the field wiring changes.
@@ -130,6 +130,6 @@ Requirements below are design intent, not a claim that every target capability i
 - VFD control terminal voltage/reference requirements.
 - Exact encoder model, voltage, cable length, observed 12 V/270 ohm/TLP291-4 path, and maximum pulse rate.
 - Number and voltage of button, limit, home, safety, and service inputs.
-- Whether the Linx RXM-418-LR receiver and existing remotes should remain supported.
+- Confirm installed RXM-418-LR/LICAL wiring and jumper configuration; legacy remote support is mandatory.
 - Actual light load voltage/current and whether any solenoid/interlock outputs remain required.
 - Environmental requirements for outdoor use: surge, ESD, VFD noise, moisture, temperature, and connector sealing.

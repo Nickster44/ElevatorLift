@@ -1,6 +1,6 @@
 # Firmware / WebUI Handoff
 
-Updated 2026-09-11. This replaces the old preview-oriented handoff.
+Current software contract: v2, diagnostics-inhibited. Reviewed 2026-09-14.
 See [software checklist](../../docs/software-integration-checklist.md) and the
 separate [hardware dependencies](../../docs/hardware-dependency-handoff.md).
 
@@ -8,7 +8,7 @@ separate [hardware dependencies](../../docs/hardware-dependency-handoff.md).
 
 - No automatic demo fallback, fake initial health, local-only STOP, fake telemetry,
   fabricated calibration, timer-based pairing success or local configuration success.
-- Validated v1 status, explicit unavailable capabilities and stale/disconnected states.
+- Validated contract-v2 status in API-v1 envelopes, unavailable capabilities and stale/disconnected states.
 - Controller-owned floor numbers, nullable position and decimal-string counts.
 - Idempotent light set-state, real network save, bounded durable log read and errors.
 - Native static WebUI serving, asset staging and N16R8 flash partition build.
@@ -29,9 +29,10 @@ separate [hardware dependencies](../../docs/hardware-dependency-handoff.md).
    monitoring plus stable encoder observations. EM01 has no transaction ID.
 3. Bind the supervisor's top-HOME reference handshake to the counter origin;
    commission scale/polarity, landing/home coordinates, tolerances, speeds and
-   progress/time limits. Wire program-exit to measured calibration and persist
-   completed results before enabling normal motion. The isolated controller session
-   implements this coordination and durable pre-RUN intent. No fabricated defaults.
+   progress/time limits. Replace isolated program-exit calibration with explicit
+   WebUI start after valid floor programming and persist direction-specific offsets.
+   The session currently implements a single-calibration model and durable pre-RUN
+   intent, not the full requested operational flow. No fabricated defaults.
 4. Expose guarded settings/floor/fault-reset/homing/calibration handlers. Finish
    configuration migration and fault durability under every reset point, including
    physical power interruption during the immediate fault-ledger write. The target

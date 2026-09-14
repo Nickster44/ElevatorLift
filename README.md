@@ -9,7 +9,7 @@ The new design goals are:
 - Store current position, floor targets, calibration values, faults, and event logs in nonvolatile MRAM.
 - Host a local access-point web interface for setup, diagnostics, data logs, and maintenance actions, with optional station-mode connection to a local network.
 - Keep safety functions electrically independent from the MCU wherever possible.
-- Design a custom KiCad control board after the firmware and hardware requirements are clear.
+- Develop the custom controller board alongside a versioned firmware interface contract.
 
 Important: this repository is not a certified elevator controller. The software here is a development baseline. Any real lift must use appropriately rated safety devices, hardwired interlocks, braking/enable circuits, limit switches, emergency stop hardware, enclosure design, and professional review before operation.
 
@@ -108,7 +108,7 @@ Known design constraints captured so far:
 - Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
 - Web assets, OTA staging and noncritical logs should use the module's 16 MB flash and 8 MB PSRAM first. Rev A does not include a separate QSPI NOR device.
 - Outside control should use local REST first, optional MQTT later, and Home Assistant as the recommended bridge to Google Home, watches, and broader automation.
-- Motion control should stay with measured deceleration-distance stopping, not PID. Calibration should measure actual stop distance after leaving program mode and save that value for future prediction stops.
+- Motion control should use measured deceleration-distance stopping, not PID. Planned calibration starts explicitly after valid floor programming and stores direction-specific offsets; target integration remains incomplete.
 
 ## Old System Summary
 
@@ -197,10 +197,10 @@ The next board should be designed around these blocks:
 - SPI MRAM for live position snapshots, settings, recent event logs, and fault records.
 - The selected N16R8 module's 16 MB flash and 8 MB PSRAM serve WebUI assets, OTA staging and noncritical data; no separate Rev-A QSPI device is planned.
 - Hardware safety chain independent of application firmware.
-- VFD enable/stop/brake control path that fails safe on MCU reset or watchdog timeout.
+- External hardwired motion authority; GPIO42 enables UART translation only, not RUN or a brake.
 - Protected digital inputs for call buttons, RF receiver, limit switches, home switch, and safety loop.
 - Mandatory RXM-418-LR RF receiver path.
-- Protected 12 V MOSFET light output with jumper-selectable onboard or external 12 V supply, plus an optional low-voltage auxiliary output header.
+- Protected 12 V MOSFET light output with jumper-selectable onboard or external 12 V supply. AUX has been removed.
 - Watchdog and brownout detection.
 - Surge/ESD/EMI protection suitable for outdoor wiring and a VFD enclosure.
 
@@ -239,18 +239,14 @@ Before final schematic release, complete the remaining checks below:
 11. VFD parameters: dump or photograph current drive parameters, especially acceleration, deceleration, max frequency, current/overload settings, serial timeout, and any stop/enable terminal configuration.
 12. Safety devices: identify final limits, emergency stop, gate/latch devices, brakes, and any non-MCU circuits that remove motion authority.
 
-## Near-Term Project Plan
+## Remaining Software Work
 
-1. Review the completed Rev-A KiCad schematic, replace the remaining provisional connector/counter/MRAM/RTC library assets, and close actionable ERC findings.
-2. Verify the first-pass connector map against the real wiring and physical verification checklist.
-3. Bench-test the assembled field-matched `TXS0104E` VFD interface, header pinout, levels, and fault behavior before connecting to the real lift.
-4. Define the MRAM data layout for position snapshots, settings, VFD parameter cache, remote registry, and event logs.
-5. Implement the program-mode exit calibration workflow that measures and stores stop distance.
-6. Implement LS7366R and MRAM firmware drivers behind the existing firmware interfaces.
-7. Build a bench VFD serial simulator before testing motion logic on a real lift.
-8. Add authentication/API tokens before any production WebUI or automation write operation.
+Drivers, integrity-checked MRAM records, token authentication and host protocol
+simulations exist. Track remaining operational motion, RF capture/programming,
+explicit calibration, guarded settings and update workflows in the
+[integration checklist](docs/software-integration-checklist.md).
 
-## Build The Starter Firmware
+## Build Firmware Without Deployment
 
 Install PlatformIO, then run:
 
@@ -259,11 +255,7 @@ cd firmware
 pio run
 ```
 
-For upload and serial monitor:
-
-```powershell
-pio run -t upload
-pio device monitor
-```
-
-No production hardware should be connected until the pinout, VFD interface, safety chain, and stop behavior have been bench tested.
+Upload and uploadfs deliberately fail in this profile. See the
+[firmware guide](firmware/README.md) for host tests and filesystem builds and the
+[WebUI guide](webapp/README.md) for mocked browser tests. Do not remove the inhibit
+to try hardware; physical qualification remains separate.

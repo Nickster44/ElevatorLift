@@ -138,4 +138,4 @@ Parameter 13 appears in both the writeable setting list and read-only expansion-
   No TIME setting is changed automatically; target writes remain inhibited.
 - Parse complete frames and verify checksums before acting on responses.
 - Treat VFD alarm status as a latched controller fault.
-- Do not rely on serial stop alone for safety. The board should have a fail-safe VFD enable/stop path.
+- Serial STOP is not independent stopping authority. External hardwired circuitry owns that authority; GPIO42 controls UART translation only. The current mapping has no MCU RUN/brake output.

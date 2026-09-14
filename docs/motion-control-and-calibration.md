@@ -2,7 +2,9 @@
 
 ## Recommended Motion Strategy
 
-Use the same basic strategy as the old controller: command the VFD at a selected run speed, stop early by a measured deceleration distance, and let the VFD deceleration parameter define the stop ramp. This is simple, deterministic, and already proved accurate enough in the old installation.
+Retain measured deceleration-distance stopping: command a selected VFD speed and
+issue STOP early by a measured offset. The owner reported good legacy accuracy;
+that observation does not qualify this controller or establish the old fault's cause.
 
 Do not use a classic PID position loop as the primary lift control strategy. The VFD already controls motor speed and ramp behavior, and the controller talks to it through a relatively slow serial command path. A PID loop would add tuning complexity without solving the main historic risk, which was likely state/position/serial robustness rather than poor steady-state positioning.
 
@@ -24,11 +26,12 @@ calibration are invented at startup.
 
 ## Calibration Mode Requirement
 
-The new controller should preserve the old calibration concept:
+The requested operational profile preserves measured coast distance, but starts
+calibration explicitly rather than automatically on programming-mode exit:
 
 1. User enters programming/calibration mode from the WebUI or service workflow.
 2. User sets or confirms floor positions.
-3. When leaving programming mode, the controller chooses the longer available travel direction toward the top or bottom floor.
+3. Start calibration explicitly from the WebUI after validating Floor 1 < Floor 2 < Floor 3. At or below the Floor 1/Floor 3 midpoint choose upward travel; above it choose downward travel. Reject insufficient travel before RUN.
 4. The controller commands motion long enough to reach the configured normal run speed.
 5. The controller records the position at the instant it sends the stop command.
 6. The controller waits for fresh VFD stopped-status/zero-frequency telemetry and stable encoder position. STOP acknowledgement alone is never sufficient.
@@ -40,9 +43,11 @@ This calibration value is mostly determined by the VFD deceleration-rate paramet
 
 ## Stored Calibration Data
 
-The first implementation can store a single global stop distance if testing confirms both directions behave similarly. The data model should still leave room for expansion:
+The current isolated model stores one calibration. The requested operational
+profile requires separate upward/downward offsets; the single-record model is
+not complete. For each direction retain:
 
-- `normal_stop_offset_counts`
+- `configuration_revision`
 - `calibrated_run_speed_tenths_hz`
 - `calibrated_vfd_decel_parameter`
 - `calibration_direction`
@@ -53,16 +58,18 @@ The first implementation can store a single global stop distance if testing conf
 - `timestamp_or_sequence`
 - `crc`
 
-If future testing shows meaningful differences, extend this to separate values for upward travel, downward travel, or different run speeds.
+Normal floor travel must reject absent, stale or direction-mismatched calibration.
+Changes to floors, encoder scaling, speed, deceleration or relevant drive parameters
+invalidate it. Explicit-start and directional persistence remain integration work.
 
 ## Runtime Checks
 
 Keep the runtime logic conservative:
 
 - Stop command is sent when remaining distance is less than or equal to the calibrated offset.
-- VFD stop command should be repeated until acknowledgment or timeout.
+- Repeat STOP independently of bounded reply retries; see [EM01 timing](vfd-serial-protocol.md). Neither acknowledgement nor retry exhaustion proves physical stopping.
 - If final stopped position is outside an allowed tolerance, latch a fault or require service recalibration.
-- If VFD deceleration, max frequency, run speed, or encoder scaling changes, invalidate or warn on the saved calibration.
+- Relevant settings changes invalidate calibration; a warning alone must not permit normal motion.
 - Calibration mode must not override hardwired safety devices, final limits, or fault conditions.
 
 ## Top Reference And Service Boundary

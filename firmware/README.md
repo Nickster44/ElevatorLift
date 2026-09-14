@@ -49,8 +49,9 @@ Target RF capture/programming movement and the operational v3 profile remain inc
 | `core/Rf.h` | Release-to-rearm, slot/epoch association, five-command mapping, learn/erase confirmation models | Capture UART, qualified timing and persistent registry still to integrate |
 | `main.cpp` | Inhibited diagnostics, real counter/storage/RTC adapters, light set-state, AP/station, bounded HTTP, LittleFS | No motion, homing, RF learning, settings writes, parameter writes, reboot or OTA |
 
-The old interrupt-counter, fabricated floor defaults, substring ACK, periodic
-NVS-position and RAM-log scaffolds have been removed. Git history retains them.
+The isolated session still starts single-record calibration on program exit.
+Explicit WebUI start and direction-specific records are pending; see
+[motion requirements](../docs/motion-control-and-calibration.md).
 
 Diagnostic traffic uses 100 ms slots with periodic STOP refresh due every 300 ms,
 interleaving monitor/read transactions and reading TIME first. Parameter 13 is skipped

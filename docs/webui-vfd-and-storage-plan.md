@@ -1,148 +1,38 @@
-# WebUI, VFD Parameter, And Storage Plan
+# WebUI And Storage Direction
 
-## WebUI Configuration Scope
+Reviewed 2026-09-14. Design intent is separate from the inhibited target baseline.
 
-The WebUI should become the primary setup and service tool. Physical buttons and switches should be kept for motion requests, emergency/safety functions, or service override only when they are clearly necessary.
+## Current Implementation
 
-Planned WebUI areas:
+- PM004MNIATR provides 4 Mbit (524,288 bytes). The MRAM journal reserves 768 event
+  slots of 576 bytes, using bounded JSON payloads and integrity metadata. Earlier
+  64-byte binary-record estimates are not implemented capacity.
+- MRAM holds snapshots, configuration and fault/event records. Snapshots cannot
+  prove incremental position continuity after reset.
+- Station credentials use NVS, not MRAM. API credentials are build configuration.
+- Web assets use internal flash/LittleFS. Rev A has no SD or separate QSPI NOR.
+  OTA-sized partitions exist, but no updater or atomic asset rollback.
+- Diagnostic VFD reads use a timestamped RAM cache. Guarded write/readback and
+  persistent cache logic are isolated, not target write capabilities.
 
-- Live status: position, target, state, VFD output frequency, current, bus voltage, temperature, safety inputs, limits, RF status, and last fault.
-- Motion settings: normal run speed, service jog speed, measured stop-distance calibration, floor positions, acceleration/deceleration policy, and homing behavior.
-- VFD parameters: read all supported EM01 parameters, edit writeable parameters with range checks, and show raw protocol values.
-- Load/weight limiting: expose VFD current limit/current-related settings as a controlled user-facing limit after bench validation.
-- RF remotes: request decoder Learn Mode, observe decoder state, name remotes by observed TX_ID, view last command/history, and perform the decoder's erase-all operation. Each remote has five fixed functions rather than a single-floor assignment.
-- Logs: recent events, faults, configuration changes, VFD alarms, resets, and exported CSV/JSON.
-- Maintenance: versioned backup/restore, firmware version, restricted service-recovery workflow, reboot, and factory defaults. Backup includes settings, VFD parameters, floor names/positions, calibration, and remote nickname profiles, but not the decoder's internal learned-address memory.
-- Automation: local REST API documentation, API tokens, command audit log, and optional MQTT/Home Assistant settings.
+Use the [firmware guide](../firmware/README.md) for exact storage addresses and
+[delivery contract](../webapp/docs/embedded-delivery.md) for asset budgets.
 
-## VFD Parameter Handling
+## Remaining Product Work
 
-The firmware should maintain a metadata table for VFD parameters:
+Target floor programming, explicit calibration, guarded VFD writes, RF learning,
+backup/restore and paginated log export remain unfinished. Host models do not
+establish target capabilities. RF nicknames require learned slot plus association
+epoch, never TX_ID alone. Decoder address memory cannot be enumerated or backed up.
+Current/overload settings are not certified weight measurements.
 
-- Parameter number.
-- Short name and display name.
-- Units and scale.
-- Minimum, maximum, and default value from the manual.
-- Read/write permission.
-- Safety class: user, installer, advanced, or locked.
-- Whether a change takes effect immediately or requires a stop/reboot.
-- Human-readable help text for the WebUI.
+Dense binary logging remains future work. Reconsider external/removable storage
+only if measured retention requirements exceed the current board's capacity.
 
-The WebUI should not simply expose raw writes to every user. It should provide a normal-user view for safe settings and an installer/advanced view for full VFD access. Every VFD write should be logged with old value, new value, timestamp/sequence, source, and result.
+Canonical requirements and workflows:
 
-## Lift Settings Versus VFD Settings
-
-Some settings should remain local controller variables rather than VFD parameters:
-
-- Normal lift run speed.
-- Service jog speed.
-- Floor positions.
-- Floor nicknames keyed by stable numeric floor identifiers.
-- Stop offset/calibration table.
-- Homing speed and homing timeout.
-- Measured stop-distance calibration value and the VFD/speed settings it was calibrated against.
-- RF remote nickname/observation profiles keyed by TX_ID. These are separate from decoder-learned addresses.
-- AP/station network settings.
-- Log retention/export settings.
-
-The VFD should provide motor drive limits and feedback. The controller should decide when motion is allowed and what target speed to command.
-
-## Weight Limit / Current Limit
-
-Using current limit as a user-facing weight limit is reasonable as a design goal, but it needs calibration and clear wording. Motor current is affected by load, temperature, mechanical friction, supply voltage, acceleration ramp, and direction. It should be treated as an adjustable overload threshold, not a certified scale.
-
-Recommended implementation:
-
-- Keep an installer-only raw VFD current parameter page.
-- Add a user-facing "load limit" setting that maps to validated current-related VFD settings.
-- Log all overcurrent/current-alarm events with direction, speed, position, and VFD monitor data.
-- Consider separate thresholds for upward travel, downward travel, acceleration, and steady run if testing shows meaningful differences.
-
-## Storage Recommendation
-
-Use MRAM for data that must survive power loss and should tolerate frequent writes:
-
-- Current position snapshots.
-- Active/last motion state.
-- Floor positions and calibration values.
-- VFD parameter cache and local controller settings.
-- Network settings.
-- Recent event/fault ring buffer.
-- Boot count and reset reason.
-
-Use internal MCU flash or LittleFS for compact built-in web assets if the UI remains small. Add SD card or large external flash only if we want long history, downloadable logs, screenshots/assets, OTA bundles, or a rich WebUI with many static files.
-
-## MRAM Capacity Estimate
-
-"A few megabits" is useful, but the unit matters:
-
-| MRAM size | Bytes | Practical use |
-| --- | ---: | --- |
-| 1 Mbit | 128 KB | Config, position snapshots, and a modest recent fault log |
-| 4 Mbit | 512 KB | Good baseline for config plus thousands of compact log records |
-| 16 Mbit | 2 MB | Comfortable MRAM-only recent history and parameter cache |
-
-If one binary log record is 64 bytes, then:
-
-| Storage reserved for logs | Approx. records |
-| ---: | ---: |
-| 128 KB | 2,048 |
-| 512 KB | 8,192 |
-| 2 MB | 32,768 |
-
-For this controller, 4-16 Mbit MRAM is sufficient for critical settings and recent logs. It is not ideal for large web files or indefinite logging.
-
-## SD Card Decision
-
-Do not make SD card mandatory for the first board unless the WebUI or log-retention requirement grows. SD cards add sockets, board area, field reliability concerns, and filesystem corruption handling.
-
-Recommended approach:
-
-- Baseline board: SPI MRAM plus MCU internal flash/LittleFS for WebUI assets.
-- Rev A uses the N16R8 module's 16 MB flash for the WebUI, OTA staging and noncritical data; it does not fit microSD or external QSPI flash.
-- Reconsider external QSPI NOR or removable SD only in a later revision if the measured production partition and retention requirements exceed the module capacity.
-- Prefer SD only if the user needs removable long-term logs or easy offline export.
-
-## Log Retention Model
-
-Store two tiers:
-
-- Critical recent log in MRAM as a fixed-size binary ring buffer.
-- Optional extended log in SD/external flash when available.
-
-Recommended log categories:
-
-- Boot/reset.
-- Motion command accepted/rejected.
-- Motion start/stop.
-- VFD command failures.
-- VFD monitor snapshots at fault time.
-- Safety loop open.
-- Limit switch active.
-- Position mismatch/no movement.
-- RF command received, including TX_ID and resolved nickname when known.
-- WebUI login/config change.
-- VFD parameter read/write.
-- Network connection state changes.
-- Calibration started/completed/failed/stale.
-
-The WebUI should export logs as CSV/JSON, but the internal format should stay compact binary.
-
-## Home Automation Path
-
-The baseline automation surface should be a local HTTP API with token authentication, explicit command endpoints, and read-only status endpoints. This keeps Google Home, Home Assistant, Node-RED, or another automation system outside the motion-control core.
-
-Recommended rev-A split:
-
-- REST API: always present for local status, logs, and guarded motion requests.
-- Home Assistant bridge: recommended hub for scripts/buttons, Google Home exposure, mobile/watch access, and future automations.
-- MQTT: optional firmware feature for Home Assistant discovery, status publishing, and command topics after REST is stable.
-- Google Home: integrate through Home Assistant first. Direct Google integration can be added later, but it adds cloud/account complexity and should not be required for lift operation.
-
-Any automation-originated motion request should be treated like a WebUI or RF request: authenticate it, log it, require normal motion prechecks, and reject it during service/fault/unknown-position states.
-
-## Stop Calibration Workflow
-
-The WebUI/service workflow should retain the old measured stop-distance approach. After the user exits floor-position programming, the controller should choose the longer safe travel direction toward the top or bottom floor, command normal run long enough to reach speed, issue a stop, measure the distance between the stop command position and the final stopped position, and store that as the stop offset.
-
-The saved calibration should record the run speed and VFD deceleration parameter used for the measurement. Changing either setting should mark the calibration stale and require a new measurement before normal automatic operation.
+- [Controller requirements](new-controller-requirements.md)
+- [Motion and calibration](motion-control-and-calibration.md)
+- [API contract](../webapp/docs/api-contract.md)
+- [Firmware/WebUI gaps](../webapp/docs/firmware-integration-gaps.md)
+- [Home automation plan](home-automation-integration.md)

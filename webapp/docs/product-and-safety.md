@@ -1,6 +1,9 @@
 # Product and Safety Decisions
 
-This document records durable WebUI decisions so future frontend work remains aligned with the controller hardware and firmware.
+This document records product intent, not implemented capabilities. Contract v2
+inhibits motion and does not expose programming, calibration, RF learning, drive
+writes, backup/restore or recovery. See the [API contract](api-contract.md) for
+current behavior and [integration gaps](firmware-integration-gaps.md) for remaining work.
 
 ## Primary controls
 
@@ -32,7 +35,7 @@ Stop belongs with the operational controls, not in global navigation. It request
 
 - A remote is not assigned to one floor; every compatible transmitter has the same five button functions.
 - The LICAL-DEC-MS001 decoder can retain up to 40 learned addresses but cannot enumerate them for the WebUI or delete one address individually.
-- The WebUI registry is separate MRAM data keyed by observed `TX_ID`. It can store a nickname, first/last seen time, last command, and audit history.
+- The planned registry uses observed `TX_ID` plus association epoch. TX_ID is a reusable learned slot, not permanent transmitter identity. Invalidate associations on learn/erase/restore; do not silently rebind nicknames.
 - Pairing requests the decoder's 17-second Learn Mode through `LEARN` and reports `MODE_IND` state.
 - Erasing requires a deliberate 10-second hold and clears all decoder addresses. Nickname profiles become unlinked; they are not silently rebound.
 - Logs include observed transmitter ID, resolved nickname when known, button, requested command, accepted/rejected result, and reason.

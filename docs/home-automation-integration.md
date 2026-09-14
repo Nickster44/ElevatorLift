@@ -27,15 +27,15 @@ The controller should expose:
 - `GET /api/status` for read-only state.
 - `POST /api/move?floor=N` for guarded floor requests.
 - `POST /api/stop` for guarded stop requests.
-- `X-Lift-Api-Token` header on write endpoints when a token is configured.
+- `X-Lift-Api-Token` header required on every write; missing/short configuration disables writes.
 - Clear JSON errors for rejected, unauthorized, busy, faulted, or unsafe requests.
 
 Current firmware fails closed: a blank or shorter-than-16-character
 `LIFT_API_TOKEN` disables all writes. A trusted hub must include a configured
 token in the header. The current N16R8 profile is hardware-inhibited: floor
-commands are rejected and STOP reports unavailable delivery through the disabled
-UART path. These examples describe the future operational integration, not a
-working/qualified lift deployment. Poll the v1 capabilities and freshness fields;
+commands are rejected; STOP queues a diagnostic UART request or reports unavailable
+delivery if UART is unavailable. These examples describe future operational
+integration, not a qualified deployment. Poll API-v1/contract-v2 capabilities and freshness fields;
 never treat a hub script completing as evidence that the lift moved or stopped.
 
 ## Home Assistant Path

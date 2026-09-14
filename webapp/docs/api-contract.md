@@ -58,7 +58,7 @@ monotonic browser clock and is checked again when dispatching non-STOP commands.
 
 | Route | Result |
 | --- | --- |
-| GET `/api/status` | v1 status |
+| GET `/api/status` | API-v1 envelope with contract-v2 status |
 | GET `/api/capabilities` | v1 boolean capabilities |
 | GET `/api/network` | Redacted network status and SSID |
 | POST `/api/network` | Validated SSID/password saved in NVS; restart required, no automatic restart |
