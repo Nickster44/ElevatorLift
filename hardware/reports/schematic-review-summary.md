@@ -2,6 +2,10 @@
 
 Review date: 2026-09-04
 
+Historical snapshot. Use the [hardware README](../README.md) and
+[current dependency handoff](../../docs/hardware-dependency-handoff.md) for
+current implementation and unresolved gates; the counts below describe this date only.
+
 ## Automated results
 
 - Hierarchy: 6 reachable sheets, no missing child files, and no sheet-pin mismatches.

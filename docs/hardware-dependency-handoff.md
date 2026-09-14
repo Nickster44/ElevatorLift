@@ -41,13 +41,13 @@ wire continuity: `FieldContinuityQualified` remains false and no motion is allow
 The active-low switch NO/NC arrangement and power-loss detection require physical
 review; debounce is not a substitute. No eFuse or bootloader reconfiguration occurred.
 
-- Version the interface contract and regenerate PinMap from the new export.
-- Configure GPIO3/43/44 as inputs; remove GPIO3 AUX output handling. Keep the
+- Contract v2 and generated PinMap adopt the new export; keep them synchronized.
+- GPIO3/43/44 are inputs and AUX handling is removed. Preserve the
   existing active-low conventions, with unknown/unvalidated inputs inhibiting motion.
-- Disable UART0 console/recovery use on GPIO43/44; J11 pins 3/4 are NC. Native
+- UART0 application console use is disabled; J11 pins 3/4 are NC. Native
   USB programming remains available, subject to the existing bench-power gate.
-- Rename VFD_ENABLE to VFD_COMMS_ENABLE and separate communication availability
-  from motion permission. Initialize GPIO42 LOW; enable UART for STOP/readback
+- VFD_COMMS_ENABLE separates communication availability from motion permission.
+  Preserve GPIO42 LOW at startup, then enable UART for STOP/readback
   independently of the safety state. A transmitted STOP is not proof of stopping.
 - Keep default JTAG eFuses: GPIO3 is externally pulled HIGH when the key is open
   and LOW when closed. Do not enable GPIO3-controlled pad-JTAG selection; it can

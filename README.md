@@ -1,6 +1,6 @@
 # Elevator Lift Controller Redesign
 
-This repository is the starting point for a redesigned outdoor elevator lift controller. The original controller was a Particle Xenon sketch that drove an EM01 VFD over serial, watched a safety loop, counted position pulses in firmware, stored floor positions in EEPROM, and exchanged simple serial messages with a secondary relay/input board.
+This repository contains the Rev-A hardware design and inhibited software for a redesigned outdoor elevator lift controller. The original controller was a Particle Xenon sketch that drove an EM01 VFD over serial, watched a safety loop, counted position pulses in firmware, stored floor positions in EEPROM, and exchanged simple serial messages with a secondary relay/input board.
 
 The new design goals are:
 
@@ -48,6 +48,9 @@ shows unavailable capabilities instead of simulating successful hardware actions
 
 ## Current Repository Layout
 
+Use the [documentation guide](docs/README.md) to distinguish current design
+guidance from dated reviews and historical evidence.
+
 ```text
 _old_resources/
   old_code.ino.txt                 Original Particle Xenon firmware
@@ -55,7 +58,7 @@ _old_resources/
   SKF-Motor-Encoder-Unit---15276_1-EN.pdf
 docs/
   hardware-requirements-matrix.md   Schematic-facing hardware requirements
-  hardware-selection.md             First-pass hardware IC/module candidates
+  hardware-selection.md             Selected Rev-A hardware
   home-automation-integration.md    Local REST/Home Assistant/Google Home bridge plan
   jlcpcb-lcsc-sourcing.md           JLCPCB/LCSC-oriented major part matrix
   motion-control-and-calibration.md Motion strategy and measured stop calibration
@@ -69,7 +72,7 @@ docs/
 datasheets/
   README.md                         Local datasheet manifest for major ICs/modules
 firmware/
-  platformio.ini                    Starter PlatformIO target for ESP32-S3
+  platformio.ini                    Inhibited N16R8 PlatformIO target
   include/
   src/
 webapp/
@@ -81,7 +84,7 @@ hardware/
   ElevatorLift.kicad_sch            Root hierarchical schematic
   Power_RevA.kicad_sch              AC input and 12 V/5 V/3.3 V power
   MCU_Storage_RevA.kicad_sch        ESP32-S3, USB, MRAM and RTC
-  VFD_Interface_RevA.kicad_sch      VFD UART and enable interface
+  VFD_Interface_RevA.kicad_sch      VFD UART and communications-only OE
   Encoder_Counter_RevA.kicad_sch    Encoder isolation and counter
   IO.kicad_sch                      RF, field inputs and outputs
   ElevatorLift.kicad_pcb            PCB WIP; full footprint/net transfer on a 90 mm x 90 mm outline with 86 mm hole centers
@@ -103,49 +106,18 @@ Known design constraints captured so far:
 - The Rev-A VFD serial circuit has been cross-checked against the field design and reproduces its TI `TXS0104E` 3.3 V-to-5 V topology. The assembled board, connector pinout, reference, and idle levels still require bench verification before lift connection.
 - The observed encoder path appears to be 12 V open-collector A/B with 270 ohm pullups and 270 ohm series resistors feeding a `TLP291-4` optocoupler. Trace details, current, and maximum pulse rate remain open.
 - Legacy Linx/TE RXM-418-LR 418 MHz RF remote support is mandatory.
-- Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, because the previous system successfully powered its lighting from this supply and JLCPCB lists it as assembly part `C5199922`.
+- Baseline control supply is RECOM `RAC10-12SK/277`, 12 V, 10 W, based on the previously observed installation; `C5199922` is a recorded sourcing reference, not verified current availability.
 - Rev A retains a jumper-selectable external 12 V lighting input. Use it if measured controller margin is insufficient or future lighting requires more power than the onboard supply can provide.
-- Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, with Siproin `PM004MNIATR` as the current JLC-friendly candidate.
+- Critical state and recent logs should use 4 Mbit SPI/QPI MRAM, using the selected Siproin `PM004MNIATR`.
 - Web assets, OTA staging and noncritical logs should use the module's 16 MB flash and 8 MB PSRAM first. Rev A does not include a separate QSPI NOR device.
 - Outside control should use local REST first, optional MQTT later, and Home Assistant as the recommended bridge to Google Home, watches, and broader automation.
 - Motion control should use measured deceleration-distance stopping, not PID. Planned calibration starts explicitly after valid floor programming and stores direction-specific offsets; target integration remains incomplete.
 
-## Old System Summary
+## Legacy Reference
 
-The old sketch used these major I/O groups:
-
-| Function | Old Particle pin | Notes |
-| --- | --- | --- |
-| Top button | `A3` | Floor command or jog up in program mode |
-| Right button | `A4` | Floor command or relay toggle in program mode |
-| Bottom button | `A5` | Jog down in program mode or relay toggle |
-| Left button | `A2` | Floor command |
-| Center button | `D2` | Stop, set position, or hold for homing behavior |
-| RF line | `D3` | Output controlled by incoming serial data |
-| Safety loop | `A1` | Input pullup; low meant safety loop closed |
-| Up position pulses | `D6` | Rising-edge interrupt increments position |
-| Down position pulses | `D8` | Rising-edge interrupt decrements position |
-| VFD serial | `Serial1`, 9600 baud | EM01 ASCII command protocol |
-| Relay/input serial | `Serial2`, 9600 baud | Reads switch/remote data and writes relay bits |
-| USB debug | `Serial`, 115200 baud | Diagnostics |
-
-The original firmware stored floor positions and stopping thresholds in EEPROM. The live position was only held in RAM except when calibration values were saved. Motion was controlled by sending repeated VFD run commands until the calculated stopping point was reached, then sending repeated stop commands until a stop acknowledgment was seen or a retry counter expired.
-
-The old calibration workflow set floor positions in program mode, then on exit ran toward whichever end of travel was farther away, allowed the lift to reach speed, commanded a stop, measured the coast/deceleration distance, and saved that value as the stop calibration. The redesign should retain this measured stop-distance concept while storing it more robustly in MRAM.
-
-## Observed Risk Areas In The Old Firmware
-
-- Position is RAM-only during operation. A reset, brownout, or firmware fault can lose the true carriage position.
-- Encoder pulse counting is done directly in MCU interrupts without an external counter or clearly defined quadrature validation.
-- Several state flags are shared across timers, serial callbacks, interrupts, and the main loop.
-- Stop timing depends on a configured threshold and repeated serial stop messages to the VFD.
-- VFD response parsing is weak; partial or stale serial data can affect stop-state decisions.
-- The homing path relies on a value in the serial input array and can be affected by stale/default input data.
-- One relay bit check uses C++ operator precedence incorrectly: `currRelayValue & 0x02 == 0x02` checks bit 0, not bit 1.
-- Blocking delays in button handlers can hide fast-changing input or safety conditions.
-- EEPROM writes are used for calibration but there is no structured event/fault log.
-
-These are not proof of the historic first-floor overshoot, but they are credible contributors to intermittent behavior.
+The original pin map, behavior and risk analysis are retained in
+[old-system-review.md](docs/old-system-review.md). They are historical evidence,
+not wiring or operating instructions for Rev A.
 
 ## Firmware Direction
 
@@ -185,9 +157,9 @@ Planned WebUI expansion includes local lift settings, RF pairing, VFD parameter 
 
 The preferred home-automation path is local REST API first, optional MQTT later, and Home Assistant as the bridge to Google Home. Google Home should not talk directly to the lift controller or bypass the controller's authentication, logging, and motion prechecks.
 
-## Hardware Architecture Draft
+## Captured Hardware Architecture
 
-The next board should be designed around these blocks:
+The Rev-A design contains the following blocks; physical qualification remains open:
 
 - Exact `ESP32-S3-WROOM-1U-N16R8` external-antenna Wi-Fi module.
 - Fused 120 VAC + neutral input, isolated 12 V supply, 5 V rail, and 3.3 V rail.
@@ -207,7 +179,7 @@ The next board should be designed around these blocks:
 The service/recovery interface uses dry-contact inputs: J43 provides SERVICE
 KEY, HOLD-TO-RUN and GND; J44 provides SERVICE UP, SERVICE DOWN and GND. The
 intended external hardware is a maintained keyed service switch, a momentary
-hold-to-run control, and momentary UP/DOWN controls. These optically isolated
+hold-to-run control, and momentary UP/DOWN controls. These optocoupler-conditioned, shared-ground
 MCU inputs are authorization/command inputs only; they are not a safety-rated
 enabling circuit and may not bypass the independent emergency-stop, final-limit,
 watchdog or VFD motion-authority paths.
@@ -224,7 +196,9 @@ SnapEDA library directory must remain together.
 ## Physical Verification Checklist
 
 The initial on-site observations are recorded in `docs/field-verification-log.md`.
-Before final schematic release, complete the remaining checks below:
+Before hardware release, complete the remaining checks below. The
+[external-box evidence checklist](docs/reviews/2026-09-13-manual-control-box.md)
+defines the non-energized wiring review; this list does not authorize live testing.
 
 1. Confirm the estimated 40 mm enclosure height and 12 mm underside clearance, then measure connector/wire-bend keepouts and airflow.
 2. Confirm the approximately 90 mm x 90 mm board, 86 mm mounting-hole centers, 2.56 mm hole diameter, screw size, and standoff material.

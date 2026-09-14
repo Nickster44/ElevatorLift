@@ -35,12 +35,13 @@ Symbols and matching footprints were downloaded for:
 - RC0603FR-075K1L
 - SMBJ15A
 
-The download also includes a symbol for `LICAL-DEC-MS001`; it has no matching
-footprint in this package and must not receive an invented land pattern.
+The current design uses `LICAL-DEC-MS001` at U41 with `SnapEDA:20-SSOP`.
+The earlier missing-footprint description is superseded; the installed asset
+still requires manufacturer package verification.
 
 ## Selected USB connector
 
 `USB4145-03-0230-C_REVA2` is now the selected USB-C receptacle. The MCU sheet
-uses it as J16 with the matching `SnapEDA:GCT_USB4145-03-0230-C_REVA2`
+uses it as J10 with the matching `SnapEDA:GCT_USB4145-03-0230-C_REVA2`
 footprint. The former USB4120-03-C selection is superseded and should not be
 used on this revision.

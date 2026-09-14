@@ -2,6 +2,14 @@
 
 Review date: 2026-09-10. Baseline: `1c37a65` on `main`; see [source manifest](source-manifest.json) for the full commit and source hashes. This review concerns the saved repository design, not unrecorded changes in an open editor or an installed legacy controller.
 
+## Historical scope
+
+This baseline is superseded for current implementation status. Retained findings
+and evidence remain useful for traceability; use the
+[current dependency handoff](../../hardware-dependency-handoff.md) and
+[software checklist](../../software-integration-checklist.md) for open work.
+Do not apply its old GPIO map or missing-driver descriptions to current firmware.
+
 ## Assessment
 
 **The pieces do not yet implement one operational controller.** They share a recognizable intended architecture, but the schematic describes a substantially more advanced controller than the firmware implements. The web application is a mixed live client and demonstration interface. The PCB is not fully routed.

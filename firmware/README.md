@@ -14,12 +14,13 @@ and cannot be suppressed by this application; R62 and boot-waveform testing rema
 GPIO42 starts LOW, then enables only the TXS0104E after UART1 initialization.
 Only STOP, monitor and parameter READ commands are target-bound; no RUN or WRITE.
 
-Active-low readings require 100 ms stability with sample gaps <=25 ms. A transition,
+Upper/lower-limit and service-key active-low readings require 100 ms stability with sample gaps <=25 ms. A transition,
 invalid level or missing sample invalidates readiness immediately. Pulled-up single
 inputs cannot distinguish open contacts from broken wires/absent field power.
 `FieldContinuityQualified=false` therefore keeps input qualification false, in
 addition to the unchanged global motion/upload inhibit. No setting or web override
-can remove either gate. The external hardwired safety loop is the sole motion authority.
+can remove either gate. The external hardwired safety loop is the required independent motion authority;
+its installed topology and drive/brake behavior remain unverified.
 
 ## Implementation Boundaries
 

@@ -1,0 +1,34 @@
+[
+  {
+    "sha256": "D9A98A4832DFED569F2F9B63A7DFF238F2AD319244B5761A9F56F26CFB3FE921",
+    "path": "hardware/ElevatorLift.kicad_pcb"
+  },
+  {
+    "sha256": "C3F0CB6965956B9D3737C24BB6620DDB0CC41A7392EA0AE65AC249224E5934E8",
+    "path": "hardware/ElevatorLift.kicad_pro"
+  },
+  {
+    "sha256": "94361C1B4FCC392EBC46EA6D906181FF9B2822B0F76CDBE577C540EE6F62ECF7",
+    "path": "hardware/Power_RevA.kicad_sch"
+  },
+  {
+    "sha256": "8D84B523B40A4CBB91EFBCB913724F751BBDC3349977B13D29C057A4222C47D4",
+    "path": "hardware/MCU_Storage_RevA.kicad_sch"
+  },
+  {
+    "sha256": "035819C8730F41759EDC304D45A3278CEC6F67FE919FBB459A820225C6C08DCE",
+    "path": "hardware/VFD_Interface_RevA.kicad_sch"
+  },
+  {
+    "sha256": "5E12DD5EDAAC7CE728F54D1FC30FB98E89CC5804731DD1A25B8F0AEB29431816",
+    "path": "hardware/IO.kicad_sch"
+  },
+  {
+    "sha256": "A7648742AC0B867EEB17AEE93D6527E9EF75C8E3DFD7BCB7C9BD22F74087D8C4",
+    "path": "hardware/Encoder_Counter_RevA.kicad_sch"
+  },
+  {
+    "sha256": "1608ACD55D367F5780EFB22D95AFA966B1429B70678F6B95D58C591D55DE3301",
+    "path": "hardware/.konnect/project.json"
+  }
+]

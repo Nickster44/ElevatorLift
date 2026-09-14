@@ -1,5 +1,9 @@
 # PCB Layout Readiness — 2026-09-04
 
+Historical snapshot, not current layout guidance. Current counts, pin changes and
+open routing gates are in the [hardware README](../README.md) and
+[September 13 handoff](../../docs/reviews/2026-09-13-pin-comms-fourlayer.md).
+
 ## Completed
 
 - Six-sheet hierarchy transferred to the board: 131 schematic footprints plus four mounting holes, 496 pads and 144 named nets.

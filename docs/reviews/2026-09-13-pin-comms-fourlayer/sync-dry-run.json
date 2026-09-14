@@ -1,0 +1,67 @@
+[
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"R25\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"U25\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"J25\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"TP26\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"R59\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"R60\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"Q41\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"F41\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"D42\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"J47\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"U31\"}"
+  },
+  {
+    "isError": false,
+    "tool": "delete_component",
+    "result": "{\"deleted\":\"U42\"}"
+  },
+  {
+    "isError": false,
+    "tool": "update_pcb_from_schematic",
+    "result": "{\"changes\":[{\"dnp\":false,\"kiid\":\"6dfd07db-304e-409f-ba86-e8045b7cd94a\",\"kind\":\"update\",\"pad_nets\":{\"1\":\"+3V3\",\"2\":\"GND\",\"3\":\"unconnected-(J11-Pin_3-Pad3)\",\"4\":\"unconnected-(J11-Pin_4-Pad4)\",\"5\":\"/MCU_Storage/ESP_EN\",\"6\":\"/MCU_Storage/ESP_BOOT\"},\"preserve\":{\"layer\":\"F.Cu\",\"locked\":false,\"position\":{\"x\":157.41,\"y\":126.49325},\"rotation\":90.0},\"reference\":\"J11\",\"symbol_path\":\"/96b45577-cf23-425d-b21b-e8e0055d5317/8181f2db-e06b-49e5-8436-293fe8eba806\",\"value\":\"BOOT RESET HEADER - UART PINS 3/4 NC\"},{\"dnp\":false,\"kiid\":\"6bdcde67-475f-48e4-b240-96d53a607806\",\"kind\":\"update\",\"pad_nets\":{\"1\":\"GND\",\"10\":\"VFD_TX_3V3\",\"11\":\"VFD_RX_3V3\",\"12\":\"RF_D4\",\"13\":\"/MCU_Storage/USB_D-\",\"14\":\"/MCU_Storage/USB_D+\",\"15\":\"SERVICE_KEY\",\"16\":\"unconnected-(U10-IO46-Pad16)\",\"17\":\"MRAM_CS_N\",\"18\":\"COUNTER_CS_N\",\"19\":\"SPI_MOSI\",\"2\":\"+3V3\",\"20\":\"SPI_SCK\",\"21\":\"SPI_MISO\",\"22\":\"RF_LEARN\",\"23\":\"/MCU_Storage/STATUS_LED\",\"24\":\"I2C_SDA\",\"25\":\"I2C_SCL\",\"26\":\"unconnected-(U10-IO45-Pad26)\",\"27\":\"/MCU_Storage/ESP_BOOT\",\"28\":\"unconnected-(U10-IO35-Pad28)\",\"29\":\"unconnected-(U10-IO36-Pad29)\",\"3\":\"/MCU_Storage/ESP_EN\",\"30\":\"unconnected-(U10-IO37-Pad30)\",\"31\":\"HOLD_TO_RUN\",\"32\":\"SERVICE_UP\",\"33\":\"SERVICE_DOWN\",\"34\":\"LIGHT_CTRL\",\"35\":\"VFD_COMMS_ENABLE\",\"36\":\"LIMIT_DOWN\",\"37\":\"LIMIT_UP\",\"38\":\"HOME\",\"39\":\"SAFETY_MON\",\"4\":\"RF_D0\",\"40\":\"GND\",\"41_1\":\"GND\",\"41_2\":\"GND\",\"41_3\":\"GND\",\"41_4\":\"GND\",\"41_5\":\"GND\",\"41_6\":\"GND\",\"41_7\":\"GND\",\"41_8\":\"GND\",\"41_9\":\"GND\",\"5\":\"RF_D1\",\"6\":\"RF_D2\",\"7\":\"RF_D3\",\"8\":\"RF_TX_ID\",\"9\":\"RF_MODE_IND\"},\"preserve\":{\"layer\":\"F.Cu\",\"locked\":false,\"position\":{\"x\":140.45,\"y\":116.99325},\"rotation\":90.0},\"reference\":\"U10\",\"symbol_path\":\"/96b45577-cf23-425d-b21b-e8e0055d5317/abfc8dd6-a500-4b67-8855-ab615792c2f8\",\"value\":\"ESP32-S3-WROOM-1U-N16R8\"},{\"dnp\":false,\"kiid\":\"8dd630b0-a883-46f4-86ae-a3a99a242ed8\",\"kind\":\"update\",\"pad_nets\":{\"1\":\"VFD_COMMS_ENABLE\",\"2\":\"GND\"},\"preserve\":{\"layer\":\"B.Cu\",\"locked\":false,\"position\":{\"x\":105.535,\"y\":98.39325},\"rotation\":0.0},\"reference\":\"R24\",\"symbol_path\":\"/d8035c27-9481-48bc-b99c-c1bc78f420cb/185113cc-5d7d-4f90-ba86-9a31304fcc4c\",\"value\":\"10k OE pull-down\"},{\"dnp\":false,\"kiid\":\"a749f6c1-9dfe-4649-8ce4-6ffed3c841cf\",\"kind\":\"update\",\"pad_nets\":{\"1\":\"+3V3\",\"10\":\"unconnected-(U24-B4-Pad10)\",\"11\":\"unconnected-(U24-B3-Pad11)\",\"12\":\"/VFD_Interface/VFD_TX_5V\",\"13\":\"/VFD_Interface/VFD_RX_5V\",\"14\":\"+5V\",\"2\":\"VFD_TX_3V3\",\"3\":\"VFD_RX_3V3\",\"4\":\"unconnected-(U24-A3-Pad4)\",\"5\":\"unconnected-(U24-A4-Pad5)\",\"6\":\"unconnected-(U24-NC-Pad6)\",\"7\":\"GND\",\"8\":\"VFD_COMMS_ENABLE\",\"9\":\"unconnected-(U24-NC-Pad9)\"},\"preserve\":{\"layer\":\"B.Cu\",\"locked\":false,\"position\":{\"x\":108.45,\"y\":105.268249},\"rotation\":90.0},\"reference\":\"U24\",\"symbol_path\":\"/d8035c27-9481-48bc-b99c-c1bc78f420cb/119cd990-9309-45d0-9e0d-d667f810e464\",\"value\":\"TXS0104ED (3V3 <-> 5V)\"},{\"dnp\":false,\"footprint_id\":\"Package_SO:SOIC-14_3.9x8.7mm_P1.27mm\",\"kind\":\"add\",\"pad_nets\":{\"1\":\"/Encoder_Counter/ENC_A_OPTO\",\"10\":\"unconnected-(U31-Pad10)\",\"11\":\"GND\",\"12\":\"unconnected-(U31-Pad12)\",\"13\":\"GND\",\"14\":\"+3V3\",\"2\":\"/Encoder_Counter/ENC_A_CLEAN\",\"3\":\"/Encoder_Counter/ENC_B_OPTO\",\"4\":\"/Encoder_Counter/ENC_B_CLEAN\",\"5\":\"GND\",\"6\":\"unconnected-(U31-Pad6)\",\"7\":\"GND\",\"8\":\"unconnected-(U31-Pad8)\",\"9\":\"GND\"},\"position\":{\"x\":8.7,\"y\":4.640000000000001},\"reference\":\"U31\",\"symbol_path\":\"/8eecdc97-44f7-4936-917f-e0d7871e0599/8a5ffb69-3c52-4c07-aef5-c822119ddabc\",\"value\":\"74HC14D SCHMITT CONDITIONING\"},{\"dnp\":false,\"kiid\":\"dfde10f6-4de5-453a-974a-da27e8f990eb\",\"kind\":\"update\",\"pad_nets\":{\"1\":\"Net-(R51-Pad1)\",\"2\":\"+3V3\"},\"preserve\":{\"layer\":\"B.Cu\",\"locked\":false,\"position\":{\"x\":144.96,\"y\":112.89325},\"rotation\":-90.0},\"reference\":\"R51\",\"symbol_path\":\"/06e3c240-f857-4f50-8e62-b0389e493f88/345b03b1-6891-4418-98fd-819466f6c5ab\",\"value\":\"10k\"},{\"dnp\":false,\"footprint_id\":\"Resistor_SMD:R_0603_1608Metric\",\"kind\":\"add\",\"pad_nets\":{\"1\":\"Net-(R51-Pad1)\",\"2\":\"LIMIT_UP\"},\"position\":{\"x\":6.48,\"y\":15.010000000000002},\"reference\":\"R62\",\"symbol_path\":\"/06e3c240-f857-4f50-8e62-b0389e493f88/54128bbf-29ac-4ae8-a219-1ce570139ee4\",\"value\":\"1k\"},{\"dnp\":false,\"footprint_id\":\"Package_SO:SOIC-16_4.55x10.3mm_P1.27mm\",\"kind\":\"add\",\"pad_nets\":{\"1\":\"Net-(R41-Pad2)\",\"10\":\"LIMIT_DOWN\",\"11\":\"GND\",\"12\":\"Net-(R51-Pad1)\",\"13\":\"GND\",\"14\":\"HOME\",\"15\":\"GND\",\"16\":\"SAFETY_MON\",\"2\":\"/IO/SAFETY_FIELD\",\"3\":\"Net-(R42-Pad2)\",\"4\":\"/IO/HOME_FIELD\",\"5\":\"Net-(R43-Pad2)\",\"6\":\"/IO/LIMIT_UP_FIELD\",\"7\":\"Net-(R44-Pad2)\",\"8\":\"/IO/LIMIT_DOWN_FIELD\",\"9\":\"GND\"},\"position\":{\"x\":9.3,\"y\":26.17},\"reference\":\"U42\",\"symbol_path\":\"/06e3c240-f857-4f50-8e62-b0389e493f88/f175c1ac-7eaf-42ac-9501-1884abab3693\",\"value\":\"TLP291-4\"}],\"coverage\":{\"atomicity\":\"single_kicad_undo_commit\",\"board_only_preserved\":{\"applied\":0,\"planned\":0},\"conflicts\":{\"applied\":0,\"planned\":0},\"footprints_added\":{\"applied\":0,\"planned\":3},\"footprints_updated\":{\"applied\":0,\"planned\":5},\"hierarchy_files\":6,\"pads_reassigned\":{\"applied\":0,\"planned\":12},\"skipped_by_flag\":{\"applied\":0,\"planned\":0},\"source\":\"saved_schematic_hierarchy\",\"transport\":\"live_kicad_ipc\"},\"diagnostics\":[],\"plan_revision\":\"c185d5d2c7eb2d21bc5a465b621276de5a76fc630dbb007315a484155a332c53\",\"status\":\"ready\",\"undo\":null}"
+  }
+]
